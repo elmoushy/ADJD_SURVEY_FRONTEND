@@ -22,7 +22,7 @@ declare module "vue-router" {
 
 // Auth & Public
 const UnauthorizedAccess = () => import("../pages/Auth/UnauthorizedAccess.vue");
-const JWTLogin = () => import("../pages/Auth/JWTLogin.vue");
+const Login = () => import("../pages/Auth/Login.vue");
 // const Register = () => import('../pages/Auth/Register.vue') 
 
 // Core
@@ -70,7 +70,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/login",
     name: "Login",
-    component: JWTLogin,
+    component: Login,
     meta: { title: "Login - WPC | WeaponpowerCloud App", requiresGuest: true },
   },
   /*
@@ -188,7 +188,6 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: "Communication Hub - WPC | WeaponpowerCloud App",
       requiresAuth: true,
-      requiresAdmin: true,
     },
   },
   {

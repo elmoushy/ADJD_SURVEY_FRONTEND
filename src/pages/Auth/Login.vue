@@ -86,49 +86,6 @@
                   <path d="M10 3l-5 5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-
-              <!-- Secondary Popup Option -->
-              <div :class="styles.alternativeSection">
-                <div :class="styles.divider">
-                  <span>أو</span>
-                </div>
-                <button 
-                  @click="handleMicrosoftLoginPopup"
-                  :class="styles.popupButton"
-                  :disabled="authLoading"
-                >
-                  <svg :class="styles.popupIcon" viewBox="0 0 16 16" fill="none">
-                    <rect x="2" y="3" width="12" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M7 7h2M7 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                  </svg>
-                  <span>استخدام نافذة منبثقة</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Modern Security Features -->
-            <div :class="styles.securitySection">
-              <div :class="styles.securityHeader">
-                <svg :class="styles.shieldIcon" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1l6 2v5c0 3.5-2.5 6.5-6 7-3.5-.5-6-3.5-6-7V3l6-2z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                  <path d="M6 8l1.5 1.5L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>محمي بواسطة Azure AD</span>
-              </div>
-              <div :class="styles.securityFeatures">
-                <div :class="styles.feature">
-                  <div :class="styles.featureDot"></div>
-                  <span>تشفير شامل من البداية للنهاية</span>
-                </div>
-                <div :class="styles.feature">
-                  <div :class="styles.featureDot"></div>
-                  <span>مصادقة متعددة العوامل</span>
-                </div>
-                <div :class="styles.feature">
-                  <div :class="styles.featureDot"></div>
-                  <span>امتثال المؤسسات</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -147,9 +104,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, watch } from 'vue'
+import { onMounted, computed, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useUnifiedAuth } from '../../composables/useUnifiedAuth'
+import { useAzureSso } from '../../composables/useAzureSso'
 import styles from './Login.module.css'
 
 const router = useRouter()
@@ -160,32 +117,20 @@ import { useAppStore } from '../../stores/useAppStore'
 const store = useAppStore()
 const currentTheme = computed(() => store.currentTheme)
 
-// Unified authentication (JWT-based)
-const auth = useUnifiedAuth()
+// Azure SSO authentication
 const { 
-  initialize,
-  login,
-  isAuthenticated: _isAzureAuthenticated,
-  isLoading: azureLoading,
-  error: azureError,
-  clearError: clearAzureError
-} = auth
+  loginWithAzure,
+  handleRedirectResponse,
+  isLoggingIn,
+  isLoggedIn,
+} = useAzureSso()
 
-// Note: loginPopup not available in unified auth
-const loginPopup = () => console.warn('loginPopup not implemented')
-
-// Backend integration - using unified auth
-const { 
-  isAuthenticated: isFullyAuthenticated,
-  isLoading: backendLoading, 
-  error: backendError,
-  clearError: clearBackendError 
-} = auth
+// Error state
+const authError = ref<string | null>(null)
 
 // Computed properties for combined state
-const isAuthenticated = isFullyAuthenticated
-const authLoading = computed(() => azureLoading.value || backendLoading.value)
-const authError = computed(() => azureError.value || backendError.value)
+const isAuthenticated = isLoggedIn
+const authLoading = isLoggingIn
 
 // Watch for authentication state changes
 watch(isAuthenticated, (newValue) => {
@@ -217,56 +162,44 @@ const particleStyle = (_index: number) => {
 // Initialize MSAL on component mount
 onMounted(async () => {
   try {
-    await initialize()
-    
-    // Add a small delay to ensure authentication state is properly set
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Handle redirect response if returning from Azure AD
+    await handleRedirectResponse()
     
     // If user is already authenticated, redirect to intended page
     if (isAuthenticated.value) {
       const redirectTo = (route.query.redirect as string) || '/surveys'
-      
       router.replace(redirectTo)
     }
   } catch (error) {
-    // Logging removed for production
+    console.error('Azure SSO initialization error:', error)
   }
 })
 
 // Handle Microsoft login using redirect
 const handleMicrosoftLogin = async () => {
   try {
-    // Store intended redirect location
     const redirectTo = (route.query.redirect as string) || '/surveys'
-    localStorage.setItem('auth-redirect-to', redirectTo)
-    
-    
-    
-    
-    await login()
+    await loginWithAzure(redirectTo, false) // Use redirect method
   } catch (error) {
-    // Logging removed for production
+    console.error('Azure login error:', error)
+    authError.value = 'Failed to login with Microsoft. Please try again.'
   }
 }
 
 // Handle Microsoft login using popup (alternative method)
 const handleMicrosoftLoginPopup = async () => {
   try {
-    await loginPopup()
-    
-    if (isAuthenticated.value) {
-      const redirectTo = (route.query.redirect as string) || '/surveys'
-      router.replace(redirectTo)
-    }
+    const redirectTo = (route.query.redirect as string) || '/surveys'
+    await loginWithAzure(redirectTo, true) // Use popup method
   } catch (error) {
-    // Logging removed for production
+    console.error('Azure login popup error:', error)
+    authError.value = 'Failed to login with Microsoft. Please try again.'
   }
 }
 
 // Clear authentication error
 const clearAuthError = () => {
-  clearAzureError()
-  clearBackendError()
+  authError.value = null
 }
 </script>
 
