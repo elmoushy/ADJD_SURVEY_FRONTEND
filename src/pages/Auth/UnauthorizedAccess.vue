@@ -49,10 +49,18 @@
                 @click="navigateToLogin" 
                 :class="styles.loginButton"
                 type="button"
+                :disabled="isLoggingIn"
               >
-                <span :class="styles.buttonText">{{ content.buttonText }}</span>
-                <svg :class="styles.buttonIcon" viewBox="0 0 16 16" fill="none">
+                <span :class="styles.buttonText">
+                  {{ isLoggingIn ? (isRTL ? 'جاري تسجيل الدخول...' : 'Signing in...') : content.buttonText }}
+                </span>
+                <svg v-if="!isLoggingIn" :class="styles.buttonIcon" viewBox="0 0 16 16" fill="none">
                   <path :d="isRTL ? 'M10 12L6 8L10 4' : 'M6 12L10 8L6 4'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else :class="[styles.buttonIcon, styles.spinning]" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" stroke-dasharray="30" stroke-dashoffset="0" stroke-linecap="round">
+                    <animateTransform attributeName="transform" type="rotate" from="0 8 8" to="360 8 8" dur="1s" repeatCount="indefinite"/>
+                  </circle>
                 </svg>
               </button>
             </div>
@@ -79,10 +87,16 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import Swal from 'sweetalert2'
 import styles from './UnauthorizedAccess.module.css'
+import { azureSsoService } from '@/services/azureSsoService'
+import { authAPI } from '@/services/jwtAuthService'
 
 // Language state
 const isRTL = ref(true)
+const router = useRouter()
+const isLoggingIn = ref(false)
 
 // Content based on language
 const content = computed(() => {
@@ -118,11 +132,114 @@ const particleStyle = (index: number) => ({
   animationDuration: `${15 + (index % 5) * 2}s`
 })
 
-// Navigate to login using full URL redirect (not Vue router)
-const navigateToLogin = () => {
-  // Use window.location.href for full page reload and URL navigation
-  // This ensures the server/proxy IP restrictions apply
-  window.location.href = '/login'
+// Navigate to login using Azure AD SSO
+const navigateToLogin = async () => {
+  if (isLoggingIn.value) return
+  
+  try {
+    isLoggingIn.value = true
+    
+    // Show loading indicator
+    Swal.fire({
+      title: isRTL.value ? 'جاري تسجيل الدخول...' : 'Signing in...',
+      text: isRTL.value ? 'جاري إعادة التوجيه إلى Microsoft...' : 'Redirecting to Microsoft...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading()
+      }
+    })
+    
+    console.log('Step 1: Initiating Azure AD login popup...')
+    
+    // Step 1: Login with Azure AD (popup method)
+    const azureToken = await azureSsoService.loginPopup()
+    
+    console.log('Step 1 Complete: Azure AD token received:', azureToken ? 'Yes' : 'No')
+    console.log('Azure Token length:', azureToken?.length)
+    console.log('Azure Token (first 50 chars):', azureToken?.substring(0, 50))
+    
+    console.log('Step 2: Exchanging Azure token for JWT...')
+    console.log('Backend URL:', import.meta.env.VITE_API_BASE_URL)
+    
+    // Step 2: Exchange Azure token for application JWT tokens
+    const loginResponse = await authAPI.azureLogin(azureToken)
+    
+    console.log('Step 2 Complete: JWT tokens received:', loginResponse)
+    
+    // Close loading indicator
+    Swal.close()
+    
+    // Step 3: Show success message and redirect
+    console.log('Login successful! Redirecting to /surveys...')
+    
+    Swal.fire({
+      icon: 'success',
+      title: isRTL.value ? 'تم تسجيل الدخول بنجاح' : 'Login Successful',
+      text: isRTL.value 
+        ? `مرحباً ${loginResponse.user.full_name || loginResponse.user.email}` 
+        : `Welcome ${loginResponse.user.full_name || loginResponse.user.email}`,
+      timer: 1500,
+      showConfirmButton: false,
+      willClose: () => {
+        // Force redirect to surveys page using window.location
+        console.log('Forcing redirect to /surveys')
+        window.location.href = '/surveys'
+      }
+    })
+    
+  } catch (error: any) {
+    console.error('Azure SSO login failed - Full error:', error)
+    console.error('Error message:', error.message)
+    console.error('Error response:', error.response)
+    console.error('Error response data:', error.response?.data)
+    console.error('Error response status:', error.response?.status)
+    
+    Swal.close()
+    
+    // Handle different error scenarios
+    let errorMessage = isRTL.value 
+      ? 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.' 
+      : 'Login failed. Please try again.'
+    
+    if (error.message === 'Login cancelled by user') {
+      errorMessage = isRTL.value ? 'تم إلغاء تسجيل الدخول' : 'Login cancelled'
+    } else if (error.message === 'Popup blocked. Please allow popups for this site.') {
+      errorMessage = isRTL.value 
+        ? 'النافذة المنبثقة محظورة. يرجى السماح بالنوافذ المنبثقة لهذا الموقع.' 
+        : 'Popup blocked. Please allow popups for this site.'
+    } else if (error.message === 'Azure AD login failed') {
+      errorMessage = isRTL.value 
+        ? 'فشل تسجيل الدخول عبر Azure AD' 
+        : 'Azure AD login failed'
+    } else if (error.response?.status === 401) {
+      errorMessage = isRTL.value 
+        ? 'رمز Azure AD غير صالح' 
+        : 'Invalid Azure AD credentials'
+    } else if (error.response?.status === 400) {
+      errorMessage = isRTL.value 
+        ? 'طلب غير صالح - تحقق من إعدادات Azure' 
+        : 'Bad request - check Azure configuration'
+    } else if (error.response?.status === 404) {
+      errorMessage = isRTL.value 
+        ? 'نقطة النهاية غير موجودة - تحقق من الخادم الخلفي' 
+        : 'Endpoint not found - check backend'
+    } else if (error.response?.data?.detail) {
+      errorMessage = error.response.data.detail
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
+    await Swal.fire({
+      icon: 'error',
+      title: isRTL.value ? 'خطأ في تسجيل الدخول' : 'Login Error',
+      text: errorMessage,
+      confirmButtonText: isRTL.value ? 'حسناً' : 'OK'
+    })
+  } finally {
+    isLoggingIn.value = false
+  }
 }
 </script>
 

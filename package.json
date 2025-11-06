@@ -19,11 +19,12 @@
     "ws:status": "node scripts/toggle-websocket.js --status"
   },
   "dependencies": {
-    "@azure/msal-browser": "^4.16.0",
+    "@azure/msal-browser": "^4.26.0",
     "@floating-ui/dom": "^1.7.3",
     "@formkit/auto-animate": "^0.8.2",
     "@fortawesome/fontawesome-free": "^7.0.0",
     "@popperjs/core": "^2.11.8",
+    "@vueup/vue-quill": "^1.2.0",
     "aos": "^2.3.4",
     "arabic-persian-reshaper": "^1.0.1",
     "axios": "^1.11.0",
@@ -35,6 +36,7 @@
     "jspdf": "^3.0.3",
     "pinia": "^3.0.3",
     "qrcode": "^1.5.4",
+    "quill": "^2.0.3",
     "sweetalert2": "^11.22.3",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.17",
@@ -50,7 +52,7 @@
     "@vitejs/plugin-vue": "^5.2.0",
     "typescript": "^5.8.3",
     "vite": "^6.0.1",
-    "vite-plugin-mkcert": "^1.17.8",
+    "vite-plugin-mkcert": "^1.17.9",
     "vite-plugin-vue-devtools": "^7.6.5",
     "vue-tsc": "^2.1.10"
   }

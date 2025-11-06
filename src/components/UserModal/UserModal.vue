@@ -16,8 +16,9 @@
               v-model="formData.email"
               type="email" 
               required
-              :class="$style.input"
+              :class="[$style.input, (mode.type === 'view' || mode.type === 'edit') ? $style.readonlyInput : '']"
               :disabled="mode.type === 'view' || mode.type === 'edit'"
+              readonly
             />
           </div>
           
@@ -28,8 +29,9 @@
                 v-model="formData.first_name"
                 type="text" 
                 required
-                :class="$style.input"
+                :class="[$style.input, (mode.type === 'view' || mode.type === 'edit') ? $style.readonlyInput : '']"
                 :disabled="mode.type === 'view' || mode.type === 'edit'"
+                readonly
               />
             </div>
             
@@ -39,8 +41,9 @@
                 v-model="formData.last_name"
                 type="text" 
                 required
-                :class="$style.input"
+                :class="[$style.input, (mode.type === 'view' || mode.type === 'edit') ? $style.readonlyInput : '']"
                 :disabled="mode.type === 'view' || mode.type === 'edit'"
+                readonly
                 autocomplete="off"
               />
             </div>
@@ -455,6 +458,19 @@ watch(() => props.user, (user) => {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(207, 163, 101, 0.1);
+}
+
+.readonlyInput {
+  background: var(--bg-glass) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.readonlyInput:focus {
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
 }
 
 .inputError {

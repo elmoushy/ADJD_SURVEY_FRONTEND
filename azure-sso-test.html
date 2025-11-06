@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure SSO Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0078d4;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            background: #e7f3ff;
+            border-left: 4px solid #0078d4;
+        }
+        .error {
+            background: #ffe7e7;
+            border-left-color: #d13438;
+        }
+        .success {
+            background: #e7ffe7;
+            border-left-color: #107c10;
+        }
+        button {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #106ebe;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .log-error {
+            color: #d13438;
+        }
+        .log-success {
+            color: #107c10;
+        }
+        .log-info {
+            color: #0078d4;
+        }
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Azure AD SSO Test Page</h1>
+        
+        <div class="status">
+            <strong>Configuration:</strong><br>
+            Client ID: <code>c04c11ba-e788-4129-99ba-d59e4a6cfd6f</code><br>
+            Tenant ID: <code>61032d68-6ef9-4d5f-9b9e-46c6556b6f47</code><br>
+            Redirect URI: <code id="redirect-uri"></code><br>
+            Backend: <code id="backend-url"></code>
+        </div>
+
+        <div>
+            <button id="loginBtn" onclick="testAzureLogin()">🚀 Test Azure AD Login (Popup)</button>
+            <button id="redirectBtn" onclick="testAzureRedirect()">🔄 Test Azure AD Login (Redirect)</button>
+            <button onclick="checkStatus()">📊 Check Status</button>
+            <button onclick="clearLogs()">🗑️ Clear Logs</button>
+        </div>
+
+        <h3>Console Logs:</h3>
+        <div id="logs" class="log"></div>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { azureSsoService } from './src/services/azureSsoService.ts';
+        import { authAPI } from './src/services/jwtAuthService.ts';
+
+        // Display configuration
+        document.getElementById('redirect-uri').textContent = window.location.origin;
+        document.getElementById('backend-url').textContent = import.meta.env.VITE_API_BASE_URL || 'Not configured';
+
+        // Global functions for buttons
+        window.testAzureLogin = async function() {
+            addLog('Starting Azure AD Login test (Popup)...', 'info');
+            document.getElementById('loginBtn').disabled = true;
+            
+            try {
+                // Step 1: Azure AD Login
+                addLog('Step 1: Opening Azure AD login popup...', 'info');
+                const azureToken = await azureSsoService.loginPopup();
+                addLog(`✓ Step 1 Complete: Azure token received (${azureToken.length} chars)`, 'success');
+                addLog(`Token preview: ${azureToken.substring(0, 50)}...`, 'info');
+                
+                // Step 2: Exchange for JWT
+                addLog('Step 2: Exchanging Azure token for JWT...', 'info');
+                addLog(`Backend endpoint: ${import.meta.env.VITE_API_BASE_URL}/auth/azure-login/`, 'info');
+                
+                const loginResponse = await authAPI.azureLogin(azureToken);
+                addLog('✓ Step 2 Complete: JWT tokens received', 'success');
+                addLog(`User: ${loginResponse.user.email} (${loginResponse.user.full_name})`, 'success');
+                
+                // Display result
+                document.getElementById('result').innerHTML = `
+                    <div class="status success">
+                        <h3>✅ Login Successful!</h3>
+                        <pre>${JSON.stringify(loginResponse, null, 2)}</pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                addLog(`❌ Login failed: ${error.message}`, 'error');
+                addLog(`Error details: ${JSON.stringify(error, null, 2)}`, 'error');
+                
+                document.getElementById('result').innerHTML = `
+                    <div class="status error">
+                        <h3>❌ Login Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    </div>
+                `;
+            } finally {
+                document.getElementById('loginBtn').disabled = false;
+            }
+        };
+
+        window.testAzureRedirect = async function() {
+            addLog('Starting Azure AD Login test (Redirect)...', 'info');
+            addLog('You will be redirected to Microsoft login page...', 'info');
+            
+            try {
+                await azureSsoService.loginRedirect();
+                // Page will redirect, so this won't execute
+            } catch (error) {
+                addLog(`❌ Redirect failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.checkStatus = async function() {
+            addLog('Checking Azure AD login status...', 'info');
+            
+            try {
+                const isLoggedIn = await azureSsoService.isLoggedIn();
+                const account = await azureSsoService.getCurrentAccount();
+                const userInfo = await azureSsoService.getUserInfo();
+                
+                addLog(`Logged in: ${isLoggedIn}`, isLoggedIn ? 'success' : 'info');
+                
+                if (account) {
+                    addLog(`Account: ${account.username}`, 'success');
+                    addLog(`User info: ${JSON.stringify(userInfo, null, 2)}`, 'info');
+                } else {
+                    addLog('No active Azure AD session', 'info');
+                }
+            } catch (error) {
+                addLog(`❌ Status check failed: ${error.message}`, 'error');
+            }
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('result').innerHTML = '';
+            addLog('Logs cleared', 'info');
+        };
+
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            // Also log to browser console
+            console.log(`[Azure SSO Test] ${message}`);
+        }
+
+        // Check for redirect response on page load
+        (async function() {
+            addLog('Page loaded - checking for redirect response...', 'info');
+            try {
+                const token = await azureSsoService.handleRedirectResponse();
+                if (token) {
+                    addLog('✓ Redirect response handled successfully', 'success');
+                    addLog('Exchanging token for JWT...', 'info');
+                    
+                    const loginResponse = await authAPI.azureLogin(token);
+                    addLog('✓ Login successful after redirect!', 'success');
+                    
+                    document.getElementById('result').innerHTML = `
+                        <div class="status success">
+                            <h3>✅ Login Successful (via Redirect)!</h3>
+                            <pre>${JSON.stringify(loginResponse, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    addLog('No redirect response to handle', 'info');
+                }
+            } catch (error) {
+                addLog(`❌ Error handling redirect: ${error.message}`, 'error');
+            }
+        })();
+    </script>
+</body>
+</html>

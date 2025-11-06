@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { azureSsoService } from './services/azureSsoService'
 import './styles/reset.module.css'
 import './styles/theme.css'
 import './styles/rtl-utils.css'
@@ -60,5 +61,19 @@ AOS.init({
 app.use(pinia)
 app.use(router)
 
-// Mount immediately; JWT composable handles its own lazy init
-app.mount('#app')
+// Initialize Azure SSO and mount app
+const initializeApp = async () => {
+  try {
+    // Initialize MSAL
+    await azureSsoService.initialize()
+    console.log('Azure SSO initialized successfully')
+  } catch (error) {
+    console.warn('Azure SSO initialization failed (this is OK if not using SSO):', error)
+  } finally {
+    // Mount app regardless of SSO initialization status
+    app.mount('#app')
+  }
+}
+
+// Start app initialization
+initializeApp()

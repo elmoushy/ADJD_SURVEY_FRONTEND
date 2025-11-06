@@ -14,14 +14,6 @@
             <i class="fas fa-users"></i>
             {{ t('userManagement.groups.addGroup') }}
           </button>
-          <button 
-            :class="[$style.actionBtn, $style.primaryBtn]" 
-            @click="openUserModal('create')"
-          >
-            <i class="fas fa-user-plus"></i>
-            {{ t('userManagement.users.addUser') }}
-          </button>
-      
           
           <!-- <button 
             :class="[$style.actionBtn, $style.refreshBtn]" 

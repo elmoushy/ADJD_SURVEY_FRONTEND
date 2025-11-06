@@ -181,23 +181,6 @@
                   <i class="fas fa-edit"></i>
                 </button>
 
-                <button
-                  v-if="canResetPassword(user)"
-                  :class="[$style.actionBtn, $style.resetPasswordBtn]"
-                  @click="$emit('user-action', 'reset_password', user)"
-                  :title="t('userManagement.tooltips.resetPassword')"
-                >
-                  <i class="fas fa-key"></i>
-                </button>
-
-                <button
-                  v-if="canDeleteUser(user)"
-                  :class="[$style.actionBtn, $style.deleteBtn]"
-                  @click="$emit('user-action', 'delete', user)"
-                  :title="t('userManagement.tooltips.deleteUser')"
-                >
-                  <i class="fas fa-trash"></i>
-                </button>
               </div>
             </td>
           </tr>
@@ -367,49 +350,7 @@ const canEditUser = (user: User) => {
   );
 };
 
-const canDeleteUser = (user: User) => {
-  if (!props.currentUser) return false;
 
-  // Cannot delete self
-  if (user.id === props.currentUser.id) return false;
-
-  // Only admin and super_admin can delete users
-  if (
-    props.currentUser.role !== "admin" &&
-    props.currentUser.role !== "super_admin"
-  )
-    return false;
-
-  // Admin cannot delete super_admin
-  if (props.currentUser.role === "admin" && user.role === "super_admin")
-    return false;
-
-  return true;
-};
-
-const canResetPassword = (user: User) => {
-  if (!props.currentUser) return false;
-
-  // Cannot reset own password using this method
-  if (user.id === props.currentUser.id) return false;
-
-  // Only admin and super_admin can reset passwords
-  if (
-    props.currentUser.role !== "admin" &&
-    props.currentUser.role !== "super_admin"
-  )
-    return false;
-
-  // Admin cannot reset super_admin password
-  if (props.currentUser.role === "admin" && user.role === "super_admin")
-    return false;
-
-  // Only works for regular authentication users (not Azure AD users)
-  // Note: We assume users without azure_object_id are regular auth users
-  if (user.azure_object_id) return false;
-
-  return true;
-};
 
 const getRoleDisplay = (role: string) => {
   const roleObj = props.roles.find((r) => r.value === role);

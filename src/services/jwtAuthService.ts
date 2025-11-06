@@ -445,6 +445,60 @@ apiClient.interceptors.response.use(
 
 // Authentication API Service
 export const authAPI = {
+  // Login with Azure AD SSO (exchange Azure token for JWT)
+  azureLogin: async (azureAccessToken: string): Promise<LoginResponse> => {
+    try {
+      console.log('azureLogin: Starting Azure token exchange...')
+      console.log('azureLogin: Token received:', azureAccessToken ? 'Yes' : 'No')
+      console.log('azureLogin: Token length:', azureAccessToken?.length)
+      console.log('azureLogin: API Base URL:', API_BASE_URL)
+      console.log('azureLogin: Full endpoint:', `${API_BASE_URL}/auth/azure-login/`)
+      
+      const response = await apiClient.post<LoginResponse>('/auth/azure-login/', { 
+        access_token: azureAccessToken 
+      }, {
+        validateStatus: (status) => status < 500 // Don't throw for 4xx errors
+      })
+      
+      console.log('azureLogin: Response received:', response.status, response.statusText)
+      console.log('azureLogin: Response data:', response.data)
+      
+      if (response.status === 200) {
+        const { tokens, user } = response.data
+        // Store both access and refresh tokens
+        setAuthTokens(tokens.access || null, tokens.refresh || null)
+        // Reset refresh failure count on successful login
+        refreshFailureCount = 0
+        lastRefreshAttempt = 0
+        refreshDisabled = false
+        return { ...response.data, user }
+      }
+      
+      // Handle specific error responses
+      if (response.status === 401) {
+        const error = new Error('Invalid Azure AD token') as any
+        error.response = response
+        throw error
+      }
+      
+      if (response.status === 400) {
+        const error = new Error('Azure AD token required') as any
+        error.response = response
+        throw error
+      }
+      
+      throw new Error('Azure AD login failed')
+    } catch (error: any) {
+      // For axios errors, preserve the original error structure
+      if (error.response) {
+        throw error
+      }
+      
+      // For other errors, wrap in our format
+      throw { general: ['Azure AD login failed. Please try again.'] }
+    }
+  },
+
   // Login with email and password
   login: async (email: string, password: string): Promise<LoginResponse> => {
     try {

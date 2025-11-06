@@ -38,6 +38,8 @@ const UserManagement = () =>
   import("../pages/Control/UserManagement/UserManagement.vue");
 const CommunicationCenter = () =>
   import("../pages/Control/Communication/Communication.vue");
+const MessageManagement = () =>
+  import("../pages/Control/MessageManagement/MessageManagement.vue");
 const FileManagement = () =>
   import("../pages/Control/FileManagement/FileManagement.vue");
 
@@ -185,6 +187,16 @@ const routes: RouteRecordRaw[] = [
     component: CommunicationCenter,
     meta: {
       title: "Communication Hub - WPC | WeaponpowerCloud App",
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: "/control/messages",
+    name: "MessageManagement",
+    component: MessageManagement,
+    meta: {
+      title: "Message Management - WPC | WeaponpowerCloud App",
       requiresAuth: true,
       requiresAdmin: true,
     },
