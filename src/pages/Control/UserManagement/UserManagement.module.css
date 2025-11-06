@@ -59,28 +59,28 @@
 }
 
 [data-theme="night"] {
-  --bg-primary: #262626;
-  --bg-secondary: #42403B;
-  --bg-glass: rgba(161, 125, 35, 0.1);
-  --bg-glass-hover: rgba(161, 125, 35, 0.15);
-  --bg-card: rgba(94, 78, 63, 0.4);
-  --text-primary: #F5F3EE;
-  --text-secondary: #E5D2BA;
-  --text-muted: rgba(161, 125, 35, 0.9);
+  --bg-primary: #181a1f;
+  --bg-secondary: rgba(248, 250, 252, 0.04);
+  --bg-glass: rgba(248, 250, 252, 0.04);
+  --bg-glass-hover: rgba(248, 250, 252, 0.08);
+  --bg-card: rgba(248, 250, 252, 0.04);
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: rgba(248, 250, 252, 0.65);
   --accent-primary: #A17D23;
   --accent-secondary: #B78A41;
   --accent-danger: #AE5D5A;
-  --border-color: rgba(161, 125, 35, 0.3);
+  --border-color: rgba(255, 255, 255, 0.08);
   --shadow-color: rgba(0, 0, 0, 0.3);
   --shadow-hover: rgba(0, 0, 0, 0.4);
   --btn-primary-shadow: 0 12px 24px rgba(161, 125, 35, 0.45);
-  --btn-secondary-bg: rgba(229, 232, 225, 0.12);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.08);
   --btn-secondary-color: var(--text-primary);
-  --btn-secondary-border: rgba(229, 232, 225, 0.22);
+  --btn-secondary-border: rgba(255, 255, 255, 0.12);
   --btn-secondary-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
-  --stat-subtext: rgba(229, 232, 225, 0.7);
-  --tab-hover-shadow: inset 0 0 0 1px rgba(229, 232, 225, 0.25);
-  --tab-active-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  --stat-subtext: rgba(248, 250, 252, 0.65);
+  --tab-hover-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  --tab-active-shadow: 0 10px 24px rgba(161, 125, 35, 0.3);
   --overlay-backdrop: rgba(0, 0, 0, 0.6);
   --error-gradient-start: #ff8379;
   --error-gradient-end: #f26d61;

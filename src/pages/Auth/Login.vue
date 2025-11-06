@@ -1,5 +1,5 @@
 <template>
-  <div :class="styles.loginPage" dir="rtl">
+  <div :class="styles.loginPage" :data-theme="currentTheme" dir="rtl">
     <!-- Background Elements -->
     <div :class="styles.backgroundLayer">
       <div :class="styles.floatingParticles">
@@ -154,6 +154,11 @@ import styles from './Login.module.css'
 
 const router = useRouter()
 const route = useRoute()
+
+// Import theme from store
+import { useAppStore } from '../../stores/useAppStore'
+const store = useAppStore()
+const currentTheme = computed(() => store.currentTheme)
 
 // Unified authentication (JWT-based)
 const auth = useUnifiedAuth()

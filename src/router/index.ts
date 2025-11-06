@@ -36,6 +36,10 @@ const Control = () => import("../pages/Control/Control.vue");
 const SurveyControl = () => import("../pages/Control/SurveyControl.vue");
 const UserManagement = () =>
   import("../pages/Control/UserManagement/UserManagement.vue");
+const CommunicationCenter = () =>
+  import("../pages/Control/Communication/Communication.vue");
+const FileManagement = () =>
+  import("../pages/Control/FileManagement/FileManagement.vue");
 
 // Surveys
 const Surveys = () => import("../pages/Survey/Surveys.vue");
@@ -171,6 +175,26 @@ const routes: RouteRecordRaw[] = [
     component: UserManagement,
     meta: {
       title: "User Management - WPC | WeaponpowerCloud App",
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: "/control/communication",
+    name: "CommunicationCenter",
+    component: CommunicationCenter,
+    meta: {
+      title: "Communication Hub - WPC | WeaponpowerCloud App",
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: "/control/files",
+    name: "FileManagement",
+    component: FileManagement,
+    meta: {
+      title: "File Management - WPC | WeaponpowerCloud App",
       requiresAuth: true,
       requiresAdmin: true,
     },

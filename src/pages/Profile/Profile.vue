@@ -1,5 +1,5 @@
 <template>
-  <div :class="$style.profilePage">
+  <div :class="$style.profilePage" :data-theme="currentTheme" :dir="isRTL ? 'rtl' : 'ltr'">
     <div :class="$style.header">
       <h1>{{ t('navigation.profile') }}</h1>
       <button @click="refreshData" :disabled="isLoading" :class="$style.refreshBtn">
@@ -167,6 +167,8 @@ import { useSimpleAuth } from '../../composables/useSimpleAuth'
 const router = useRouter()
 const store = useAppStore()
 const t = computed(() => store.t)
+const currentTheme = computed(() => store.currentTheme)
+const isRTL = computed(() => store.isRTL)
 
 const {
   user,
