@@ -112,10 +112,10 @@
                     placeholder="example@email.com"
                     required
                     dir="ltr"
-                    @focus="$event.target.style.outline = 'none'; $event.target.style.borderColor = '#AE5D5A'; $event.target.style.boxShadow = '0 0 0 4px rgba(174, 93, 90, 0.12), 0 4px 16px rgba(174, 93, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'white'; $event.target.style.transform = 'translateY(-1px)';"
-                    @blur="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'rgba(255, 255, 255, 0.95)'; $event.target.style.transform = 'translateY(0)';"
-                    @mouseenter="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.25)'; $event.target.style.boxShadow = '0 4px 12px rgba(174, 93, 90, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8)';"
-                    @mouseleave="if(document.activeElement !== $event.target) { $event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; }"
+                    @focus="handleInputFocus"
+                    @blur="handleInputBlur"
+                    @mouseenter="handleInputMouseEnter"
+                    @mouseleave="handleInputMouseLeave"
                   />
                 </div>
 
@@ -131,10 +131,10 @@
                     placeholder="••••••••"
                     required
                     dir="ltr"
-                    @focus="$event.target.style.outline = 'none'; $event.target.style.borderColor = '#AE5D5A'; $event.target.style.boxShadow = '0 0 0 4px rgba(174, 93, 90, 0.12), 0 4px 16px rgba(174, 93, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'white'; $event.target.style.transform = 'translateY(-1px)';"
-                    @blur="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'rgba(255, 255, 255, 0.95)'; $event.target.style.transform = 'translateY(0)';"
-                    @mouseenter="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.25)'; $event.target.style.boxShadow = '0 4px 12px rgba(174, 93, 90, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8)';"
-                    @mouseleave="if(document.activeElement !== $event.target) { $event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; }"
+                    @focus="handleInputFocus"
+                    @blur="handleInputBlur"
+                    @mouseenter="handleInputMouseEnter"
+                    @mouseleave="handleInputMouseLeave"
                   />
                 </div>
 
@@ -142,10 +142,10 @@
                   type="submit"
                   style="display: flex; align-items: center; justify-content: center; gap: 0.875rem; background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%); color: white; border: none; border-radius: 14px; padding: 1.125rem 1.75rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 28px rgba(174, 93, 90, 0.3), 0 4px 12px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2); position: relative; overflow: hidden; margin-top: 0.5rem; letter-spacing: -0.01em;"
                   :disabled="authLoading || !emailForm.email || !emailForm.password"
-                  @mouseenter="if(!authLoading && emailForm.email && emailForm.password) { $event.target.style.background = 'linear-gradient(135deg, #9A4F4C 0%, #B8915A 100%)'; $event.target.style.transform = 'translateY(-2px)'; $event.target.style.boxShadow = '0 14px 36px rgba(174, 93, 90, 0.4), 0 6px 16px rgba(174, 93, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'; }"
-                  @mouseleave="$event.target.style.background = 'linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%)'; $event.target.style.transform = 'translateY(0)'; $event.target.style.boxShadow = '0 10px 28px rgba(174, 93, 90, 0.3), 0 4px 12px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';"
-                  @mousedown="if(!authLoading && emailForm.email && emailForm.password) { $event.target.style.transform = 'translateY(0)'; $event.target.style.boxShadow = '0 6px 20px rgba(174, 93, 90, 0.3), 0 2px 8px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'; }"
-                  @mouseup="if(!authLoading && emailForm.email && emailForm.password) { $event.target.style.transform = 'translateY(-2px)'; $event.target.style.boxShadow = '0 14px 36px rgba(174, 93, 90, 0.4), 0 6px 16px rgba(174, 93, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'; }"
+                  @mouseenter="handleButtonMouseEnter"
+                  @mouseleave="handleButtonMouseLeave"
+                  @mousedown="handleButtonMouseDown"
+                  @mouseup="handleButtonMouseUp"
                 >
                   <svg style="width: 18px; height: 18px; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));" viewBox="0 0 16 16" fill="none">
                     <path d="M2 4l6 4 6-4M2 4v8a1 1 0 001 1h10a1 1 0 001-1V4M2 4a1 1 0 011-1h10a1 1 0 011 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -316,6 +316,79 @@ const handleMicrosoftLogin = async () => {
 const clearAuthError = () => {
   emailLoginError.value = null
   jwtAuth.clearError()
+}
+
+// Input event handlers for styling
+const handleInputFocus = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target) {
+    target.style.outline = 'none'
+    target.style.borderColor = '#AE5D5A'
+    target.style.boxShadow = '0 0 0 4px rgba(174, 93, 90, 0.12), 0 4px 16px rgba(174, 93, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+    target.style.background = 'white'
+    target.style.transform = 'translateY(-1px)'
+  }
+}
+
+const handleInputBlur = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target) {
+    target.style.borderColor = 'rgba(174, 93, 90, 0.15)'
+    target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+    target.style.background = 'rgba(255, 255, 255, 0.95)'
+    target.style.transform = 'translateY(0)'
+  }
+}
+
+const handleInputMouseEnter = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target && document.activeElement !== target) {
+    target.style.borderColor = 'rgba(174, 93, 90, 0.25)'
+    target.style.boxShadow = '0 4px 12px rgba(174, 93, 90, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+  }
+}
+
+const handleInputMouseLeave = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target && document.activeElement !== target) {
+    target.style.borderColor = 'rgba(174, 93, 90, 0.15)'
+    target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'
+  }
+}
+
+// Button event handlers for styling
+const handleButtonMouseEnter = (event: Event) => {
+  const target = event.target as HTMLButtonElement
+  if (target && !authLoading.value && emailForm.value.email && emailForm.value.password) {
+    target.style.background = 'linear-gradient(135deg, #9A4F4C 0%, #B8915A 100%)'
+    target.style.transform = 'translateY(-2px)'
+    target.style.boxShadow = '0 14px 36px rgba(174, 93, 90, 0.4), 0 6px 16px rgba(174, 93, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+  }
+}
+
+const handleButtonMouseLeave = (event: Event) => {
+  const target = event.target as HTMLButtonElement
+  if (target) {
+    target.style.background = 'linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%)'
+    target.style.transform = 'translateY(0)'
+    target.style.boxShadow = '0 10px 28px rgba(174, 93, 90, 0.3), 0 4px 12px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+  }
+}
+
+const handleButtonMouseDown = (event: Event) => {
+  const target = event.target as HTMLButtonElement
+  if (target && !authLoading.value && emailForm.value.email && emailForm.value.password) {
+    target.style.transform = 'translateY(0)'
+    target.style.boxShadow = '0 6px 20px rgba(174, 93, 90, 0.3), 0 2px 8px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+  }
+}
+
+const handleButtonMouseUp = (event: Event) => {
+  const target = event.target as HTMLButtonElement
+  if (target && !authLoading.value && emailForm.value.email && emailForm.value.password) {
+    target.style.transform = 'translateY(-2px)'
+    target.style.boxShadow = '0 14px 36px rgba(174, 93, 90, 0.4), 0 6px 16px rgba(174, 93, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+  }
 }
 </script>
 

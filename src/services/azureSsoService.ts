@@ -242,7 +242,7 @@ export const azureSsoService = {
       const msal = await getMsalInstance()
       const accounts = msal.getAllAccounts()
       return accounts.length > 0
-    } catch (_error) {
+    } catch {
       return false
     }
   },
