@@ -1,18 +1,18 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+// import vueDevTools from 'vite-plugin-vue-devtools'
 import mkcert from 'vite-plugin-mkcert'
 
-// https://vite.dev/config/
-export default defineConfig(({ command, isPreview, mode }) => {
+// https://vitejs.dev/config/
+export default defineConfig(({ command, mode }) => {
   const isDevelopment = mode === 'development'
   const isProduction = mode === 'production'
   
   const baseConfig = {
     plugins: [
       vue(),
-      ...(isDevelopment ? [vueDevTools(), mkcert()] : [])
+      ...(isDevelopment ? [mkcert()] : [])
     ],
     resolve: {
       alias: {
@@ -35,7 +35,7 @@ export default defineConfig(({ command, isPreview, mode }) => {
     }
   }
 
-  if (command === 'serve' && !isPreview) {
+  if (command === 'serve') {
     return {
       ...baseConfig,
       server: {
