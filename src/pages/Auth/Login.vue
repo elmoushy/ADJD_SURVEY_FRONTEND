@@ -185,18 +185,7 @@ const handleMicrosoftLogin = async () => {
     authError.value = 'Failed to login with Microsoft. Please try again.'
   }
 }
-
-// Handle Microsoft login using popup (alternative method)
-const handleMicrosoftLoginPopup = async () => {
-  try {
-    const redirectTo = (route.query.redirect as string) || '/surveys'
-    await loginWithAzure(redirectTo, true) // Use popup method
-  } catch (error) {
-    console.error('Azure login popup error:', error)
-    authError.value = 'Failed to login with Microsoft. Please try again.'
-  }
-}
-
+suc
 // Clear authentication error
 const clearAuthError = () => {
   authError.value = null
