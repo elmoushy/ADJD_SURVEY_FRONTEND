@@ -95,7 +95,7 @@ const isCollapsed = computed(() => internalCollapsed.value)
 const isMobileOverlay = computed(() => props.mobileOverlay === true)
 
 /** Dynamic logo: swap when collapsed */
-const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.png')
+const logoSrc = computed(() => isCollapsed.value ? '/moblogoadjd.png' : '/ADJDlogo.png')
 </script>
 
 <template>
