@@ -288,6 +288,7 @@ router.beforeEach(async (to, _from, next) => {
   if (to.path === "/" && _from.path === "/") {
     return next();
   }
+  
   // ✅ Check authentication for protected routes
   if (requiresAuth && !authenticated) {
     try {
@@ -297,8 +298,9 @@ router.beforeEach(async (to, _from, next) => {
     }
 
     if (!authenticated) {
-      // Redirect unauthenticated users to UnauthorizedAccess page
-      return next("/");
+      // Store the intended destination before redirecting to login
+      const redirectPath = to.path !== "/" ? to.fullPath : "/surveys";
+      return next({ path: "/login", query: { redirect: redirectPath } });
     }
   }
 
@@ -320,8 +322,9 @@ router.beforeEach(async (to, _from, next) => {
     }
 
     if (!authenticated) {
-      // Unauthenticated users trying to access admin routes → UnauthorizedAccess
-      return next("/");
+      // Unauthenticated users trying to access admin routes → Login
+      const redirectPath = to.fullPath;
+      return next({ path: "/login", query: { redirect: redirectPath } });
     }
 
     const currentUser = user.value;

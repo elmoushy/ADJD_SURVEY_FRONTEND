@@ -64,7 +64,7 @@
 
             <!-- Modern Login Section -->
             <div v-else :class="styles.loginSection">
-              <!-- Primary Microsoft Button -->
+              <!-- PRIMARY MICROSOFT BUTTON -->
               <button 
                 @click="handleMicrosoftLogin"
                 :class="styles.microsoftButton"
@@ -86,6 +86,76 @@
                   <path d="M10 3l-5 5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
+
+              <!-- ============================================ -->
+              <!-- TEMPORARY EMAIL/PASSWORD LOGIN - TO BE REMOVED -->
+              <!-- START OF EMAIL/PASSWORD LOGIN SECTION -->
+              <!-- ============================================ -->
+              <div :class="styles.divider">
+                <span>أو</span>
+              </div>
+
+              <!-- Email/Password Form -->
+              <form 
+                @submit.prevent="handleEmailLogin" 
+                style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%; padding: 1.5rem; background: linear-gradient(135deg, rgba(174, 93, 90, 0.02) 0%, rgba(207, 163, 101, 0.03) 100%); border-radius: 16px; border: 1px solid rgba(174, 93, 90, 0.08); position: relative; overflow: hidden;"
+              >
+                <div style="display: flex; flex-direction: column; gap: 0.625rem; text-align: right; position: relative;">
+                  <label style="font-size: 0.9rem; font-weight: 700; color: #2d2d2d; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.01em; transition: color 0.2s ease;">
+                    البريد الإلكتروني
+                    <span style="width: 4px; height: 4px; background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%); border-radius: 50%; box-shadow: 0 0 8px rgba(174, 93, 90, 0.4);"></span>
+                  </label>
+                  <input 
+                    v-model="emailForm.email"
+                    type="email" 
+                    style="padding: 1rem 1.25rem; border: 2px solid rgba(174, 93, 90, 0.15); border-radius: 14px; font-size: 0.95rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); font-family: 'Segoe UI', 'Arial', sans-serif; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8);"
+                    placeholder="example@email.com"
+                    required
+                    dir="ltr"
+                    @focus="$event.target.style.outline = 'none'; $event.target.style.borderColor = '#AE5D5A'; $event.target.style.boxShadow = '0 0 0 4px rgba(174, 93, 90, 0.12), 0 4px 16px rgba(174, 93, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'white'; $event.target.style.transform = 'translateY(-1px)';"
+                    @blur="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'rgba(255, 255, 255, 0.95)'; $event.target.style.transform = 'translateY(0)';"
+                    @mouseenter="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.25)'; $event.target.style.boxShadow = '0 4px 12px rgba(174, 93, 90, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8)';"
+                    @mouseleave="if(document.activeElement !== $event.target) { $event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; }"
+                  />
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.625rem; text-align: right; position: relative;">
+                  <label style="font-size: 0.9rem; font-weight: 700; color: #2d2d2d; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.01em; transition: color 0.2s ease;">
+                    كلمة المرور
+                    <span style="width: 4px; height: 4px; background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%); border-radius: 50%; box-shadow: 0 0 8px rgba(174, 93, 90, 0.4);"></span>
+                  </label>
+                  <input 
+                    v-model="emailForm.password"
+                    type="password" 
+                    style="padding: 1rem 1.25rem; border: 2px solid rgba(174, 93, 90, 0.15); border-radius: 14px; font-size: 0.95rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); font-family: 'Segoe UI', 'Arial', sans-serif; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8);"
+                    placeholder="••••••••"
+                    required
+                    dir="ltr"
+                    @focus="$event.target.style.outline = 'none'; $event.target.style.borderColor = '#AE5D5A'; $event.target.style.boxShadow = '0 0 0 4px rgba(174, 93, 90, 0.12), 0 4px 16px rgba(174, 93, 90, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'white'; $event.target.style.transform = 'translateY(-1px)';"
+                    @blur="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; $event.target.style.background = 'rgba(255, 255, 255, 0.95)'; $event.target.style.transform = 'translateY(0)';"
+                    @mouseenter="$event.target.style.borderColor = 'rgba(174, 93, 90, 0.25)'; $event.target.style.boxShadow = '0 4px 12px rgba(174, 93, 90, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.8)';"
+                    @mouseleave="if(document.activeElement !== $event.target) { $event.target.style.borderColor = 'rgba(174, 93, 90, 0.15)'; $event.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8)'; }"
+                  />
+                </div>
+
+                <button 
+                  type="submit"
+                  style="display: flex; align-items: center; justify-content: center; gap: 0.875rem; background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%); color: white; border: none; border-radius: 14px; padding: 1.125rem 1.75rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 28px rgba(174, 93, 90, 0.3), 0 4px 12px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2); position: relative; overflow: hidden; margin-top: 0.5rem; letter-spacing: -0.01em;"
+                  :disabled="authLoading || !emailForm.email || !emailForm.password"
+                  @mouseenter="if(!authLoading && emailForm.email && emailForm.password) { $event.target.style.background = 'linear-gradient(135deg, #9A4F4C 0%, #B8915A 100%)'; $event.target.style.transform = 'translateY(-2px)'; $event.target.style.boxShadow = '0 14px 36px rgba(174, 93, 90, 0.4), 0 6px 16px rgba(174, 93, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'; }"
+                  @mouseleave="$event.target.style.background = 'linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%)'; $event.target.style.transform = 'translateY(0)'; $event.target.style.boxShadow = '0 10px 28px rgba(174, 93, 90, 0.3), 0 4px 12px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)';"
+                  @mousedown="if(!authLoading && emailForm.email && emailForm.password) { $event.target.style.transform = 'translateY(0)'; $event.target.style.boxShadow = '0 6px 20px rgba(174, 93, 90, 0.3), 0 2px 8px rgba(174, 93, 90, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'; }"
+                  @mouseup="if(!authLoading && emailForm.email && emailForm.password) { $event.target.style.transform = 'translateY(-2px)'; $event.target.style.boxShadow = '0 14px 36px rgba(174, 93, 90, 0.4), 0 6px 16px rgba(174, 93, 90, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'; }"
+                >
+                  <svg style="width: 18px; height: 18px; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 4l6 4 6-4M2 4v8a1 1 0 001 1h10a1 1 0 001-1V4M2 4a1 1 0 011-1h10a1 1 0 011 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span>تسجيل الدخول بالبريد الإلكتروني</span>
+                </button>
+              </form>
+              <!-- ============================================ -->
+              <!-- END OF EMAIL/PASSWORD LOGIN SECTION -->
+              <!-- ============================================ -->
             </div>
           </div>
         </div>
@@ -125,12 +195,60 @@ const {
   isLoggedIn,
 } = useAzureSso()
 
-// Error state
-const authError = ref<string | null>(null)
+// ============================================
+// TEMPORARY EMAIL/PASSWORD LOGIN - TO BE REMOVED
+// START OF EMAIL/PASSWORD LOGIC
+// ============================================
+// Import JWT auth for email/password login
+import { useJWTAuth } from '../../composables/useJWTAuth'
+const jwtAuth = useJWTAuth()
+
+// Email/Password form state
+const emailForm = ref({
+  email: '',
+  password: ''
+})
+
+// Local error for email login
+const emailLoginError = ref<string | null>(null)
+
+// Handle email/password login
+const handleEmailLogin = async () => {
+  try {
+    emailLoginError.value = null
+    jwtAuth.clearError()
+    console.log('Email login attempt:', emailForm.value.email)
+    
+    // Call JWT login with email and password
+    const result = await jwtAuth.login(emailForm.value.email, emailForm.value.password)
+    
+    if (result.success) {
+      // Login successful, force redirect to /surveys immediately
+      const redirectTo = (route.query.redirect as string) || '/surveys'
+      
+      // Use window.location for a hard redirect to ensure state is fresh
+      window.location.href = redirectTo
+    } else {
+      // Login failed, show error
+      emailLoginError.value = 'فشل تسجيل الدخول. يرجى التحقق من البريد الإلكتروني وكلمة المرور'
+    }
+  } catch (error: any) {
+    console.error('Email login error:', error)
+    emailLoginError.value = error?.response?.data?.detail || 'فشل تسجيل الدخول بالبريد الإلكتروني'
+  }
+}
+// ============================================
+// END OF EMAIL/PASSWORD LOGIC
+// ============================================
+
+// Error state (combined from both auth methods)
+const authError = computed(() => {
+  return emailLoginError.value || jwtAuth.error.value
+})
 
 // Computed properties for combined state
-const isAuthenticated = isLoggedIn
-const authLoading = isLoggingIn
+const isAuthenticated = computed(() => isLoggedIn.value || jwtAuth.isAuthenticated.value)
+const authLoading = computed(() => isLoggingIn.value || jwtAuth.isLoading.value)
 
 // Watch for authentication state changes
 watch(isAuthenticated, (newValue) => {
@@ -162,8 +280,14 @@ const particleStyle = (_index: number) => {
 // Initialize MSAL on component mount
 onMounted(async () => {
   try {
+    // Initialize JWT auth first
+    await jwtAuth.checkAuth()
+    
     // Handle redirect response if returning from Azure AD
     await handleRedirectResponse()
+    
+    // Small delay to ensure authentication state is properly set
+    await new Promise(resolve => setTimeout(resolve, 100))
     
     // If user is already authenticated, redirect to intended page
     if (isAuthenticated.value) {
@@ -178,17 +302,20 @@ onMounted(async () => {
 // Handle Microsoft login using redirect
 const handleMicrosoftLogin = async () => {
   try {
+    emailLoginError.value = null
+    jwtAuth.clearError()
     const redirectTo = (route.query.redirect as string) || '/surveys'
     await loginWithAzure(redirectTo, false) // Use redirect method
   } catch (error) {
     console.error('Azure login error:', error)
-    authError.value = 'Failed to login with Microsoft. Please try again.'
+    emailLoginError.value = 'Failed to login with Microsoft. Please try again.'
   }
 }
 
 // Clear authentication error
 const clearAuthError = () => {
-  authError.value = null
+  emailLoginError.value = null
+  jwtAuth.clearError()
 }
 </script>
 
@@ -549,6 +676,221 @@ const clearAuthError = () => {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
+
+/* ============================================ */
+/* TEMPORARY EMAIL/PASSWORD LOGIN STYLES - TO BE REMOVED */
+/* START OF EMAIL/PASSWORD STYLES */
+/* ============================================ */
+.emailLoginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(174, 93, 90, 0.02) 0%, rgba(207, 163, 101, 0.03) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(174, 93, 90, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.emailLoginForm::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(174, 93, 90, 0.3), transparent);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  text-align: right;
+  position: relative;
+}
+
+.inputLabel {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2d2d2d;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+.inputLabel::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(174, 93, 90, 0.4);
+}
+
+[data-theme="light"] .inputLabel {
+  color: #42403B;
+}
+
+.input {
+  padding: 1rem 1.25rem;
+  border: 2px solid rgba(174, 93, 90, 0.15);
+  border-radius: 14px;
+  font-size: 0.95rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.02),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  position: relative;
+}
+
+.input:hover {
+  border-color: rgba(174, 93, 90, 0.25);
+  box-shadow: 
+    0 4px 12px rgba(174, 93, 90, 0.08),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #AE5D5A;
+  box-shadow: 
+    0 0 0 4px rgba(174, 93, 90, 0.12),
+    0 4px 16px rgba(174, 93, 90, 0.15),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  background: white;
+  transform: translateY(-1px);
+}
+
+.input::placeholder {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+[data-theme="light"] .input {
+  background: rgba(255, 252, 247, 0.95);
+  border-color: rgba(174, 93, 90, 0.2);
+}
+
+[data-theme="light"] .input:focus {
+  background: #FFFCF7;
+  border-color: #AE5D5A;
+}
+
+.emailLoginButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.875rem;
+  background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 1.125rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 10px 28px rgba(174, 93, 90, 0.3),
+    0 4px 12px rgba(174, 93, 90, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.emailLoginButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.6s ease;
+}
+
+.emailLoginButton:hover::before {
+  left: 100%;
+}
+
+.emailLoginButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #9A4F4C 0%, #B8915A 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 14px 36px rgba(174, 93, 90, 0.4),
+    0 6px 16px rgba(174, 93, 90, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.emailLoginButton:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 
+    0 6px 20px rgba(174, 93, 90, 0.3),
+    0 2px 8px rgba(174, 93, 90, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.emailLoginButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 4px 12px rgba(174, 93, 90, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.emailIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .emailLoginForm {
+    padding: 1.25rem;
+    gap: 1.25rem;
+  }
+  
+  .input {
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .emailLoginButton {
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .emailLoginForm {
+    padding: 1rem;
+  }
+  
+  .inputLabel {
+    font-size: 0.85rem;
+  }
+  
+  .emailIcon {
+    width: 16px;
+    height: 16px;
+  }
+}
+/* ============================================ */
+/* END OF EMAIL/PASSWORD STYLES */
+/* ============================================ */
 
 .popupButton {
   display: flex;

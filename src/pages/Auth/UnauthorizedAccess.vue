@@ -1,5 +1,5 @@
 <template>
-  <div :class="styles.loginPage" :dir="isRTL ? 'rtl' : 'ltr'">
+  <div v-if="!isAuthenticated && !isCheckingAuth" :class="styles.loginPage" :dir="isRTL ? 'rtl' : 'ltr'">
     <!-- Background Elements -->
     <div :class="styles.backgroundLayer">
       <div :class="styles.floatingParticles">
@@ -80,13 +80,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAzureSso } from '../../composables/useAzureSso'
+import { useJWTAuth } from '../../composables/useJWTAuth'
 import styles from './UnauthorizedAccess.module.css'
 
 // Language state
 const isRTL = ref(true)
 const router = useRouter()
+
+// Check authentication status
+const { isLoggedIn: isAzureLoggedIn } = useAzureSso()
+const jwtAuth = useJWTAuth()
+
+// Track if we're currently checking authentication
+const isCheckingAuth = ref(true)
+
+// Check if user is authenticated (either Azure SSO or JWT)
+const isAuthenticated = computed(() => isAzureLoggedIn.value || jwtAuth.isAuthenticated.value)
+
+// Redirect function
+const redirectToSurveys = () => {
+  router.replace('/surveys')
+}
+
+// Check authentication on mount
+onMounted(async () => {
+  try {
+    // Initialize JWT auth and check status
+    await jwtAuth.checkAuth()
+    
+    // Small delay to ensure state is updated
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // If authenticated, redirect immediately
+    if (isAuthenticated.value) {
+      redirectToSurveys()
+      return
+    }
+  } catch (error) {
+    console.error('Auth check error:', error)
+  } finally {
+    // Auth check complete
+    isCheckingAuth.value = false
+  }
+})
+
+// Watch for authentication state changes and redirect immediately
+watch(isAuthenticated, (newValue) => {
+  if (newValue) {
+    redirectToSurveys()
+  }
+})
+
+// Also watch individual auth states to catch any changes
+watch([isAzureLoggedIn, () => jwtAuth.isAuthenticated.value], ([azureAuth, jwtAuthState]) => {
+  if (azureAuth || jwtAuthState) {
+    redirectToSurveys()
+  }
+})
 
 // Content based on language
 const content = computed(() => {
