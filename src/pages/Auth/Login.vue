@@ -185,7 +185,7 @@ const handleMicrosoftLogin = async () => {
     authError.value = 'Failed to login with Microsoft. Please try again.'
   }
 }
-suc
+
 // Clear authentication error
 const clearAuthError = () => {
   authError.value = null
