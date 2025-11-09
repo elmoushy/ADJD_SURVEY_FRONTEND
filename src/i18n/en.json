@@ -983,6 +983,8 @@
     "saving": "Saving...",
     "create": "Create",
     "copy": "Copy",
+    "ok": "OK",
+    "remove": "Remove",
     "saveChanges": "Save Changes",
     "selectOption": "Select an option",
     "enter": "Enter",
@@ -1484,6 +1486,46 @@
             "text": "You don't have permission to reset this user's password."
           }
         }
+      }
+    },
+    "bulkUpload": {
+      "title": "Bulk Upload Users",
+      "downloadTemplate": "Download Excel Template",
+      "upload": "Upload File",
+      "uploading": "Uploading...",
+      "dragDrop": "Drag and drop Excel file here",
+      "orClick": "or click to select",
+      "preview": "Data Preview",
+      "users": "users",
+      "andMore": "and {{count}} more rows...",
+      "validationErrors": "Validation Errors",
+      "instructions": {
+        "title": "Instructions",
+        "step1": "Download the Excel template using the button below",
+        "step2": "Fill in the template with user data (Email is required only)",
+        "step3": "Upload the completed file to create users",
+        "note": "Note: Azure AD Object ID is automatically generated from the email address"
+      },
+      "fields": {
+        "email": "Email",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "role": "Role"
+      },
+      "errors": {
+        "noData": "No data found in file",
+        "parseError": "Failed to parse Excel file. Please ensure it's properly formatted.",
+        "uploadFailed": "Failed to upload users. Please try again."
+      },
+      "results": {
+        "summary": "Summary",
+        "totalRequested": "Total Requested",
+        "created": "Created",
+        "skipped": "Skipped",
+        "failed": "Failed",
+        "createdUsers": "Created Users",
+        "skippedUsers": "Skipped Users",
+        "failedUsers": "Failed Users"
       }
     }
   }

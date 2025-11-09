@@ -30,7 +30,9 @@ import type {
   CreateUserRequest,
   SearchUsersQuery,
   BulkDeleteRequest,
-  BulkDeleteResponse
+  BulkDeleteResponse,
+  BulkCreateRequest,
+  BulkCreateResponse
   // ApiResponse // Unused - commenting out
 } from '../types/user-management.types'
 
@@ -120,6 +122,14 @@ export const inviteUser = async (inviteData: InviteUserRequest): Promise<InviteU
  */
 export const bulkDeleteUsers = async (deleteData: BulkDeleteRequest): Promise<BulkDeleteResponse> => {
   const response: AxiosResponse<BulkDeleteResponse> = await apiClient.post('/auth/users/bulk-delete/', deleteData)
+  return response.data
+}
+
+/**
+ * Bulk create Azure AD users (admin and super_admin only)
+ */
+export const bulkCreateAzureUsers = async (createData: BulkCreateRequest): Promise<BulkCreateResponse> => {
+  const response: AxiosResponse<BulkCreateResponse> = await apiClient.post('/auth/azure-users/bulk-create/', createData)
   return response.data
 }
 
@@ -296,6 +306,7 @@ export default {
   getUserGroups,
   inviteUser,
   bulkDeleteUsers,
+  bulkCreateAzureUsers,
   
   // Group endpoints
   getGroups,

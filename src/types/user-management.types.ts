@@ -278,3 +278,59 @@ export interface BulkDeleteResponse {
   summary: BulkDeleteSummary
   results: BulkDeleteResults
 }
+
+// Bulk Create Types (Azure AD Users)
+export interface BulkCreateUserRequest {
+  email: string
+  first_name?: string
+  last_name?: string
+  role?: 'super_admin' | 'admin' | 'user'
+}
+
+export interface BulkCreateRequest {
+  users: BulkCreateUserRequest[]
+}
+
+export interface BulkCreateCreatedUser {
+  id: number
+  object_id: string
+  email: string
+  full_name: string
+  role: string
+}
+
+export interface BulkCreateSkippedUser {
+  object_id: string
+  email: string
+  reason: string
+  existing_user?: {
+    id: number
+    email: string
+    username: string
+  }
+}
+
+export interface BulkCreateFailedUser {
+  object_id: string
+  email: string
+  error: string
+}
+
+export interface BulkCreateSummary {
+  total_requested: number
+  created: number
+  skipped: number
+  failed: number
+}
+
+export interface BulkCreateResults {
+  created: BulkCreateCreatedUser[]
+  skipped: BulkCreateSkippedUser[]
+  failed: BulkCreateFailedUser[]
+}
+
+export interface BulkCreateResponse {
+  message: string
+  summary: BulkCreateSummary
+  results: BulkCreateResults
+}

@@ -9,6 +9,14 @@
               
           <button 
             :class="[$style.actionBtn, $style.primaryBtn]" 
+            @click="openBulkUploadModal"
+          >
+            <i class="fas fa-file-upload"></i>
+            {{ t('userManagement.bulkUpload.title') }}
+          </button>
+          
+          <button 
+            :class="[$style.actionBtn, $style.primaryBtn]" 
             @click="openGroupModal('create')"
           >
             <i class="fas fa-users"></i>
@@ -191,6 +199,13 @@
       @close="closeResetPasswordModal"
     />
 
+    <!-- Bulk Upload Modal -->
+    <BulkUploadModal
+      :visible="bulkUploadModalVisible"
+      @success="handleBulkUploadSuccess"
+      @close="closeBulkUploadModal"
+    />
+
     <!-- Loading Overlay -->
     <!-- <div v-if="loading" :class="$style.loadingOverlay">
       <div :class="$style.loadingSpinner">
@@ -228,6 +243,7 @@ import BulkActionModal from '../../../components/BulkActionModal/BulkActionModal
 import AddUsersToGroupModal from '../../../components/AddUsersToGroupModal/AddUsersToGroupModal.vue'
 import UserRoleModal from '../../../components/UserRoleModal/UserRoleModal.vue'
 import ResetPasswordModal from '../../../components/ResetPasswordModal/ResetPasswordModal.vue'
+import BulkUploadModal from '../../../components/BulkUploadModal/BulkUploadModal.vue'
 import type { 
   User, 
   Group,
@@ -319,6 +335,9 @@ const selectedUserForRole = ref<User | null>(null)
 const resetPasswordModalVisible = ref(false)
 const selectedUserForResetPassword = ref<User | null>(null)
 const resetPasswordLoading = ref(false)
+
+// Bulk upload modal
+const bulkUploadModalVisible = ref(false)
 
 // Methods
 const setActiveTab = (tab: 'users' | 'groups') => {
@@ -853,6 +872,23 @@ const handleUserRoleChangeSuccess = async () => {
   
   // You could show a success notification here
   // showNotification(`Changed ${data.user.full_name}'s role from ${data.oldRole} to ${data.newRole}`)
+}
+
+// Bulk Upload Modal Functions
+const openBulkUploadModal = () => {
+  bulkUploadModalVisible.value = true
+}
+
+const closeBulkUploadModal = () => {
+  bulkUploadModalVisible.value = false
+}
+
+const handleBulkUploadSuccess = async () => {
+  // Refresh the data after successful bulk upload
+  await initialize()
+  
+  // Close the modal
+  closeBulkUploadModal()
 }
 
 // Lifecycle
