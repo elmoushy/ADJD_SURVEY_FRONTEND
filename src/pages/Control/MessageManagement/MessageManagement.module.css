@@ -552,6 +552,73 @@
   gap: 10px;
 }
 
+.fieldLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fileActionButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.downloadTemplateButton,
+.uploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.downloadTemplateButton {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.downloadTemplateButton:hover {
+  background-color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.uploadButton {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.uploadButton:hover {
+  background-color: #a7f3d0;
+  transform: translateY(-1px);
+}
+
+.page[data-theme="night"] .downloadTemplateButton {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.page[data-theme="night"] .downloadTemplateButton:hover {
+  background-color: rgba(59, 130, 246, 0.25);
+}
+
+.page[data-theme="night"] .uploadButton {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+}
+
+.page[data-theme="night"] .uploadButton:hover {
+  background-color: rgba(16, 185, 129, 0.25);
+}
+
 .fieldLabel {
   font-size: 15px;
   font-weight: 600;

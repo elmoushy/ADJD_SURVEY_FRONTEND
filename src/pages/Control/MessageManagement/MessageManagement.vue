@@ -53,6 +53,10 @@ const selectedCostCenterId = ref<number | null>(null)
 const recipientEmailInput = ref("")
 const ccEmailInput = ref("")
 
+// File input refs
+const recipientFileInput = ref<HTMLInputElement | null>(null)
+const ccFileInput = ref<HTMLInputElement | null>(null)
+
 // Form state
 const costCenterForm = reactive<CreateCostCenterRequest>({
   cost_center_code: "",
@@ -161,6 +165,220 @@ const removeCCEmail = (email: string) => {
   if (index > -1) {
     costCenterForm.cc_emails.splice(index, 1)
   }
+}
+
+// Download Excel template for emails
+const downloadEmailTemplate = (type: "recipient" | "cc") => {
+  // Create a simple CSV format (Excel compatible)
+  const csvContent = "البريد الإلكتروني\nuser1@example.com\nuser2@example.com\nuser3@example.com"
+  const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" })
+  const link = document.createElement("a")
+  const url = URL.createObjectURL(blob)
+  
+  link.setAttribute("href", url)
+  link.setAttribute("download", type === "recipient" ? "recipients_template.csv" : "cc_template.csv")
+  link.style.visibility = "hidden"
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+// Upload Excel file for recipients
+const handleRecipientFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  // Check file type
+  const validTypes = [
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  ]
+  
+  if (!validTypes.includes(file.type) && !file.name.endsWith(".csv")) {
+    Swal.fire({
+      title: "خطأ",
+      text: "يرجى تحميل ملف CSV أو Excel فقط",
+      icon: "error",
+      confirmButtonText: "حسناً",
+    })
+    target.value = ""
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target?.result as string
+    const emails = parseEmailsFromCSV(text)
+    
+    if (emails.length === 0) {
+      Swal.fire({
+        title: "تنبيه",
+        text: "لم يتم العثور على رسائل بريد إلكتروني صالحة في الملف",
+        icon: "warning",
+        confirmButtonText: "حسناً",
+      })
+      target.value = ""
+      return
+    }
+    
+    // Add valid emails to recipient list
+    if (!costCenterForm.recipient_emails) {
+      costCenterForm.recipient_emails = []
+    }
+    
+    let addedCount = 0
+    let duplicateCount = 0
+    let invalidCount = 0
+    
+    emails.forEach(email => {
+      if (!isValidEmail(email)) {
+        invalidCount++
+      } else if (costCenterForm.recipient_emails!.includes(email)) {
+        duplicateCount++
+      } else {
+        costCenterForm.recipient_emails!.push(email)
+        addedCount++
+      }
+    })
+    
+    let message = `تم إضافة ${addedCount} بريد إلكتروني بنجاح`
+    if (duplicateCount > 0) {
+      message += `\nتم تجاهل ${duplicateCount} بريد مكرر`
+    }
+    if (invalidCount > 0) {
+      message += `\nتم تجاهل ${invalidCount} بريد غير صالح`
+    }
+    
+    Swal.fire({
+      title: "نجح",
+      text: message,
+      icon: "success",
+      confirmButtonText: "حسناً",
+    })
+    
+    target.value = ""
+  }
+  
+  reader.readAsText(file)
+}
+
+// Upload Excel file for CC
+const handleCCFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  // Check file type
+  const validTypes = [
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  ]
+  
+  if (!validTypes.includes(file.type) && !file.name.endsWith(".csv")) {
+    Swal.fire({
+      title: "خطأ",
+      text: "يرجى تحميل ملف CSV أو Excel فقط",
+      icon: "error",
+      confirmButtonText: "حسناً",
+    })
+    target.value = ""
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target?.result as string
+    const emails = parseEmailsFromCSV(text)
+    
+    if (emails.length === 0) {
+      Swal.fire({
+        title: "تنبيه",
+        text: "لم يتم العثور على رسائل بريد إلكتروني صالحة في الملف",
+        icon: "warning",
+        confirmButtonText: "حسناً",
+      })
+      target.value = ""
+      return
+    }
+    
+    // Add valid emails to CC list
+    if (!costCenterForm.cc_emails) {
+      costCenterForm.cc_emails = []
+    }
+    
+    let addedCount = 0
+    let duplicateCount = 0
+    let invalidCount = 0
+    
+    emails.forEach(email => {
+      if (!isValidEmail(email)) {
+        invalidCount++
+      } else if (costCenterForm.cc_emails!.includes(email)) {
+        duplicateCount++
+      } else {
+        costCenterForm.cc_emails!.push(email)
+        addedCount++
+      }
+    })
+    
+    let message = `تم إضافة ${addedCount} بريد إلكتروني بنجاح`
+    if (duplicateCount > 0) {
+      message += `\nتم تجاهل ${duplicateCount} بريد مكرر`
+    }
+    if (invalidCount > 0) {
+      message += `\nتم تجاهل ${invalidCount} بريد غير صالح`
+    }
+    
+    Swal.fire({
+      title: "نجح",
+      text: message,
+      icon: "success",
+      confirmButtonText: "حسناً",
+    })
+    
+    target.value = ""
+  }
+  
+  reader.readAsText(file)
+}
+
+// Parse emails from CSV content
+const parseEmailsFromCSV = (csvContent: string): string[] => {
+  const emails: string[] = []
+  const lines = csvContent.split(/\r?\n/)
+  
+  // Skip header row if it exists
+  const startIndex = lines[0]?.toLowerCase().includes("email") || lines[0]?.includes("بريد") ? 1 : 0
+  
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+    
+    // Handle both comma and semicolon separators
+    const parts = line.split(/[,;]/)
+    parts.forEach(part => {
+      const email = part.trim().replace(/['"]/g, "")
+      if (email && email.includes("@")) {
+        emails.push(email)
+      }
+    })
+  }
+  
+  return emails
+}
+
+// Trigger file input click
+const triggerRecipientFileUpload = () => {
+  recipientFileInput.value?.click()
+}
+
+const triggerCCFileUpload = () => {
+  ccFileInput.value?.click()
 }
 
 // Fetch all users
@@ -1043,7 +1261,44 @@ onMounted(() => {
 
             <!-- Recipient Emails (TO Field) -->
             <div :class="$style.formField">
-              <label :class="$style.fieldLabel">المستلمين (TO)</label>
+              <div :class="$style.fieldLabelRow">
+                <label :class="$style.fieldLabel">المستلمين (TO)</label>
+                <div :class="$style.fileActionButtons">
+                  <button
+                    type="button"
+                    :class="$style.downloadTemplateButton"
+                    @click="downloadEmailTemplate('recipient')"
+                    title="تحميل قالب Excel"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M4.66797 6.66669L8.0013 10L11.3346 6.66669" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8 10V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    تحميل قالب
+                  </button>
+                  <button
+                    type="button"
+                    :class="$style.uploadButton"
+                    @click="triggerRecipientFileUpload"
+                    title="رفع ملف Excel"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M11.3346 5.33331L8.0013 1.99998L4.66797 5.33331" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8 2V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    رفع ملف
+                  </button>
+                  <input
+                    ref="recipientFileInput"
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    style="display: none;"
+                    @change="handleRecipientFileUpload"
+                  />
+                </div>
+              </div>
               
               <!-- Selected Recipients -->
               <div v-if="costCenterForm.recipient_emails && costCenterForm.recipient_emails.length" :class="$style.selectedChipsContainer">
@@ -1088,12 +1343,49 @@ onMounted(() => {
               <span v-if="getFieldError('recipient_emails')" :class="$style.errorText">
                 {{ getFieldError('recipient_emails') }}
               </span>
-              <small :class="$style.fieldHint">المستلمون الرئيسيون للرسائل - أدخل البريد الإلكتروني واضغط "إضافة" أو Enter</small>
+              <small :class="$style.fieldHint">المستلمون الرئيسيون للرسائل - أدخل البريد الإلكتروني يدوياً أو ارفع ملف Excel</small>
             </div>
 
             <!-- CC Emails -->
             <div :class="$style.formField">
-              <label :class="$style.fieldLabel">نسخة كربونية (CC)</label>
+              <div :class="$style.fieldLabelRow">
+                <label :class="$style.fieldLabel">نسخة كربونية (CC)</label>
+                <div :class="$style.fileActionButtons">
+                  <button
+                    type="button"
+                    :class="$style.downloadTemplateButton"
+                    @click="downloadEmailTemplate('cc')"
+                    title="تحميل قالب Excel"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M4.66797 6.66669L8.0013 10L11.3346 6.66669" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8 10V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    تحميل قالب
+                  </button>
+                  <button
+                    type="button"
+                    :class="$style.uploadButton"
+                    @click="triggerCCFileUpload"
+                    title="رفع ملف Excel"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M14 10V12.6667C14 13.0203 13.8595 13.3594 13.6095 13.6095C13.3594 13.8595 13.0203 14 12.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M11.3346 5.33331L8.0013 1.99998L4.66797 5.33331" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8 2V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    رفع ملف
+                  </button>
+                  <input
+                    ref="ccFileInput"
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    style="display: none;"
+                    @change="handleCCFileUpload"
+                  />
+                </div>
+              </div>
               
               <!-- Selected CCs -->
               <div v-if="costCenterForm.cc_emails && costCenterForm.cc_emails.length" :class="$style.selectedChipsContainer">
@@ -1138,7 +1430,7 @@ onMounted(() => {
               <span v-if="getFieldError('cc_emails')" :class="$style.errorText">
                 {{ getFieldError('cc_emails') }}
               </span>
-              <small :class="$style.fieldHint">المديرون والمشرفون الذين يحتاجون إلى متابعة الرسائل - أدخل البريد الإلكتروني واضغط "إضافة" أو Enter</small>
+              <small :class="$style.fieldHint">المديرون والمشرفون الذين يحتاجون إلى متابعة الرسائل - أدخل البريد الإلكتروني يدوياً أو ارفع ملف Excel</small>
             </div>
 
             <div :class="$style.formField">
