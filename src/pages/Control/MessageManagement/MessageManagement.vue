@@ -49,15 +49,9 @@ const costCenterModalVisible = ref(false)
 const costCenterModalMode = ref<"create" | "edit">("create")
 const selectedCostCenterId = ref<number | null>(null)
 
-// Searchable dropdown state
-const recipientSearchQuery = ref("")
-const ccSearchQuery = ref("")
-const showRecipientDropdown = ref(false)
-const showCCDropdown = ref(false)
-const recipientInputRef = ref<HTMLInputElement | null>(null)
-const ccInputRef = ref<HTMLInputElement | null>(null)
-const recipientDropdownPosition = ref({ top: 0, left: 0, width: 0 })
-const ccDropdownPosition = ref({ top: 0, left: 0, width: 0 })
+// Email input state
+const recipientEmailInput = ref("")
+const ccEmailInput = ref("")
 
 // Form state
 const costCenterForm = reactive<CreateCostCenterRequest>({
@@ -73,59 +67,46 @@ const costCenterForm = reactive<CreateCostCenterRequest>({
 
 const formErrors = ref<Record<string, string[]>>({})
 
-// Filtered users for dropdowns
-const filteredRecipientUsers = computed(() => {
-  const query = recipientSearchQuery.value.toLowerCase()
-  const selectedEmails = new Set(costCenterForm.recipient_emails || [])
-  
-  let available = users.value.filter(u => !selectedEmails.has(u.email))
-  
-  if (query) {
-    available = available.filter(u => 
-      u.full_name.toLowerCase().includes(query) || 
-      u.email.toLowerCase().includes(query)
-    )
-  }
-  
-  return available
-})
-
-const filteredCCUsers = computed(() => {
-  const query = ccSearchQuery.value.toLowerCase()
-  const selectedEmails = new Set(costCenterForm.cc_emails || [])
-  
-  let available = users.value.filter(u => !selectedEmails.has(u.email))
-  
-  if (query) {
-    available = available.filter(u => 
-      u.full_name.toLowerCase().includes(query) || 
-      u.email.toLowerCase().includes(query)
-    )
-  }
-  
-  return available
-})
-
-const selectedRecipients = computed(() => {
-  const selectedEmails = new Set(costCenterForm.recipient_emails || [])
-  return users.value.filter(u => selectedEmails.has(u.email))
-})
-
-const selectedCCs = computed(() => {
-  const selectedEmails = new Set(costCenterForm.cc_emails || [])
-  return users.value.filter(u => selectedEmails.has(u.email))
-})
+// Email validation helper
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
 
 // Add recipient email
-const addRecipientEmail = (email: string) => {
+const addRecipientEmail = () => {
+  const email = recipientEmailInput.value.trim()
+  
+  if (!email) {
+    return
+  }
+  
+  if (!isValidEmail(email)) {
+    Swal.fire({
+      title: "خطأ",
+      text: "البريد الإلكتروني غير صالح",
+      icon: "error",
+      confirmButtonText: "حسناً",
+    })
+    return
+  }
+  
   if (!costCenterForm.recipient_emails) {
     costCenterForm.recipient_emails = []
   }
-  if (!costCenterForm.recipient_emails.includes(email)) {
-    costCenterForm.recipient_emails.push(email)
+  
+  if (costCenterForm.recipient_emails.includes(email)) {
+    Swal.fire({
+      title: "تنبيه",
+      text: "البريد الإلكتروني موجود بالفعل",
+      icon: "warning",
+      confirmButtonText: "حسناً",
+    })
+    return
   }
-  showRecipientDropdown.value = false
-  recipientSearchQuery.value = ""
+  
+  costCenterForm.recipient_emails.push(email)
+  recipientEmailInput.value = ""
 }
 
 // Remove recipient email
@@ -138,15 +119,39 @@ const removeRecipientEmail = (email: string) => {
 }
 
 // Add CC email
-const addCCEmail = (email: string) => {
+const addCCEmail = () => {
+  const email = ccEmailInput.value.trim()
+  
+  if (!email) {
+    return
+  }
+  
+  if (!isValidEmail(email)) {
+    Swal.fire({
+      title: "خطأ",
+      text: "البريد الإلكتروني غير صالح",
+      icon: "error",
+      confirmButtonText: "حسناً",
+    })
+    return
+  }
+  
   if (!costCenterForm.cc_emails) {
     costCenterForm.cc_emails = []
   }
-  if (!costCenterForm.cc_emails.includes(email)) {
-    costCenterForm.cc_emails.push(email)
+  
+  if (costCenterForm.cc_emails.includes(email)) {
+    Swal.fire({
+      title: "تنبيه",
+      text: "البريد الإلكتروني موجود بالفعل",
+      icon: "warning",
+      confirmButtonText: "حسناً",
+    })
+    return
   }
-  showCCDropdown.value = false
-  ccSearchQuery.value = ""
+  
+  costCenterForm.cc_emails.push(email)
+  ccEmailInput.value = ""
 }
 
 // Remove CC email
@@ -156,50 +161,6 @@ const removeCCEmail = (email: string) => {
   if (index > -1) {
     costCenterForm.cc_emails.splice(index, 1)
   }
-}
-
-// Delayed close for dropdowns (to allow click on dropdown items)
-const delayedCloseRecipientDropdown = () => {
-  window.setTimeout(() => showRecipientDropdown.value = false, 300)
-}
-
-const delayedCloseCCDropdown = () => {
-  window.setTimeout(() => showCCDropdown.value = false, 300)
-}
-
-// Update dropdown position when opening
-const updateRecipientDropdownPosition = () => {
-  if (recipientInputRef.value) {
-    const rect = recipientInputRef.value.getBoundingClientRect()
-    recipientDropdownPosition.value = {
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-      width: rect.width
-    }
-  }
-}
-
-const updateCCDropdownPosition = () => {
-  if (ccInputRef.value) {
-    const rect = ccInputRef.value.getBoundingClientRect()
-    ccDropdownPosition.value = {
-      top: rect.bottom + window.scrollY,
-      left: rect.left + window.scrollX,
-      width: rect.width
-    }
-  }
-}
-
-// Open recipient dropdown
-const openRecipientDropdown = () => {
-  updateRecipientDropdownPosition()
-  showRecipientDropdown.value = true
-}
-
-// Open CC dropdown
-const openCCDropdown = () => {
-  updateCCDropdownPosition()
-  showCCDropdown.value = true
 }
 
 // Fetch all users
@@ -253,16 +214,10 @@ const fetchCostCenters = async () => {
 }
 
 // Open create modal
-const openCreateModal = async () => {
+const openCreateModal = () => {
   costCenterModalMode.value = "create"
   selectedCostCenterId.value = null
   resetForm()
-  
-  // Fetch users if not already loaded
-  if (users.value.length === 0) {
-    await fetchUsers()
-  }
-  
   costCenterModalVisible.value = true
 }
 
@@ -270,11 +225,6 @@ const openCreateModal = async () => {
 const openEditModal = async (id: number) => {
   try {
     isLoading.value = true
-    
-    // Fetch users if not already loaded
-    if (users.value.length === 0) {
-      await fetchUsers()
-    }
     
     const costCenter = await messageManagementAPI.getCostCenterDetails(id)
     
@@ -321,6 +271,8 @@ const resetForm = () => {
   costCenterForm.is_active = true
   costCenterForm.recipient_emails = []
   costCenterForm.cc_emails = []
+  recipientEmailInput.value = ""
+  ccEmailInput.value = ""
   formErrors.value = {}
 }
 
@@ -1094,20 +1046,19 @@ onMounted(() => {
               <label :class="$style.fieldLabel">المستلمين (TO)</label>
               
               <!-- Selected Recipients -->
-              <div v-if="selectedRecipients.length" :class="$style.selectedChipsContainer">
+              <div v-if="costCenterForm.recipient_emails && costCenterForm.recipient_emails.length" :class="$style.selectedChipsContainer">
                 <div
-                  v-for="recipient in selectedRecipients"
-                  :key="recipient.email"
+                  v-for="email in costCenterForm.recipient_emails"
+                  :key="email"
                   :class="$style.userChip"
                 >
                   <div :class="$style.userChipContent">
-                    <span :class="$style.userChipName">{{ recipient.full_name }}</span>
-                    <span :class="$style.userChipEmail">{{ recipient.email }}</span>
+                    <span :class="$style.userChipEmail">{{ email }}</span>
                   </div>
                   <button
                     type="button"
                     :class="$style.chipRemove"
-                    @click="removeRecipientEmail(recipient.email)"
+                    @click="removeRecipientEmail(email)"
                     title="إزالة"
                   >
                     &times;
@@ -1115,23 +1066,29 @@ onMounted(() => {
                 </div>
               </div>
 
-              <!-- Searchable Dropdown -->
-              <div :class="$style.searchableDropdown">
+              <!-- Email Input -->
+              <div :class="$style.emailInputGroup">
                 <input
-                  ref="recipientInputRef"
-                  v-model="recipientSearchQuery"
-                  type="text"
+                  v-model="recipientEmailInput"
+                  type="email"
                   :class="[$style.fieldInput, getFieldError('recipient_emails') ? $style.fieldError : '']"
-                  placeholder="ابحث عن مستخدم لإضافته كمستلم"
-                  @focus="openRecipientDropdown"
-                  @blur="delayedCloseRecipientDropdown"
+                  placeholder="أدخل البريد الإلكتروني واضغط إضافة (مثال: user@example.com)"
+                  @keyup.enter="addRecipientEmail"
                 />
+                <button
+                  type="button"
+                  :class="$style.addEmailButton"
+                  @click="addRecipientEmail"
+                  title="إضافة بريد إلكتروني"
+                >
+                  إضافة
+                </button>
               </div>
               
               <span v-if="getFieldError('recipient_emails')" :class="$style.errorText">
                 {{ getFieldError('recipient_emails') }}
               </span>
-              <small :class="$style.fieldHint">المستلمون الرئيسيون للرسائل</small>
+              <small :class="$style.fieldHint">المستلمون الرئيسيون للرسائل - أدخل البريد الإلكتروني واضغط "إضافة" أو Enter</small>
             </div>
 
             <!-- CC Emails -->
@@ -1139,20 +1096,19 @@ onMounted(() => {
               <label :class="$style.fieldLabel">نسخة كربونية (CC)</label>
               
               <!-- Selected CCs -->
-              <div v-if="selectedCCs.length" :class="$style.selectedChipsContainer">
+              <div v-if="costCenterForm.cc_emails && costCenterForm.cc_emails.length" :class="$style.selectedChipsContainer">
                 <div
-                  v-for="cc in selectedCCs"
-                  :key="cc.email"
+                  v-for="email in costCenterForm.cc_emails"
+                  :key="email"
                   :class="$style.userChip"
                 >
                   <div :class="$style.userChipContent">
-                    <span :class="$style.userChipName">{{ cc.full_name }}</span>
-                    <span :class="$style.userChipEmail">{{ cc.email }}</span>
+                    <span :class="$style.userChipEmail">{{ email }}</span>
                   </div>
                   <button
                     type="button"
                     :class="$style.chipRemove"
-                    @click="removeCCEmail(cc.email)"
+                    @click="removeCCEmail(email)"
                     title="إزالة"
                   >
                     &times;
@@ -1160,23 +1116,29 @@ onMounted(() => {
                 </div>
               </div>
 
-              <!-- Searchable Dropdown -->
-              <div :class="$style.searchableDropdown">
+              <!-- Email Input -->
+              <div :class="$style.emailInputGroup">
                 <input
-                  ref="ccInputRef"
-                  v-model="ccSearchQuery"
-                  type="text"
+                  v-model="ccEmailInput"
+                  type="email"
                   :class="[$style.fieldInput, getFieldError('cc_emails') ? $style.fieldError : '']"
-                  placeholder="ابحث عن مستخدم لإضافته في CC"
-                  @focus="openCCDropdown"
-                  @blur="delayedCloseCCDropdown"
+                  placeholder="أدخل البريد الإلكتروني واضغط إضافة (مثال: user@example.com)"
+                  @keyup.enter="addCCEmail"
                 />
+                <button
+                  type="button"
+                  :class="$style.addEmailButton"
+                  @click="addCCEmail"
+                  title="إضافة بريد إلكتروني"
+                >
+                  إضافة
+                </button>
               </div>
               
               <span v-if="getFieldError('cc_emails')" :class="$style.errorText">
                 {{ getFieldError('cc_emails') }}
               </span>
-              <small :class="$style.fieldHint">المديرون والمشرفون الذين يحتاجون إلى متابعة الرسائل</small>
+              <small :class="$style.fieldHint">المديرون والمشرفون الذين يحتاجون إلى متابعة الرسائل - أدخل البريد الإلكتروني واضغط "إضافة" أو Enter</small>
             </div>
 
             <div :class="$style.formField">
@@ -1200,68 +1162,6 @@ onMounted(() => {
             </button>
           </footer>
         </section>
-      </div>
-    </teleport>
-
-    <!-- Recipient Dropdown (Teleported) -->
-    <teleport to="body">
-      <div
-        v-if="showRecipientDropdown && costCenterModalVisible"
-        :class="$style.dropdownMenuTeleported"
-        :style="{
-          top: `${recipientDropdownPosition.top}px`,
-          left: `${recipientDropdownPosition.left}px`,
-          width: `${recipientDropdownPosition.width}px`
-        }"
-      >
-        <div v-if="filteredRecipientUsers.length" :class="$style.dropdownScroll">
-          <button
-            v-for="user in filteredRecipientUsers"
-            :key="user.id"
-            type="button"
-            :class="$style.dropdownItem"
-            @mousedown.prevent="addRecipientEmail(user.email)"
-          >
-            <div :class="$style.dropdownItemContent">
-              <span :class="$style.userName">{{ user.full_name }}</span>
-              <span :class="$style.userEmail">{{ user.email }}</span>
-            </div>
-          </button>
-        </div>
-        <div v-else :class="$style.dropdownEmpty">
-          لا توجد نتائج
-        </div>
-      </div>
-    </teleport>
-
-    <!-- CC Dropdown (Teleported) -->
-    <teleport to="body">
-      <div
-        v-if="showCCDropdown && costCenterModalVisible"
-        :class="$style.dropdownMenuTeleported"
-        :style="{
-          top: `${ccDropdownPosition.top}px`,
-          left: `${ccDropdownPosition.left}px`,
-          width: `${ccDropdownPosition.width}px`
-        }"
-      >
-        <div v-if="filteredCCUsers.length" :class="$style.dropdownScroll">
-          <button
-            v-for="user in filteredCCUsers"
-            :key="user.id"
-            type="button"
-            :class="$style.dropdownItem"
-            @mousedown.prevent="addCCEmail(user.email)"
-          >
-            <div :class="$style.dropdownItemContent">
-              <span :class="$style.userName">{{ user.full_name }}</span>
-              <span :class="$style.userEmail">{{ user.email }}</span>
-            </div>
-          </button>
-        </div>
-        <div v-else :class="$style.dropdownEmpty">
-          لا توجد نتائج
-        </div>
       </div>
     </teleport>
 
