@@ -194,7 +194,7 @@ defineExpose({
               v-model="formData.subject"
               type="text"
               :class="[$style.fieldInput, getFieldError('subject') ? $style.fieldError : '']"
-              placeholder="مثال: Welcome to WeaponPowerCloud"
+              placeholder="مثال: Welcome to ADJD"
             />
             <span v-if="getFieldError('subject')" :class="$style.errorText">
               {{ getFieldError('subject') }}

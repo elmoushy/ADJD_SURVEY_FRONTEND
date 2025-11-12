@@ -251,8 +251,8 @@
           <p :class="styles.heroSubtitle">
             {{
               isLogin
-                ? 'Access your WPC | WeaponpowerCloud App dashboard and continue your innovation journey with cutting-edge technology and seamless experiences.'
-                : 'Begin your journey with WPC | WeaponpowerCloud App and unlock access to next-generation tools, insights, and innovation platforms designed for the future.'
+                ? 'Access your WPC | ADJD App dashboard and continue your innovation journey with cutting-edge technology and seamless experiences.'
+                : 'Begin your journey with WPC | ADJD App and unlock access to next-generation tools, insights, and innovation platforms designed for the future.'
             }}
           </p>
           

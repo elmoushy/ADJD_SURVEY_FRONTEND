@@ -15,7 +15,7 @@
         <header :class="styles.floatingHeader">
           <div :class="styles.logoContainer">
             <img src="/News-Logo.png" alt="WeaponpowerCloud" :class="styles.logo" />
-            <span :class="styles.brandName">WPA | WeaponpowerCloud</span>
+            <span :class="styles.brandName">WPA | ADJD</span>
           </div>
           <div :class="styles.statusIndicator">
             <span :class="styles.statusDot"></span>
