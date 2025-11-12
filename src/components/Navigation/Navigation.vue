@@ -548,13 +548,37 @@ const closeAllDropdowns = () => {
   showUserMenu.value = false
 }
 
-// Generate avatar URL from email (using Gravatar as fallback)
+// Generate avatar offline using SVG data URL
 const generateAvatarUrl = (email: string) => {
   if (!email) return ''
   
-  // Use UI Avatars service as a fallback
-  const name = userDisplayName.value ? encodeURIComponent(userDisplayName.value) : 'User'
-  return `https://ui-avatars.com/api/?name=${name}&background=667eea&color=fff&size=128&rounded=true`
+  const name = userDisplayName.value || 'User'
+  
+  // Get initials from name (supports Arabic and English)
+  const getInitials = (fullName: string): string => {
+    const words = fullName.trim().split(/\s+/).filter(w => w.length > 0)
+    if (words.length === 0) return 'U'
+    if (words.length === 1) return words[0].substring(0, 2).toUpperCase()
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase()
+  }
+  
+  const initials = getInitials(name)
+  const backgroundColor = '#667eea'
+  const textColor = '#ffffff'
+  
+  // Create SVG avatar
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+      <circle cx="64" cy="64" r="64" fill="${backgroundColor}"/>
+      <text x="50%" y="50%" text-anchor="middle" dy="0.35em" 
+            font-family="Arial, sans-serif" font-size="48" font-weight="500" fill="${textColor}">
+        ${initials}
+      </text>
+    </svg>
+  `.trim()
+  
+  // Convert SVG to data URL
+  return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svg)))}`
 }
 
 // Handle JWT logout
