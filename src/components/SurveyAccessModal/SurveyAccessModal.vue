@@ -38,7 +38,7 @@
                 <div :class="$style.optionLeft">
                   <!-- <i class="fas fa-globe" :class="[$style.optionIcon, $style.public]"></i> -->
                   <div :class="$style.optionText">
-                    <span :class="$style.optionTitle">{{ getText('survey.access.public.title') }}</span>
+                    <span :class="$style.optionTitle">عام - (داخل و خارج دائرة القضاء)</span>
                     <small :class="$style.optionDescription">{{ getText('survey.access.public.description') }}</small>
                   </div>
                 </div>
@@ -370,7 +370,7 @@
                 <div :class="$style.optionLeft">
                   <!-- <i class="fas fa-users" :class="[$style.optionIcon, $style.auth]"></i> -->
                   <div :class="$style.optionText">
-                    <span :class="$style.optionTitle">{{ getText('survey.access.authenticated.title') }}</span>
+                    <span :class="$style.optionTitle">جميع إدارات دائرة القضاء</span>
                     <small :class="$style.optionDescription">{{ getText('survey.access.authenticated.description') }}</small>
                   </div>
                 </div>

@@ -953,6 +953,17 @@ const closeEmailDetailModal = () => {
 
       <!-- Pagination -->
       <div v-if="!loading && totalCount > 0" :class="$style.pagination">
+                <button
+          :class="$style.paginationButton"
+          :disabled="currentPage >= totalPages"
+          @click="goToNextPage"
+        >
+          التالي →
+        </button>
+
+        <span :class="$style.paginationInfo">
+          صفحة {{ currentPage }} من {{ totalPages }} ({{ totalCount }} عنصر)
+        </span>
         <button
           :class="$style.paginationButton"
           :disabled="currentPage === 1"
@@ -960,17 +971,7 @@ const closeEmailDetailModal = () => {
         >
           ← السابق
         </button>
-        <span :class="$style.paginationInfo">
-          صفحة {{ currentPage }} من {{ totalPages }} ({{ totalCount }} عنصر)
-        </span>
-        <button
-          :class="$style.paginationButton"
-          :disabled="currentPage >= totalPages"
-          @click="goToNextPage"
-        >
-          التالي →
-        </button>
-      </div>
+            </div>
     </div>
 
     <teleport to="body">

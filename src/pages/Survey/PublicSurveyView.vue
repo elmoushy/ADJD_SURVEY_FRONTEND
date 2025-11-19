@@ -128,7 +128,7 @@
       <!-- All Questions View (Google Forms Style) -->
       <div v-if="showAllQuestions" :class="$style.allQuestionsContainer">
         <div 
-          v-for="(question, index) in survey.questions" 
+          v-for="(question, index) in visibleQuestions" 
           :key="question.id"
           :class="$style.questionContainer"
         >
@@ -248,16 +248,16 @@
               <div :class="$style.yesNoContainer">
                 <div :class="$style.yesNoButtons">
                   <button
-                    :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[question.id] === 'yes' }]"
-                    @click="answers[question.id] = 'yes'"
+                    :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[question.id] === 'نعم' }]"
+                    @click="answers[question.id] = 'نعم'"
                     type="button"
                   >
                     <i class="fas fa-check" :class="$style.yesNoButtonIcon"></i>
                     <span :class="$style.yesNoButtonText">نعم</span>
                   </button>
                   <button
-                    :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[question.id] === 'no' }]"
-                    @click="answers[question.id] = 'no'"
+                    :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[question.id] === 'لا' }]"
+                    @click="answers[question.id] = 'لا'"
                     type="button"
                   >
                     <i class="fas fa-times" :class="$style.yesNoButtonIcon"></i>
@@ -520,10 +520,10 @@
             <div :class="$style.yesNoContainer">
               <div :class="$style.yesNoButtons">
                 <button
-                  :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[currentQuestion.id] === 'yes' }]"
-                  @click="answers[currentQuestion.id] = 'yes'"
+                  :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[currentQuestion.id] === 'نعم' }]"
+                  @click="answers[currentQuestion.id] = 'نعم'"
                   type="button"
-                  :aria-pressed="answers[currentQuestion.id] === 'yes'"
+                  :aria-pressed="answers[currentQuestion.id] === 'نعم'"
                 >
                   <i class="fas fa-check" :class="$style.yesNoButtonIcon"></i>
                   <span :class="$style.yesNoButtonText">نعم</span>
@@ -532,10 +532,10 @@
                   </div>
                 </button>
                 <button
-                  :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[currentQuestion.id] === 'no' }]"
-                  @click="answers[currentQuestion.id] = 'no'"
+                  :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[currentQuestion.id] === 'لا' }]"
+                  @click="answers[currentQuestion.id] = 'لا'"
                   type="button"
-                  :aria-pressed="answers[currentQuestion.id] === 'no'"
+                  :aria-pressed="answers[currentQuestion.id] === 'لا'"
                 >
                   <i class="fas fa-times" :class="$style.yesNoButtonIcon"></i>
                   <span :class="$style.yesNoButtonText">لا</span>
@@ -842,8 +842,8 @@ const canProceed = computed(() => {
 const canSubmit = computed(() => {
   if (!survey.value) return false
   
-  // Check all required questions have answers
-  for (const question of survey.value.questions) {
+  // Check all required questions that are visible have answers
+  for (const question of visibleQuestions.value) {
     if (question.is_required) {
       const answer = answers.value[question.id]
       if (question.question_type === 'multiple_choice') {
@@ -912,6 +912,24 @@ const filteredCountries = computed(() => {
 
 const selectedCountry = computed(() => {
   return countryCodes.find(country => country.dialCode === selectedCountryCode.value) || defaultCountry
+})
+
+// Filter questions based on conditional logic visibility
+const visibleQuestions = computed(() => {
+  if (!survey.value?.questions) return []
+  
+  return survey.value.questions.filter(question => {
+    // If no conditions, always visible
+    if (!question.conditional_on || question.conditional_on.length === 0) {
+      return true
+    }
+    
+    // Check if ANY condition is met (OR logic)
+    return question.conditional_on.some(condition => {
+      const triggerAnswer = answers.value[condition.trigger_question_id]
+      return triggerAnswer === condition.trigger_answer_value
+    })
+  })
 })
 
 const shouldShowContactForm = computed(() => {
@@ -1243,9 +1261,13 @@ const formatAnswersForSubmission = () => {
     answer: string | string[]
   }> = []
   
+  // Only include answers for visible questions
+  const visibleQuestionIds = new Set(visibleQuestions.value.map(q => q.id))
+  
   Object.entries(answers.value).forEach(([questionId, answer]) => {
-    // Only include answered questions
-    if (answer !== '' && answer !== null && answer !== undefined) {
+    // Only include answered questions that are currently visible
+    if (visibleQuestionIds.has(questionId) && 
+        answer !== '' && answer !== null && answer !== undefined) {
       if (Array.isArray(answer) && answer.length === 0) return
       
       formattedAnswers.push({

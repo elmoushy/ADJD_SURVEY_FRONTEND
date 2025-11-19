@@ -437,6 +437,129 @@
                 </div>
               </div>
             </div>
+
+            <!-- Conditional Logic Section -->
+            <div :class="$style.conditionalSection">
+              <div :class="$style.conditionalHeader">
+                <i class="fas fa-project-diagram"></i>
+                <span>{{ isRTL ? 'منطق الشرط' : 'Conditional Logic' }}</span>
+                <button 
+                  type="button"
+                  :class="$style.toggleConditionalButton"
+                  @click="toggleConditionalBuilder(index)"
+                  :title="isRTL ? 'إضافة شرط' : 'Add Condition'"
+                >
+                  <i :class="hasConditions(question) ? 'fas fa-edit' : 'fas fa-plus'"></i>
+                  <span>{{ hasConditions(question) ? (isRTL ? 'تعديل الشروط' : 'Edit Conditions') : (isRTL ? 'إضافة شرط' : 'Add Condition') }}</span>
+                </button>
+              </div>
+              
+              <!-- Show existing conditions summary -->
+              <div v-if="hasConditions(question)" :class="$style.conditionsSummary">
+                <div :class="$style.conditionSummaryItem">
+                  <i class="fas fa-info-circle"></i>
+                  <span>
+                    {{ isRTL ? 'يظهر هذا السؤال عندما:' : 'This question shows when:' }}
+                  </span>
+                </div>
+                <div 
+                  v-for="(condition, condIdx) in getQuestionConditions(question)" 
+                  :key="condIdx"
+                  :class="$style.conditionBadge"
+                >
+                  <span :class="$style.conditionText">
+                    {{ getConditionDisplayText(condition, index) }}
+                  </span>
+                  <button
+                    type="button"
+                    :class="$style.removeConditionBadgeButton"
+                    @click="removeConditionFromQuestion(index, condIdx)"
+                    :title="isRTL ? 'حذف الشرط' : 'Remove condition'"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div v-if="getQuestionConditions(question).length > 1" :class="$style.orLogicNote">
+                  <i class="fas fa-code-branch"></i>
+                  <span>{{ isRTL ? '(منطق OR: يظهر إذا تحقق أي شرط)' : '(OR logic: shows if ANY condition is met)' }}</span>
+                </div>
+              </div>
+              
+              <!-- Condition Builder (shown when toggled) -->
+              <div v-if="activeConditionBuilder === index" :class="$style.conditionBuilder">
+                <div :class="$style.conditionBuilderHeader">
+                  <i class="fas fa-magic"></i>
+                  <span>{{ isRTL ? 'إضافة شرط جديد' : 'Add New Condition' }}</span>
+                </div>
+                
+                <!-- Check if there are eligible trigger questions -->
+                <div v-if="getEligibleTriggerQuestions(index).length === 0" :class="$style.noTriggersMessage">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <p>{{ isRTL ? 'لا توجد أسئلة مؤهلة لتكون محفزات' : 'No eligible trigger questions available' }}</p>
+                  <small>{{ isRTL ? 'يمكن فقط لأسئلة "نعم/لا" و"اختيار واحد" التي تظهر قبل هذا السؤال أن تكون محفزات' : 'Only Yes/No and Single Choice questions that appear before this question can be triggers' }}</small>
+                </div>
+                
+                <div v-else :class="$style.conditionForm">
+                  <div :class="$style.conditionFormRow">
+                    <label :class="$style.conditionLabel">
+                      {{ isRTL ? 'عندما' : 'When' }}
+                    </label>
+                    <select 
+                      v-model="newConditionForm.trigger_question_tempId"
+                      :class="$style.conditionSelect"
+                      @change="onTriggerQuestionChange"
+                    >
+                      <option value="">{{ isRTL ? '-- اختر السؤال المحفز --' : '-- Select trigger question --' }}</option>
+                      <option 
+                        v-for="q in getEligibleTriggerQuestions(index)" 
+                        :key="q.tempId" 
+                        :value="q.tempId"
+                      >
+                        {{ isRTL ? `س${q.order}: ${q.text || 'سؤال بدون عنوان'}` : `Q${q.order}: ${q.text || 'Untitled question'}` }}
+                      </option>
+                    </select>
+                  </div>
+                  
+                  <div v-if="newConditionForm.trigger_question_tempId" :class="$style.conditionFormRow">
+                    <label :class="$style.conditionLabel">
+                      {{ isRTL ? 'يساوي' : 'Equals' }}
+                    </label>
+                    <select 
+                      v-model="newConditionForm.trigger_answer_value"
+                      :class="$style.conditionSelect"
+                    >
+                      <option value="">{{ isRTL ? '-- اختر الإجابة --' : '-- Select answer --' }}</option>
+                      <option 
+                        v-for="option in getSelectedTriggerOptions()" 
+                        :key="option" 
+                        :value="option"
+                      >
+                        {{ option }}
+                      </option>
+                    </select>
+                  </div>
+                  
+                  <div :class="$style.conditionFormActions">
+                    <button
+                      type="button"
+                      :class="[$style.conditionButton, $style.addConditionButton]"
+                      @click="addConditionToQuestion(index)"
+                      :disabled="!canAddCondition"
+                    >
+                      <i class="fas fa-plus"></i>
+                      <span>{{ isRTL ? 'إضافة شرط' : 'Add Condition' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      :class="[$style.conditionButton, $style.cancelConditionButton]"
+                      @click="cancelConditionBuilder"
+                    >
+                      <span>{{ isRTL ? 'إلغاء' : 'Cancel' }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Question Actions -->
@@ -803,6 +926,12 @@ const isRTL = computed(() => store.currentLanguage === 'ar')
 // Check if we're creating a template (no template prop provided)
 const isCreatingTemplate = computed(() => !props.template)
 
+// Check if we can add a condition
+const canAddCondition = computed(() => {
+  return newConditionForm.value.trigger_question_tempId !== '' && 
+         newConditionForm.value.trigger_answer_value !== ''
+})
+
 // State
 const surveyData = ref<{
   title: string
@@ -823,6 +952,19 @@ const surveyData = ref<{
     options_satisfaction_values?: (0 | 1 | 2 | null)[]
     // Validation field
     validation_type?: 'none' | 'email' | 'phone' | 'number' | 'url'
+    // Conditional logic fields
+    id?: string // For existing questions from backend
+    set_conditional_on?: Array<{
+      trigger_question_id: string
+      trigger_answer_value: string
+    }>
+    conditional_on?: Array<{
+      trigger_question_id: string
+      trigger_question_order: number
+      trigger_question_text: string
+      trigger_answer_value: string
+      condition_id: string
+    }>
   }>
 }>({
   title: '',
@@ -835,6 +977,16 @@ const activeQuestionIndex = ref<number | null>(null)
 const showPreview = ref(false)
 const draggedQuestionIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
+
+// Conditional logic state
+const activeConditionBuilder = ref<number | null>(null)
+const newConditionForm = ref<{
+  trigger_question_tempId: string
+  trigger_answer_value: string
+}>({
+  trigger_question_tempId: '',
+  trigger_answer_value: ''
+})
 
 // Scheduling and Settings State
 const showSchedulingModal = ref(false)
@@ -1060,7 +1212,14 @@ const initializeSurvey = () => {
             semantic_tag: q.semantic_tag || 'none',
             options_satisfaction_values: parsedSatisfactionValues,
             // Validation field
-            validation_type: q.validation_type || 'none'
+            validation_type: q.validation_type || 'none',
+            // Keep ID for existing questions
+            id: q.id,
+            // Conditional logic - convert conditional_on to set_conditional_on for editing
+            set_conditional_on: q.conditional_on ? q.conditional_on.map((cond: any) => ({
+              trigger_question_id: cond.trigger_question_id,
+              trigger_answer_value: cond.trigger_answer_value
+            })) : (q.set_conditional_on || [])
           }
         })
       }
@@ -1511,6 +1670,186 @@ const saveSurveySettings = () => {
   })
 }
 
+// Conditional Logic Methods
+const hasConditions = (question: any): boolean => {
+  return (question.set_conditional_on && question.set_conditional_on.length > 0) ||
+         (question.conditional_on && question.conditional_on.length > 0)
+}
+
+const getQuestionConditions = (question: any): any[] => {
+  // Return set_conditional_on (for new questions) or conditional_on (for existing questions from backend)
+  return question.set_conditional_on || question.conditional_on || []
+}
+
+const getEligibleTriggerQuestions = (currentIndex: number): any[] => {
+  // Only questions before the current one can be triggers
+  // Only yes_no and single_choice can be triggers
+  return surveyData.value.questions
+    .slice(0, currentIndex)
+    .filter(q => q.question_type === 'yes_no' || q.question_type === 'single_choice')
+}
+
+const getSelectedTriggerOptions = (): string[] => {
+  if (!newConditionForm.value.trigger_question_tempId) return []
+  
+  const triggerQuestion = surveyData.value.questions.find(
+    q => q.tempId === newConditionForm.value.trigger_question_tempId
+  )
+  
+  if (!triggerQuestion) return []
+  
+  if (triggerQuestion.question_type === 'yes_no') {
+    return [isRTL.value ? 'نعم' : 'Yes', isRTL.value ? 'لا' : 'No']
+  }
+  
+  if (triggerQuestion.question_type === 'single_choice') {
+    return triggerQuestion.options || []
+  }
+  
+  return []
+}
+
+const onTriggerQuestionChange = () => {
+  // Reset answer value when trigger question changes
+  newConditionForm.value.trigger_answer_value = ''
+}
+
+const toggleConditionalBuilder = (questionIndex: number) => {
+  if (activeConditionBuilder.value === questionIndex) {
+    activeConditionBuilder.value = null
+    resetConditionForm()
+  } else {
+    activeConditionBuilder.value = questionIndex
+    resetConditionForm()
+  }
+}
+
+const cancelConditionBuilder = () => {
+  activeConditionBuilder.value = null
+  resetConditionForm()
+}
+
+const resetConditionForm = () => {
+  newConditionForm.value = {
+    trigger_question_tempId: '',
+    trigger_answer_value: ''
+  }
+}
+
+const addConditionToQuestion = (questionIndex: number) => {
+  const question = surveyData.value.questions[questionIndex]
+  
+  if (!canAddCondition.value) {
+    Swal.fire({
+      icon: 'warning',
+      title: isRTL.value ? 'تحذير' : 'Warning',
+      text: isRTL.value ? 'يرجى اختيار السؤال المحفز والإجابة' : 'Please select trigger question and answer',
+      confirmButtonText: isRTL.value ? 'موافق' : 'OK'
+    })
+    return
+  }
+  
+  const triggerQuestion = surveyData.value.questions.find(
+    q => q.tempId === newConditionForm.value.trigger_question_tempId
+  )
+  
+  if (!triggerQuestion) return
+  
+  // Check for duplicate condition
+  const conditions = question.set_conditional_on || []
+  const isDuplicate = conditions.some(c => 
+    c.trigger_question_id === (triggerQuestion.id || triggerQuestion.tempId) &&
+    c.trigger_answer_value === newConditionForm.value.trigger_answer_value
+  )
+  
+  if (isDuplicate) {
+    Swal.fire({
+      icon: 'warning',
+      title: isRTL.value ? 'تحذير' : 'Warning',
+      text: isRTL.value ? 'هذا الشرط موجود بالفعل' : 'This condition already exists',
+      confirmButtonText: isRTL.value ? 'موافق' : 'OK'
+    })
+    return
+  }
+  
+  // Initialize set_conditional_on if needed
+  if (!question.set_conditional_on) {
+    question.set_conditional_on = []
+  }
+  
+  // Add new condition
+  question.set_conditional_on.push({
+    trigger_question_id: triggerQuestion.id || triggerQuestion.tempId,
+    trigger_answer_value: newConditionForm.value.trigger_answer_value
+  })
+  
+  // Reset form and close builder
+  resetConditionForm()
+  activeConditionBuilder.value = null
+  
+  Swal.fire({
+    icon: 'success',
+    title: isRTL.value ? 'تمت الإضافة' : 'Added',
+    text: isRTL.value ? 'تمت إضافة الشرط بنجاح' : 'Condition added successfully',
+    timer: 1500,
+    showConfirmButton: false
+  })
+}
+
+const removeConditionFromQuestion = async (questionIndex: number, conditionIndex: number) => {
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: isRTL.value ? 'تأكيد الحذف' : 'Confirm Delete',
+    text: isRTL.value ? 'هل تريد حذف هذا الشرط؟' : 'Do you want to delete this condition?',
+    showCancelButton: true,
+    confirmButtonText: isRTL.value ? 'حذف' : 'Delete',
+    cancelButtonText: isRTL.value ? 'إلغاء' : 'Cancel',
+    confirmButtonColor: '#d33'
+  })
+  
+  if (result.isConfirmed) {
+    const question = surveyData.value.questions[questionIndex]
+    
+    if (question.set_conditional_on && question.set_conditional_on.length > conditionIndex) {
+      question.set_conditional_on.splice(conditionIndex, 1)
+      
+      // If no conditions left, remove the array
+      if (question.set_conditional_on.length === 0) {
+        delete question.set_conditional_on
+      }
+    }
+    
+    Swal.fire({
+      icon: 'success',
+      title: isRTL.value ? 'تم الحذف' : 'Deleted',
+      text: isRTL.value ? 'تم حذف الشرط بنجاح' : 'Condition deleted successfully',
+      timer: 1500,
+      showConfirmButton: false
+    })
+  }
+}
+
+const getConditionDisplayText = (condition: any, _questionIndex: number): string => {
+  // Find the trigger question
+  let triggerQuestion
+  
+  // Try to find by ID first (for existing questions)
+  if (condition.trigger_question_id) {
+    triggerQuestion = surveyData.value.questions.find(
+      q => q.id === condition.trigger_question_id || q.tempId === condition.trigger_question_id
+    )
+  }
+  
+  if (!triggerQuestion) return isRTL.value ? 'شرط غير صالح' : 'Invalid condition'
+  
+  const questionNumber = triggerQuestion.order || (surveyData.value.questions.indexOf(triggerQuestion) + 1)
+  const answerValue = condition.trigger_answer_value
+  
+  return isRTL.value 
+    ? `س${questionNumber} = "${answerValue}"`
+    : `Q${questionNumber} = "${answerValue}"`
+}
+
 const handleBack = async () => {
   const result = await Swal.fire({
     icon: 'warning',
@@ -1535,23 +1874,54 @@ const prepareSurveyData = () => {
     is_active: surveySettings.value.is_active,
     start_date: schedulingSettings.value.start_date,
     end_date: schedulingSettings.value.end_date,
-    questions: surveyData.value.questions.map(q => ({
-      text: q.text,
-      question_type: q.question_type,
-      options: needsOptions(q.question_type) ? JSON.stringify(q.options) : undefined,
-      is_required: q.is_required,
-      order: q.order,
-      // Analytics fields
-      NPS_Calculate: q.NPS_Calculate || false,
-      CSAT_Calculate: q.CSAT_Calculate || false,
-      min_scale: q.min_scale !== undefined ? q.min_scale : 0,
-      max_scale: q.max_scale !== undefined ? q.max_scale : 5,
-      options_satisfaction_values: q.options_satisfaction_values && q.options_satisfaction_values.length > 0 
-        ? JSON.stringify(q.options_satisfaction_values) 
-        : undefined,
-      // Validation field
-      validation_type: q.validation_type || 'none'
-    }))
+    questions: surveyData.value.questions.map(q => {
+      const questionData: any = {
+        // CRITICAL: Always include ID field FIRST (for both updates and creation)
+        // - For updates (PATCH): Use real UUID to preserve existing questions
+        // - For creation (POST): Use tempId to enable conditional logic in single request
+        // Without IDs, questions get deleted and recreated, breaking conditional logic!
+        id: q.id || q.tempId,  // ✅ Always include ID (real UUID or temp ID)
+        
+        text: q.text,
+        question_type: q.question_type,
+        options: needsOptions(q.question_type) ? JSON.stringify(q.options) : undefined,
+        is_required: q.is_required,
+        order: q.order,
+        // Analytics fields
+        NPS_Calculate: q.NPS_Calculate || false,
+        CSAT_Calculate: q.CSAT_Calculate || false,
+        min_scale: q.min_scale !== undefined ? q.min_scale : 0,
+        max_scale: q.max_scale !== undefined ? q.max_scale : 5,
+        options_satisfaction_values: q.options_satisfaction_values && q.options_satisfaction_values.length > 0 
+          ? JSON.stringify(q.options_satisfaction_values) 
+          : undefined,
+        // Validation field
+        validation_type: q.validation_type || 'none'
+      }
+      
+      // CRITICAL: Handle conditional logic carefully
+      // - If set_conditional_on exists (array with items or empty array): Always send it
+      // - If undefined/null: Omit field to preserve existing conditions during PATCH
+      // - Empty array [] explicitly clears conditions
+      if (q.set_conditional_on !== undefined && q.set_conditional_on !== null) {
+        questionData.set_conditional_on = q.set_conditional_on.map(cond => {
+          // Find the trigger question to get its actual ID or tempId
+          const triggerQuestion = surveyData.value.questions.find(
+            tq => tq.tempId === cond.trigger_question_id || tq.id === cond.trigger_question_id
+          )
+          
+          // Use real ID if available, otherwise use tempId (for creation with conditional logic)
+          const triggerId = triggerQuestion?.id || triggerQuestion?.tempId || cond.trigger_question_id
+          
+          return {
+            trigger_question_id: triggerId,
+            trigger_answer_value: cond.trigger_answer_value
+          }
+        })
+      }
+      
+      return questionData
+    })
   }
 }
 

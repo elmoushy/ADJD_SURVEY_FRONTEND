@@ -50,6 +50,27 @@ export type QuestionType = 'text' | 'textarea' | 'single_choice' | 'multiple_cho
 // Semantic tag for questions
 export type SemanticTag = 'none' | 'nps' | 'csat'
 
+// Conditional Question Logic Interfaces
+export interface ConditionalLogic {
+  trigger_question_id: string
+  trigger_answer_value: string
+}
+
+export interface QuestionCondition {
+  trigger_question_id: string
+  trigger_question_order: number
+  trigger_question_text: string
+  trigger_answer_value: string
+  condition_id: string
+}
+
+export interface QuestionTrigger {
+  dependent_question_id: string
+  dependent_question_order: number
+  dependent_question_text: string
+  trigger_values: string[]
+}
+
 // Survey Question interface
 export interface SurveyQuestion {
   id: string
@@ -66,6 +87,10 @@ export interface SurveyQuestion {
   max_scale?: number | null
   semantic_tag?: SemanticTag
   validation_type?: 'none' | 'email' | 'phone' | 'number' | 'url' // Input validation for text questions
+  // Conditional question fields
+  conditional_on?: QuestionCondition[] | null
+  triggers?: QuestionTrigger[] | null
+  set_conditional_on?: ConditionalLogic[] // Used when creating/updating questions
 }
 
 // Question Option interface (for single_choice questions with CSAT)
@@ -156,6 +181,8 @@ export interface QuestionCreateRequest {
   min_scale?: number | null
   max_scale?: number | null
   semantic_tag?: SemanticTag
+  // Conditional question field
+  set_conditional_on?: ConditionalLogic[]
 }
 
 // Survey response submission types

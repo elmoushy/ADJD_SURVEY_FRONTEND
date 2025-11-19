@@ -2622,3 +2622,307 @@
     width: 100%;
   }
 }
+
+/* ==================== Conditional Logic Styles ==================== */
+
+.conditionalSection {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.editorContainer[data-theme="night"] .conditionalSection {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+.conditionalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.editorContainer[data-theme="night"] .conditionalHeader {
+  color: #adb5bd;
+}
+
+.conditionalHeader i {
+  color: #7952b3;
+  margin-inline-end: 0.5rem;
+}
+
+.toggleConditionalButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #7952b3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggleConditionalButton:hover {
+  background: #6941a5;
+  transform: translateY(-1px);
+}
+
+.toggleConditionalButton i {
+  color: white;
+  margin: 0;
+}
+
+.conditionsSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.conditionSummaryItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.editorContainer[data-theme="night"] .conditionSummaryItem {
+  color: #adb5bd;
+}
+
+.conditionSummaryItem i {
+  color: #0dcaf0;
+}
+
+.conditionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid #7952b3;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  color: #7952b3;
+  margin-inline-end: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.editorContainer[data-theme="night"] .conditionBadge {
+  background: #343a40;
+  border-color: #7952b3;
+  color: #bd93f9;
+}
+
+.conditionText {
+  font-weight: 500;
+}
+
+.removeConditionBadgeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.removeConditionBadgeButton:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.orLogicNote {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #0c5460;
+}
+
+.editorContainer[data-theme="night"] .orLogicNote {
+  background: #0f3443;
+  border-color: #155160;
+  color: #88c0d0;
+}
+
+.orLogicNote i {
+  color: #17a2b8;
+}
+
+.conditionBuilder {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 2px dashed #7952b3;
+  border-radius: 8px;
+}
+
+.editorContainer[data-theme="night"] .conditionBuilder {
+  background: #343a40;
+  border-color: #7952b3;
+}
+
+.conditionBuilderHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #7952b3;
+}
+
+.editorContainer[data-theme="night"] .conditionBuilderHeader {
+  color: #bd93f9;
+}
+
+.conditionBuilderHeader i {
+  color: #7952b3;
+}
+
+.editorContainer[data-theme="night"] .conditionBuilderHeader i {
+  color: #bd93f9;
+}
+
+.noTriggersMessage {
+  text-align: center;
+  padding: 1.5rem;
+  color: #6c757d;
+}
+
+.editorContainer[data-theme="night"] .noTriggersMessage {
+  color: #adb5bd;
+}
+
+.noTriggersMessage i {
+  font-size: 2rem;
+  color: #ffc107;
+  margin-bottom: 0.5rem;
+}
+
+.noTriggersMessage p {
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+.noTriggersMessage small {
+  font-size: 0.85rem;
+  color: #868e96;
+}
+
+.editorContainer[data-theme="night"] .noTriggersMessage small {
+  color: #868e96;
+}
+
+.conditionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.conditionFormRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.conditionLabel {
+  min-width: 80px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.editorContainer[data-theme="night"] .conditionLabel {
+  color: #adb5bd;
+}
+
+.conditionSelect {
+  flex: 1;
+  padding: 0.625rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  color: #495057;
+  transition: all 0.2s;
+}
+
+.editorContainer[data-theme="night"] .conditionSelect {
+  background: #2d2d2d;
+  border-color: #495057;
+  color: #e9ecef;
+}
+
+.conditionSelect:focus {
+  outline: none;
+  border-color: #7952b3;
+  box-shadow: 0 0 0 3px rgba(121, 82, 179, 0.1);
+}
+
+.conditionFormActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.conditionButton {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.addConditionButton {
+  background: #28a745;
+  color: white;
+}
+
+.addConditionButton:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.addConditionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelConditionButton {
+  background: #6c757d;
+  color: white;
+}
+
+.cancelConditionButton:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+

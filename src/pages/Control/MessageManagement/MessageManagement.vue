@@ -952,10 +952,8 @@ onMounted(() => {
                 <tr>
                   <th :class="$style.headCell">الرمز</th>
                   <th :class="$style.headCell">الاسم</th>
-                  <th :class="$style.headCell">الاسم بالعربية</th>
-                  <th :class="$style.headCell">عدد الرسائل</th>
-                  <th :class="$style.headCell">المستلمين</th>
-                  <th :class="$style.headCell">نسخة كربونية</th>
+                  <th :class="$style.headCell">المنسق المالى</th>
+                  <th :class="$style.headCell">المدراء</th>
                   <th :class="$style.headCell">الحالة</th>
                   <th :class="$style.headCell">تاريخ الإنشاء</th>
                   <th :class="$style.headCell">الإجراءات</th>
@@ -969,8 +967,6 @@ onMounted(() => {
                 >
                   <td :class="$style.tableCell">{{ costCenter.cost_center_code }}</td>
                   <td :class="$style.tableCell">{{ costCenter.cost_center_name }}</td>
-                  <td :class="$style.tableCell">{{ costCenter.cost_center_name_ar }}</td>
-                  <td :class="$style.tableCell">{{ costCenter.email_count }}</td>
                   <td :class="$style.tableCell">{{ costCenter.recipient_count }}</td>
                   <td :class="$style.tableCell">{{ costCenter.cc_count }}</td>
                   <td :class="$style.tableCell">

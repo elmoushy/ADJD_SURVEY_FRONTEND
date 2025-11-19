@@ -7,11 +7,11 @@
     "password": "كلمة المرور",
     "loginButton": "دخول",
     "registerButton": "إنشاء حساب",
-    "welcomeAuth": "مرحباً بك في WPC | WeaponpowerCloud App",
+    "welcomeAuth": "مرحباً بك في WPC | ADJD App",
     "subtitle": "مستقبلك يبدأ هنا"
   },
   "header": {
-    "projectName": "WPC | WeaponpowerCloud App",
+    "projectName": "WPC | ADJD App",
     "toggleLanguage": "تبديل اللغة",
     "toggleTheme": "تبديل المظهر",
     "notifications": "الإشعارات",
@@ -120,10 +120,10 @@
     }
   },
   "welcome": {
-    "heroTitle": "WPC | WeaponpowerCloud",
+    "heroTitle": "WPC | ADJD",
     "heroDescription": "استمتع بالجيل القادم من الأنظمة السحابية الآمنة المصممة للتميز العسكري والعمليات الاستراتيجية. توفر منصتنا أماناً لا مثيل له، واستخبارات في الوقت الفعلي، وقدرات تعاون سلسة للمنظمات الدفاعية في جميع أنحاء العالم.",
     "greeting": "مرحباً بك في",
-    "staticText": "WPC WeaponPowerCloud", 
+    "staticText": "WPC ADJD", 
     "animatedTexts": {
       "innovation": "الابتكار",
       "security": "الأمان",
@@ -178,7 +178,7 @@
         "date": "15 ديسمبر 2024",
         "category": "النظام",
         "title": "توسيع البنية التحتية العالمية",
-        "excerpt": "تعمل WeaponpowerCloud الآن عبر 15 مركز بيانات آمن في جميع أنحاء العالم، مما يوفر وصولاً أسرع وتحسين التكرار للعمليات الحيوية."
+        "excerpt": "تعمل ADJD الآن عبر 15 مركز بيانات آمن في جميع أنحاء العالم، مما يوفر وصولاً أسرع وتحسين التكرار للعمليات الحيوية."
       }
     },
     "features": {

@@ -8,7 +8,7 @@
 }
 
 html {
-  /* Fluid typography as per WPC | WeaponpowerCloud theme rules */
+  /* Fluid typography as per WPC | ADJD theme rules */
   font-size: clamp(14px, 0.9vw + 0.4rem, 18px);
   scroll-behavior: smooth;
   /* Default to night theme */

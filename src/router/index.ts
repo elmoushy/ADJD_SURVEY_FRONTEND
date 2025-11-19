@@ -64,21 +64,21 @@ const routes: RouteRecordRaw[] = [
     path: "/", 
     name: "UnauthorizedAccess",
     component: UnauthorizedAccess,
-    meta: { title: "Unauthorized Access - WPC | WeaponpowerCloud App" }
+    meta: { title: "Unauthorized Access - WPC | ADJD App" }
   },
 
   {
     path: "/login",
     name: "Login",
     component: Login,
-    meta: { title: "Login - WPC | WeaponpowerCloud App", requiresGuest: true },
+    meta: { title: "Login - WPC | ADJD App", requiresGuest: true },
   },
   /*
   {
     path: '/register',
     name: 'Register',
     component: Register,
-    meta: { title: 'Register - WPC | WeaponpowerCloud App', requiresGuest: true }
+    meta: { title: 'Register - WPC | ADJD App', requiresGuest: true }
   },
   */
 
@@ -87,13 +87,13 @@ const routes: RouteRecordRaw[] = [
     path: "/survey/public/:token",
     name: "PublicSurvey",
     component: PublicSurveyView,
-    meta: { title: "Public Survey - WPC | WeaponpowerCloud App" },
+    meta: { title: "Public Survey - WPC | ADJD App" },
   },
   {
     path: "/survey/password/:token",
     name: "PasswordProtectedSurvey",
     component: PasswordProtectedSurveyView,
-    meta: { title: "Protected Survey - WPC | WeaponpowerCloud App" },
+    meta: { title: "Protected Survey - WPC | ADJD App" },
   },
 
   // Authenticated app
@@ -101,14 +101,14 @@ const routes: RouteRecordRaw[] = [
     path: "/surveys",
     name: "Surveys",
     component: Surveys,
-    meta: { title: "Surveys - WPC | WeaponpowerCloud App", requiresAuth: true },
+    meta: { title: "Surveys - WPC | ADJD App", requiresAuth: true },
   },
   {
     path: "/surveys/take/:id",
     name: "AuthSurveyTake",
     component: AuthSurveyView,
     meta: {
-      title: "Take Survey - WPC | WeaponpowerCloud App",
+      title: "Take Survey - WPC | ADJD App",
       requiresAuth: true,
       hideNavigation: true,
     },
@@ -119,7 +119,7 @@ const routes: RouteRecordRaw[] = [
     path: "/notifications",
     name: "Notifications",
     component: Notifications,
-    meta: { title: "Notifications - WPC | WeaponpowerCloud App", requiresAuth: true },
+    meta: { title: "Notifications - WPC | ADJD App", requiresAuth: true },
   },
 
   // WebSocket Test (Development only)
@@ -127,7 +127,7 @@ const routes: RouteRecordRaw[] = [
     path: "/websocket-test",
     name: "WebSocketTest",
     component: WebSocketTest,
-    meta: { title: "WebSocket Test - WPC | WeaponpowerCloud App", requiresAuth: true },
+    meta: { title: "WebSocket Test - WPC | ADJD App", requiresAuth: true },
   },
 
   // Control (Admins only)
@@ -136,7 +136,7 @@ const routes: RouteRecordRaw[] = [
     name: "Control",
     component: Control,
     meta: {
-      title: "Control Panel - WPC | WeaponpowerCloud App",
+      title: "Control Panel - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -146,7 +146,7 @@ const routes: RouteRecordRaw[] = [
     name: "SurveyControl",
     component: SurveyControl,
     meta: {
-      title: "Survey Management - WPC | WeaponpowerCloud App",
+      title: "Survey Management - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -156,7 +156,7 @@ const routes: RouteRecordRaw[] = [
     name: "SurveyCreate",
     component: SurveyEditorPage,
     meta: {
-      title: "Create Survey - WPC | WeaponpowerCloud App",
+      title: "Create Survey - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -166,7 +166,7 @@ const routes: RouteRecordRaw[] = [
     name: "SurveyEdit",
     component: SurveyEditorPage,
     meta: {
-      title: "Edit Survey - WPC | WeaponpowerCloud App",
+      title: "Edit Survey - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -176,7 +176,7 @@ const routes: RouteRecordRaw[] = [
     name: "UserManagement",
     component: UserManagement,
     meta: {
-      title: "User Management - WPC | WeaponpowerCloud App",
+      title: "User Management - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -186,7 +186,7 @@ const routes: RouteRecordRaw[] = [
     name: "CommunicationCenter",
     component: CommunicationCenter,
     meta: {
-      title: "Communication Hub - WPC | WeaponpowerCloud App",
+      title: "Communication Hub - WPC | ADJD App",
       requiresAuth: true,
     },
   },
@@ -195,7 +195,7 @@ const routes: RouteRecordRaw[] = [
     name: "MessageManagement",
     component: MessageManagement,
     meta: {
-      title: "Message Management - WPC | WeaponpowerCloud App",
+      title: "Message Management - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -205,7 +205,7 @@ const routes: RouteRecordRaw[] = [
     name: "FileManagement",
     component: FileManagement,
     meta: {
-      title: "File Management - WPC | WeaponpowerCloud App",
+      title: "File Management - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -215,7 +215,7 @@ const routes: RouteRecordRaw[] = [
     name: "SurveyResponses",
     component: SurveyResponses,
     meta: {
-      title: "Survey Responses - WPC | WeaponpowerCloud App",
+      title: "Survey Responses - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -225,7 +225,7 @@ const routes: RouteRecordRaw[] = [
     name: "SurveyAnalytics",
     component: SurveyAnalytics,
     meta: {
-      title: "Survey Analytics - WPC | WeaponpowerCloud App",
+      title: "Survey Analytics - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -235,7 +235,7 @@ const routes: RouteRecordRaw[] = [
     name: "AllSurveyResponses",
     component: SurveyResponses,
     meta: {
-      title: "All Survey Responses - WPC | WeaponpowerCloud App",
+      title: "All Survey Responses - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },
@@ -244,7 +244,7 @@ const routes: RouteRecordRaw[] = [
     path: "/profile",
     name: "Profile",
     component: Profile,
-    meta: { title: "Profile - WPC | WeaponpowerCloud App", requiresAuth: true },
+    meta: { title: "Profile - WPC | ADJD App", requiresAuth: true },
   },
 
   // ✅ 404 fallback

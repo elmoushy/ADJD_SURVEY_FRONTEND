@@ -146,15 +146,15 @@
       </div>
 
       <!-- All Questions View (Google Forms Style) -->
-      <div v-if="showAllQuestions" :class="$style.allQuestionsContainer">
+            <div v-if="showAllQuestions" :class="$style.allQuestionsContainer">
         <div 
-          v-for="(question, qIndex) in survey.questions" 
+          v-for="(question, index) in visibleQuestions" 
           :key="question.id"
-          :class="$style.currentQuestion"
+          :class="$style.questionContainer"
         >
           <div :class="$style.questionHeader">
             <div :class="$style.questionBadge">
-              <span :class="$style.questionIndex">{{ qIndex + 1 }}</span>
+              <span :class="$style.questionIndex">{{ index + 1 }}</span>
             </div>
             <h2 :class="$style.questionTitle">
               {{ question.text }}
@@ -258,10 +258,10 @@
             <div :class="$style.yesNoContainer">
               <div :class="$style.yesNoButtons">
                 <button
-                  :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[question.id] === 'yes' }]"
-                  @click="answers[question.id] = 'yes'"
+                  :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[question.id] === 'نعم' }]"
+                  @click="answers[question.id] = 'نعم'"
                   type="button"
-                  :aria-pressed="answers[question.id] === 'yes'"
+                  :aria-pressed="answers[question.id] === 'نعم'"
                 >
                   <i class="fas fa-check" :class="$style.yesNoButtonIcon"></i>
                   <span :class="$style.yesNoButtonText">نعم</span>
@@ -270,10 +270,10 @@
                   </div>
                 </button>
                 <button
-                  :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[question.id] === 'no' }]"
-                  @click="answers[question.id] = 'no'"
+                  :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[question.id] === 'لا' }]"
+                  @click="answers[question.id] = 'لا'"
                   type="button"
-                  :aria-pressed="answers[question.id] === 'no'"
+                  :aria-pressed="answers[question.id] === 'لا'"
                 >
                   <i class="fas fa-times" :class="$style.yesNoButtonIcon"></i>
                   <span :class="$style.yesNoButtonText">لا</span>
@@ -459,10 +459,10 @@
             <div :class="$style.yesNoContainer">
               <div :class="$style.yesNoButtons">
                 <button
-                  :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[currentQuestion.id] === 'yes' }]"
-                  @click="answers[currentQuestion.id] = 'yes'"
+                  :class="[$style.yesNoButton, $style.yes, { [$style.selected]: answers[currentQuestion.id] === 'نعم' }]"
+                  @click="answers[currentQuestion.id] = 'نعم'"
                   type="button"
-                  :aria-pressed="answers[currentQuestion.id] === 'yes'"
+                  :aria-pressed="answers[currentQuestion.id] === 'نعم'"
                 >
                   <i class="fas fa-check" :class="$style.yesNoButtonIcon"></i>
                   <span :class="$style.yesNoButtonText">نعم</span>
@@ -471,10 +471,10 @@
                   </div>
                 </button>
                 <button
-                  :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[currentQuestion.id] === 'no' }]"
-                  @click="answers[currentQuestion.id] = 'no'"
+                  :class="[$style.yesNoButton, $style.no, { [$style.selected]: answers[currentQuestion.id] === 'لا' }]"
+                  @click="answers[currentQuestion.id] = 'لا'"
                   type="button"
-                  :aria-pressed="answers[currentQuestion.id] === 'no'"
+                  :aria-pressed="answers[currentQuestion.id] === 'لا'"
                 >
                   <i class="fas fa-times" :class="$style.yesNoButtonIcon"></i>
                   <span :class="$style.yesNoButtonText">لا</span>
@@ -613,11 +613,29 @@ const canProceed = computed(() => {
   return true
 })
 
+// Filter questions based on conditional logic visibility
+const visibleQuestions = computed(() => {
+  if (!survey.value?.questions) return []
+  
+  return survey.value.questions.filter(question => {
+    // If no conditions, always visible
+    if (!question.conditional_on || question.conditional_on.length === 0) {
+      return true
+    }
+    
+    // Check if ANY condition is met (OR logic)
+    return question.conditional_on.some(condition => {
+      const triggerAnswer = answers.value[condition.trigger_question_id]
+      return triggerAnswer === condition.trigger_answer_value
+    })
+  })
+})
+
 const canSubmit = computed(() => {
   if (!survey.value) return false
   
-  // Check all required questions have answers
-  for (const question of survey.value.questions) {
+  // Check all required questions that are visible have answers
+  for (const question of visibleQuestions.value) {
     if (question.is_required) {
       const answer = answers.value[question.id]
       if (question.question_type === 'multiple_choice') {
@@ -790,8 +808,8 @@ const submitSurvey = async () => {
       answers: []
     }
     
-    // Convert answers to API format
-    for (const question of survey.value!.questions) {
+    // Convert answers to API format - only include visible questions
+    for (const question of visibleQuestions.value) {
       const answer = answers.value[question.id]
       if (answer !== undefined && answer !== null && answer !== '') {
         let answerText: string

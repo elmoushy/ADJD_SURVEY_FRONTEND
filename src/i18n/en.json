@@ -7,7 +7,7 @@
     "password": "Password",
     "loginButton": "Sign In",
     "registerButton": "Create Account",
-    "welcomeAuth": "Welcome to WeaponPowerCloud",
+    "welcomeAuth": "Welcome to ADJD",
     "subtitle": "Your Future Starts Here"
   },
   "navigation": {
@@ -106,10 +106,10 @@
     }
   },
   "welcome": {
-    "heroTitle": "WPC | WeaponpowerCloud",
+    "heroTitle": "WPC | ADJD",
     "heroDescription": "Experience the next generation of secure cloud systems designed for military excellence and strategic operations. Our platform delivers unmatched security, real-time intelligence, and seamless collaboration capabilities for defense organizations worldwide.",
     "greeting": "Welcome to",
-    "staticText": "WPC WeaponPowerCloud",
+    "staticText": "WPC ADJD",
     "animatedTexts": {
       "innovation": "Innovation",
       "security": "Security", 
@@ -164,7 +164,7 @@
         "date": "Dec 15, 2024",
         "category": "System",
         "title": "Global Infrastructure Expansion",
-        "excerpt": "WeaponpowerCloud now operates across 15 secure data centers worldwide, providing faster access and improved redundancy for mission-critical operations."
+        "excerpt": "ADJD now operates across 15 secure data centers worldwide, providing faster access and improved redundancy for mission-critical operations."
       }
     },
     "features": {
