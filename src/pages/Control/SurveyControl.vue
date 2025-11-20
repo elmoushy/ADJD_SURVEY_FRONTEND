@@ -32,9 +32,9 @@
                 <button :class="$style.dropdownItem" @click="createDefaultSurvey">
                   <i class="fas fa-file-alt"></i>
                   <div :class="$style.dropdownItemContent">
-                    <span :class="$style.dropdownItemTitle">{{ isRTL ? 'استطلاع افتراضي' : 'Default Survey' }}</span>
+                    <span :class="$style.dropdownItemTitle">{{ isRTL ? 'إيضاحات افتراضي' : 'Default Survey' }}</span>
                     <span :class="$style.dropdownItemDescription">
-                      {{ isRTL ? 'إنشاء استطلاع فارغ من البداية' : 'Create a blank survey from scratch' }}
+                      {{ isRTL ? 'إنشاء إيضاحات فارغ من البداية' : 'Create a blank survey from scratch' }}
                     </span>
                   </div>
                 </button>
@@ -44,7 +44,7 @@
                   <div :class="$style.dropdownItemContent">
                     <span :class="$style.dropdownItemTitle">{{ isRTL ? 'من قالب' : 'From Template' }}</span>
                     <span :class="$style.dropdownItemDescription">
-                      {{ isRTL ? 'اختر من القوالب الجاهزة أو استطلاعاتك السابقة' : 'Choose from ready templates or your previous surveys' }}
+                      {{ isRTL ? 'اختر من القوالب الجاهزة أو إيضاحاتاتك السابقة' : 'Choose from ready templates or your previous surveys' }}
                     </span>
                   </div>
                 </button>
@@ -95,7 +95,7 @@
       <!-- Number row: unit + number (in RTL: number left, unit to its right) -->
       <div :class="$style.kpiMain">
         <span :class="$style.kpiNumber">{{ card.value }}</span>
-        <span :class="$style.kpiUnit">{{ isRTL ? 'استطلاع' : 'surveys' }}</span>
+        <span :class="$style.kpiUnit">{{ isRTL ? 'إيضاحات' : 'surveys' }}</span>
       </div>
 
       <!-- Bottom row -->
@@ -243,7 +243,7 @@
                 v-if="survey.status === 'draft'"
                 :class="[$style.actionButton, $style.primaryAction]"
                 @click.stop="submitDraftSurvey(survey.id)"
-                :title="isRTL ? 'إرسال الاستطلاع' : 'Submit Survey'"
+                :title="isRTL ? 'إرسال الإيضاحات' : 'Submit Survey'"
               >
                 <i class="fas fa-paper-plane"></i>
                 <span :class="$style.actionButtonText">{{ isRTL ? 'إرسال' : 'Submit' }}</span>
@@ -911,7 +911,7 @@ const cloneSurvey = async (surveyId: string) => {
     await surveyService.cloneSurvey(surveyId)
     await loadSurveys()
   } catch {
-    Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في نسخ الاستطلاع', confirmButtonText: 'موافق' })
+    Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في نسخ الإيضاحات', confirmButtonText: 'موافق' })
   }
 }
 
@@ -919,7 +919,7 @@ const deleteSurvey = async (surveyId: string) => {
   const result = await Swal.fire({
     icon: 'warning',
     title: 'تأكيد الحذف',
-    text: 'هل أنت متأكد من أنك تريد حذف هذا الاستطلاع؟',
+    text: 'هل أنت متأكد من أنك تريد حذف هذا الإيضاحات؟',
     showCancelButton: true,
     confirmButtonText: 'نعم، احذف',
     cancelButtonText: 'إلغاء',
@@ -930,9 +930,9 @@ const deleteSurvey = async (surveyId: string) => {
     try {
       await surveyService.deleteSurvey(surveyId)
       await Promise.all([loadSurveys(), loadAnalytics()])
-      Swal.fire({ icon: 'success', title: 'تم الحذف', text: 'تم حذف الاستطلاع بنجاح', confirmButtonText: 'موافق' })
+      Swal.fire({ icon: 'success', title: 'تم الحذف', text: 'تم حذف الإيضاحات بنجاح', confirmButtonText: 'موافق' })
     } catch {
-      Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في حذف الاستطلاع', confirmButtonText: 'موافق' })
+      Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في حذف الإيضاحات', confirmButtonText: 'موافق' })
     }
   }
 }
@@ -941,7 +941,7 @@ const submitDraftSurvey = async (surveyId: string) => {
   try {
     const isArabic = store.currentLanguage === 'ar'
     const survey = surveys.value.find(s => s.id === surveyId)
-    if (!survey) throw new Error(isArabic ? 'لم يتم العثور على الاستطلاع' : 'Survey not found')
+    if (!survey) throw new Error(isArabic ? 'لم يتم العثور على الإيضاحات' : 'Survey not found')
 
     selectedSurveyForAccess.value = survey
     isSubmissionFlow.value = true
@@ -993,7 +993,7 @@ const handleSurveySave = async (surveyData: any, existingSurvey?: any) => {
     Swal.fire({
       icon: 'error',
       title: 'خطأ',
-      text: selectedSurveyForEdit.value ? 'فشل في تحديث الاستطلاع' : 'فشل في إنشاء الاستطلاع',
+      text: selectedSurveyForEdit.value ? 'فشل في تحديث الإيضاحات' : 'فشل في إنشاء الإيضاحات',
       confirmButtonText: 'موافق'
     })
   }
@@ -1012,7 +1012,7 @@ const bulkDelete = async () => {
   const result = await Swal.fire({
     icon: 'warning',
     title: 'تأكيد الحذف الجماعي',
-    text: `هل أنت متأكد من أنك تريد حذف ${count} استطلاع؟`,
+    text: `هل أنت متأكد من أنك تريد حذف ${count} إيضاحات؟`,
     showCancelButton: true,
     confirmButtonText: 'نعم، احذف الكل',
     cancelButtonText: 'إلغاء',
@@ -1029,9 +1029,9 @@ const performBulkOperation = async (operation: string) => {
     await Promise.all([loadSurveys(), loadAnalytics()])
 
     let msg = ''
-    if (operation === 'activate') msg = 'تم تفعيل الاستطلاعات بنجاح'
-    else if (operation === 'deactivate') msg = 'تم إلغاء تفعيل الاستطلاعات بنجاح'
-    else if (operation === 'delete') msg = 'تم حذف الاستطلاعات بنجاح'
+    if (operation === 'activate') msg = 'تم تفعيل إيضاحات بنجاح'
+    else if (operation === 'deactivate') msg = 'تم إلغاء تفعيل إيضاحات بنجاح'
+    else if (operation === 'delete') msg = 'تم حذف إيضاحات بنجاح'
     else msg = 'تمت العملية بنجاح'
     Swal.fire({ icon: 'success', title: 'نجحت العملية', text: msg, confirmButtonText: 'موافق' })
   } catch {
@@ -1099,7 +1099,7 @@ const handleCreateNewTemplate = () => {
     icon: 'info',
     title: isArabic ? 'إنشاء قالب محدد مسبقاً' : 'Create Predefined Template',
     html: isArabic
-      ? 'سيتم فتح محرر الاستطلاع حيث يمكنك إنشاء قالب جديد.<br><br>بعد إنشاء القالب، سيتم حفظه كقالب محدد مسبقاً متاح لجميع المستخدمين.'
+      ? 'سيتم فتح محرر الإيضاحات حيث يمكنك إنشاء قالب جديد.<br><br>بعد إنشاء القالب، سيتم حفظه كقالب محدد مسبقاً متاح لجميع المستخدمين.'
       : 'The survey editor will open where you can create a new template.<br><br>After creating the template, it will be saved as a predefined template available to all users.',
     confirmButtonText: isArabic ? 'متابعة' : 'Continue',
     showCancelButton: true,
@@ -1258,7 +1258,7 @@ const kpiCards = computed(() => {
   return [
     {
       key: 'total',
-      title: rtl ? 'إجمالي الاستطلاعات' : 'Total surveys',
+      title: rtl ? 'إجمالي إيضاحات' : 'Total surveys',
       value: a?.total_surveys ?? 0,
       trend: trends.total ?? null,
       icon: IconBadgeCheck,
@@ -1267,7 +1267,7 @@ const kpiCards = computed(() => {
  
     {
       key: 'active',
-      title: rtl ? 'الاستطلاعات النشطة' : 'Active surveys',
+      title: rtl ? 'إيضاحات النشطة' : 'Active surveys',
       value: a?.active_surveys ?? 0,
       trend: trends.active ?? null,
       icon: IconBadgeCheck2,   // with notification dot
