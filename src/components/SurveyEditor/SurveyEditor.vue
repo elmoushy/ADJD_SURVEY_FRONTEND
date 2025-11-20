@@ -9,7 +9,7 @@
         </button>
         <div :class="$style.headerTitle">
           <i class="fas fa-poll-h"></i>
-          <span>{{ isRTL ? 'تصميم الاستطلاع' : 'Survey Builder' }}</span>
+          <span>{{ isRTL ? 'تصميم الإيضاحات' : 'Survey Builder' }}</span>
         </div>
         <div :class="$style.headerActions">
           <!-- Button 1: Scheduling Settings -->
@@ -79,7 +79,7 @@
             <i class="fas fa-info-circle"></i>
             <div :class="$style.infoContent">
               <strong>{{ isRTL ? 'إنشاء قالب جديد' : 'Creating New Template' }}</strong>
-              <p>{{ isRTL ? 'قم بإنشاء الاستطلاع الخاص بك، وعند النشر يمكنك حفظه كقالب لاستخدامه لاحقاً.' : 'Create your survey, and when you publish it, you can save it as a template for future use.' }}</p>
+              <p>{{ isRTL ? 'قم بإنشاء الإيضاحات الخاص بك، وعند النشر يمكنك حفظه كقالب لاستخدامه لاحقاً.' : 'Create your survey, and when you publish it, you can save it as a template for future use.' }}</p>
             </div>
           </div>
           
@@ -90,7 +90,7 @@
             type="text"
             :class="$style.surveyTitle"
             v-model="surveyData.title"
-            :placeholder="isRTL ? 'عنوان الاستطلاع' : 'Survey Title'"
+            :placeholder="isRTL ? 'عنوان الإيضاحات' : 'Survey Title'"
             @blur="validateTitle"
           />
           <div v-if="errors.title" :class="$style.errorMessage">
@@ -99,7 +99,7 @@
           <textarea
             :class="$style.surveyDescription"
             v-model="surveyData.description"
-            :placeholder="isRTL ? 'وصف الاستطلاع (اختياري)' : 'Survey Description (optional)'"
+            :placeholder="isRTL ? 'وصف الإيضاحات (اختياري)' : 'Survey Description (optional)'"
             rows="3"
           ></textarea>
         </div>
@@ -717,14 +717,14 @@
     <div v-if="showPreview" :class="$style.previewOverlay" @click="togglePreview">
       <div :class="$style.previewModal" @click.stop>
         <div :class="$style.previewHeader">
-          <h2>{{ isRTL ? 'معاينة الاستطلاع' : 'Survey Preview' }}</h2>
+          <h2>{{ isRTL ? 'معاينة الإيضاحات' : 'Survey Preview' }}</h2>
           <button :class="$style.closePreview" @click="togglePreview">
             <i class="fas fa-times"></i>
           </button>
         </div>
         <div :class="$style.previewContent">
           <div :class="$style.previewSurveyHeader">
-            <h1>{{ surveyData.title || (isRTL ? 'عنوان الاستطلاع' : 'Survey Title') }}</h1>
+            <h1>{{ surveyData.title || (isRTL ? 'عنوان الإيضاحات' : 'Survey Title') }}</h1>
             <p v-if="surveyData.description">{{ surveyData.description }}</p>
           </div>
           <div :class="$style.previewQuestions">
@@ -777,7 +777,7 @@
             </button>
           </div>
           <div :class="$style.modalBody">
-            <p :class="$style.helpText">{{ isRTL ? 'حدد متى سيكون الاستطلاع نشطًا. اترك الحقول فارغة للبدء فورًا والاستمرار إلى أجل غير مسمى.' : 'Set when the survey will be active. Leave fields empty to start immediately and run indefinitely.' }}</p>
+            <p :class="$style.helpText">{{ isRTL ? 'حدد متى سيكون الإيضاحات نشطًا. اترك الحقول فارغة للبدء فورًا والاستمرار إلى أجل غير مسمى.' : 'Set when the survey will be active. Leave fields empty to start immediately and run indefinitely.' }}</p>
             
             <div :class="$style.formGrid">
               <div :class="$style.formGroup">
@@ -792,7 +792,7 @@
                   :placeholder="isRTL ? 'اختر تاريخ ووقت البداية' : 'Select start date and time'"
                 />
                 <div :class="$style.fieldHelp">
-                  {{ isRTL ? 'متى سيكون الاستطلاع متاحًا للمستجيبين' : 'When the survey will become available to respondents' }}
+                  {{ isRTL ? 'متى سيكون الإيضاحات متاحًا للمستجيبين' : 'When the survey will become available to respondents' }}
                 </div>
               </div>
               
@@ -808,7 +808,7 @@
                   :placeholder="isRTL ? 'اختر تاريخ ووقت النهاية' : 'Select end date and time'"
                 />
                 <div :class="$style.fieldHelp">
-                  {{ isRTL ? 'متى سيتوقف الاستطلاع عن قبول الردود' : 'When the survey will stop accepting responses' }}
+                  {{ isRTL ? 'متى سيتوقف الإيضاحات عن قبول الردود' : 'When the survey will stop accepting responses' }}
                 </div>
               </div>
             </div>
@@ -844,7 +844,7 @@
           <div :class="$style.modalHeader">
             <h3>
               <i class="fas fa-cog"></i>
-              {{ isRTL ? 'إعدادات الاستطلاع' : 'Survey Settings' }}
+              {{ isRTL ? 'إعدادات الإيضاحات' : 'Survey Settings' }}
             </h3>
             <button :class="$style.closeButton" @click="closeSurveySettingsModal">
               <i class="fas fa-times"></i>
@@ -855,10 +855,10 @@
               <div :class="$style.settingContent">
                 <h4 :class="$style.settingTitle">
                   <i class="fas fa-toggle-on"></i>
-                  {{ isRTL ? 'حالة الاستطلاع' : 'Survey Status' }}
+                  {{ isRTL ? 'حالة الإيضاحات' : 'Survey Status' }}
                 </h4>
                 <p :class="$style.settingDescription">
-                  {{ isRTL ? 'تفعيل أو تعطيل الاستطلاع' : 'Activate or deactivate the survey' }}
+                  {{ isRTL ? 'تفعيل أو تعطيل الإيضاحات' : 'Activate or deactivate the survey' }}
                 </p>
               </div>
               <label :class="$style.modernToggle">
@@ -1064,7 +1064,7 @@ const schedulingPreview = computed(() => {
       status: 'active',
       icon: 'fas fa-play-circle',
       title: isRTL.value ? 'يبدأ فورًا ويستمر إلى أجل غير مسمى' : 'Starts immediately, runs indefinitely',
-      description: isRTL.value ? 'الاستطلاع سيكون نشطًا فور الإنشاء ولن ينتهي حتى يتم إيقافه يدوياً' : 'Survey will be active immediately after creation and won\'t expire until manually deactivated'
+      description: isRTL.value ? 'الإيضاحات سيكون نشطًا فور الإنشاء ولن ينتهي حتى يتم إيقافه يدوياً' : 'Survey will be active immediately after creation and won\'t expire until manually deactivated'
     }
   }
 
@@ -1078,7 +1078,7 @@ const schedulingPreview = computed(() => {
         ? (isScheduled ? `مجدول للبدء ${startDate.toLocaleDateString('ar', { calendar: 'gregory' })}` : 'يبدأ فورًا ويستمر إلى أجل غير مسمى')
         : (isScheduled ? `Scheduled to start ${startDate.toLocaleDateString()}` : 'Starts immediately, runs indefinitely'),
       description: isRTL.value 
-        ? (isScheduled ? 'الاستطلاع سيبدأ في التاريخ المحدد ويستمر حتى يتم إيقافه يدوياً' : 'الاستطلاع نشط حالياً ويستمر حتى يتم إيقافه يدوياً')
+        ? (isScheduled ? 'الإيضاحات سيبدأ في التاريخ المحدد ويستمر حتى يتم إيقافه يدوياً' : 'الإيضاحات نشط حالياً ويستمر حتى يتم إيقافه يدوياً')
         : (isScheduled ? 'Survey will start on the specified date and run indefinitely until manually deactivated' : 'Survey is active now and will run indefinitely until manually deactivated')
     }
   }
@@ -1093,7 +1093,7 @@ const schedulingPreview = computed(() => {
         ? (isExpired ? 'منتهي الصلاحية' : `يبدأ الآن، ينتهي ${endDate.toLocaleDateString('ar', { calendar: 'gregory' })}`)
         : (isExpired ? 'Expired' : `Starts now, expires ${endDate.toLocaleDateString()}`),
       description: isRTL.value 
-        ? (isExpired ? 'انتهت صلاحية الاستطلاع' : 'الاستطلاع نشط حالياً وسينتهي في التاريخ المحدد')
+        ? (isExpired ? 'انتهت صلاحية الإيضاحات' : 'الإيضاحات نشط حالياً وسينتهي في التاريخ المحدد')
         : (isExpired ? 'Survey has expired' : 'Survey is active now and will expire on the specified date')
     }
   }
@@ -1110,21 +1110,21 @@ const schedulingPreview = computed(() => {
       status = 'expired'
       icon = 'fas fa-stop-circle'
       title = isRTL.value ? 'منتهي الصلاحية' : 'Expired'
-      description = isRTL.value ? 'انتهت صلاحية الاستطلاع' : 'Survey has expired'
+      description = isRTL.value ? 'انتهت صلاحية الإيضاحات' : 'Survey has expired'
     } else if (isScheduled) {
       status = 'scheduled'
       icon = 'fas fa-clock'
       title = isRTL.value 
         ? `مجدول من ${startDate.toLocaleDateString('ar', { calendar: 'gregory' })} إلى ${endDate.toLocaleDateString('ar', { calendar: 'gregory' })}`
         : `Scheduled from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
-      description = isRTL.value ? 'الاستطلاع سيعمل خلال النافذة الزمنية المحددة' : 'Survey will run within the specified time window'
+      description = isRTL.value ? 'الإيضاحات سيعمل خلال النافذة الزمنية المحددة' : 'Survey will run within the specified time window'
     } else if (isActive) {
       status = 'active'
       icon = 'fas fa-play-circle'
       title = isRTL.value 
         ? `نشط حتى ${endDate.toLocaleDateString('ar', { calendar: 'gregory' })}`
         : `Active until ${endDate.toLocaleDateString()}`
-      description = isRTL.value ? 'الاستطلاع نشط حالياً وسينتهي في التاريخ المحدد' : 'Survey is currently active and will expire on the specified date'
+      description = isRTL.value ? 'الإيضاحات نشط حالياً وسينتهي في التاريخ المحدد' : 'Survey is currently active and will expire on the specified date'
     } else {
       status = 'inactive'
       icon = 'fas fa-pause-circle'
@@ -1416,7 +1416,7 @@ const deleteQuestion = async (index: number) => {
     Swal.fire({
       icon: 'warning',
       title: isRTL.value ? 'تحذير' : 'Warning',
-      text: isRTL.value ? 'يجب أن يحتوي الاستطلاع على سؤال واحد على الأقل' : 'Survey must have at least one question',
+      text: isRTL.value ? 'يجب أن يحتوي الإيضاحات على سؤال واحد على الأقل' : 'Survey must have at least one question',
       confirmButtonText: isRTL.value ? 'موافق' : 'OK'
     })
     return
@@ -1664,7 +1664,7 @@ const saveSurveySettings = () => {
   Swal.fire({
     icon: 'success',
     title: isRTL.value ? 'تم الحفظ' : 'Saved',
-    text: isRTL.value ? 'تم حفظ إعدادات الاستطلاع بنجاح' : 'Survey settings saved successfully',
+    text: isRTL.value ? 'تم حفظ إعدادات الإيضاحات بنجاح' : 'Survey settings saved successfully',
     timer: 1500,
     showConfirmButton: false
   })
@@ -1928,7 +1928,7 @@ const prepareSurveyData = () => {
 // Validate and get specific error message
 const getValidationError = (): string | null => {
   if (surveyData.value.title.trim().length === 0) {
-    return isRTL.value ? 'عنوان الاستطلاع مطلوب' : 'Survey title is required'
+    return isRTL.value ? 'عنوان الإيضاحات مطلوب' : 'Survey title is required'
   }
 
   if (surveyData.value.questions.length === 0) {
