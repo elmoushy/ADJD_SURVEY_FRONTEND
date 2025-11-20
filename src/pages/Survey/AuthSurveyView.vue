@@ -541,7 +541,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/hooks/useI18n'
 import { surveyService } from '@/services/surveyService'
@@ -1057,6 +1057,43 @@ const getRatingLabel = (type: 'min' | 'max', questionOptions?: string): string =
     return type === 'min' ? 'ضعيف' : 'ممتاز'
   }
 }
+
+// Watch for changes in visible questions and clear answers for hidden questions
+watch(
+  () => visibleQuestions.value,
+  (newVisibleQuestions, oldVisibleQuestions) => {
+    // Only run this after survey has started
+    if (!surveyStarted.value || !survey.value) return
+    
+    // Get IDs of currently visible questions
+    const visibleQuestionIds = new Set(newVisibleQuestions.map(q => q.id))
+    
+    // Get IDs of previously visible questions
+    const oldVisibleQuestionIds = new Set((oldVisibleQuestions || []).map(q => q.id))
+    
+    // Find questions that became hidden
+    const hiddenQuestionIds = Array.from(oldVisibleQuestionIds).filter(
+      id => !visibleQuestionIds.has(id)
+    )
+    
+    // Clear answers for hidden questions
+    hiddenQuestionIds.forEach(questionId => {
+      if (answers.value[questionId] !== undefined) {
+        // Find the question to determine if it's multiple choice
+        const question = survey.value!.questions.find(q => q.id === questionId)
+        if (question?.question_type === 'multiple_choice') {
+          answers.value[questionId] = []
+        } else {
+          answers.value[questionId] = ''
+        }
+        
+        // Also clear any validation errors for this question
+        clearValidationError(questionId)
+      }
+    })
+  },
+  { deep: true }
+)
 
 // Lifecycle
 onMounted(() => {
