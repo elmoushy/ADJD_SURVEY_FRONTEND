@@ -5,7 +5,7 @@
         <div :class="$style.heroContent">
           <div :class="$style.heroText">
             <div :class="$style.sectionHerto">
-              <h1>الاستطلاعات</h1>
+              <h1>إيضاحات</h1>
             </div>
           </div>
 
@@ -126,7 +126,7 @@
         <div :class="$style.loadingSpinner">
           <i class="fas fa-spinner fa-spin"></i>
         </div>
-        <p>جاري تحميل الاستطلاعات...</p>
+        <p>جاري تحميل إيضاحات...</p>
       </div>
 
       <!-- Error State -->
@@ -134,7 +134,7 @@
         <div :class="$style.errorIcon">
           <i class="fas fa-exclamation-triangle"></i>
         </div>
-        <h3>فشل في تحميل الاستطلاعات</h3>
+        <h3>فشل في تحميل إيضاحات</h3>
         <p>{{ error }}</p>
         <button :class="$style.retryButton" @click="refreshData">
           <i class="fas fa-redo"></i>
@@ -148,7 +148,7 @@
           <i class="fas fa-clock"></i>
         </div>
         <h3>انتهت مهلة الطلب</h3>
-        <p>فشل في تحميل الاستطلاعات خلال 15 ثانية</p>
+        <p>فشل في تحميل إيضاحات خلال 15 ثانية</p>
         <div :class="$style.errorActions">
           <button :class="$style.retryButton" @click="refreshData">
             <i class="fas fa-redo"></i>
@@ -253,7 +253,7 @@
               @click.stop="takeSurvey(survey)"
             >
               <i class="fas fa-play"></i>
-              {{ t('survey.shared.card.takeNow') }}
+بدء إيضاحات
             </button>
             
             <button 
@@ -458,16 +458,16 @@ const loadSurveys = async () => {
       timeoutError.value = true
       await Swal.fire({
         title: 'انتهت مهلة الطلب',
-        text: 'فشل في تحميل الاستطلاعات خلال 15 ثانية. يرجى المحاولة مرة أخرى.',
+        text: 'فشل في تحميل إيضاحات خلال 15 ثانية. يرجى المحاولة مرة أخرى.',
         icon: 'error',
         confirmButtonText: 'موافق',
         confirmButtonColor: '#dc3545'
       })
     } else {
-      error.value = err.message || 'فشل في تحميل الاستطلاعات'
+      error.value = err.message || 'فشل في تحميل إيضاحات'
       await Swal.fire({
-        title: 'خطأ في تحميل الاستطلاعات',
-        text: err.message || 'فشل في تحميل الاستطلاعات',
+        title: 'خطأ في تحميل إيضاحات',
+        text: err.message || 'فشل في تحميل إيضاحات',
         icon: 'error',
         confirmButtonText: 'موافق',
         confirmButtonColor: '#dc3545'
