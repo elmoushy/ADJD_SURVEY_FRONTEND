@@ -629,6 +629,29 @@
   cursor: pointer;
 }
 
+.mobileUserActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobileChangePasswordBtn {
+  border: none;
+  background: rgba(183, 138, 65, 0.08);
+  color: var(--gold-600);
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileChangePasswordBtn:hover {
+  background: rgba(183, 138, 65, 0.16);
+}
+
 .mobileDivider {
   height: 1px;
   background: rgba(148, 163, 184, 0.25);

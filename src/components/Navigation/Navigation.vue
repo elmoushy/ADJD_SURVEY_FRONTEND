@@ -130,6 +130,19 @@
               </div>
             </div>
             <div :class="$style.userDropdownContent">
+              <!-- Change Password - Only for regular (non-SSO) users -->
+              <button 
+                v-if="user?.auth_type === 'regular'" 
+                @click="openChangePasswordModal" 
+                :class="$style.userDropdownLink"
+              >
+                <div :class="$style.linkIcon">
+                  <i class="fas fa-key"></i>
+                </div>
+                <div :class="$style.linkContent">
+                  <span :class="$style.linkTitle">{{ t('userManagement.changePassword.title') }}</span>
+                </div>
+              </button>
               <div :class="$style.dropdownDivider"></div>
               <button @click="handleLogout" :class="[$style.userDropdownLink, $style.logoutButton]">
                 <div :class="$style.linkIcon">
@@ -161,9 +174,20 @@
               <div :class="$style.mobileUserRole">{{ userRole || 'No role assigned' }}</div>
             </div>
           </div>
-          <button @click="handleLogout" :class="$style.mobileLogoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
+          <div :class="$style.mobileUserActions">
+            <!-- Change Password button for non-SSO users -->
+            <button 
+              v-if="user?.auth_type === 'regular'" 
+              @click="openChangePasswordModal" 
+              :class="$style.mobileChangePasswordBtn"
+              :title="t('userManagement.changePassword.title')"
+            >
+              <i class="fas fa-key"></i>
+            </button>
+            <button @click="handleLogout" :class="$style.mobileLogoutBtn">
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </div>
         </div>
         
         <div :class="$style.mobileDivider"></div>
@@ -187,6 +211,13 @@
       :class="$style.overlay" 
       @click="closeAllDropdowns"
     ></div>
+
+    <!-- Change Password Modal -->
+    <ChangePasswordModal 
+      :visible="showChangePasswordModal"
+      @close="closeChangePasswordModal"
+      @success="closeChangePasswordModal"
+    />
   </header>
 </template>
 
@@ -200,6 +231,7 @@ import { websocketService } from '../../services/websocketService'
 import { useWebSocketNotifications } from '../../composables/useWebSocketNotifications'
 import { NOTIFICATION_ICONS, PRIORITY_COLORS } from '../../types/notifications.types'
 import type { Notification } from '../../types/notifications.types'
+import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal.vue'
 
 // Navigation link interface
 interface NavigationLink {
@@ -234,6 +266,7 @@ const showSettings = ref(false)
 const showNotifications = ref(false)
 const showMobileMenu = ref(false)
 const showUserMenu = ref(false)
+const showChangePasswordModal = ref(false)
 
 // Notifications state - combining HTTP API and WebSocket data
 const notifications = ref<Notification[]>([])
@@ -546,6 +579,17 @@ const closeAllDropdowns = () => {
   showNotifications.value = false
   showMobileMenu.value = false
   showUserMenu.value = false
+}
+
+// Open change password modal
+const openChangePasswordModal = () => {
+  closeAllDropdowns()
+  showChangePasswordModal.value = true
+}
+
+// Close change password modal
+const closeChangePasswordModal = () => {
+  showChangePasswordModal.value = false
 }
 
 // Generate avatar offline using SVG data URL

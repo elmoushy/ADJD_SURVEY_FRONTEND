@@ -14,6 +14,14 @@
             <i class="fas fa-file-upload"></i>
             {{ t('userManagement.bulkUpload.title') }}
           </button>
+
+          <button 
+            :class="[$style.actionBtn, $style.primaryBtn]" 
+            @click="openBulkUploadWithPasswordModal"
+          >
+            <i class="fas fa-user-plus"></i>
+            {{ t('userManagement.bulkUploadWithPassword.title') }}
+          </button>
           
           <button 
             :class="[$style.actionBtn, $style.primaryBtn]" 
@@ -206,6 +214,13 @@
       @close="closeBulkUploadModal"
     />
 
+    <!-- Bulk Upload With Password Modal -->
+    <BulkUploadWithPasswordModal
+      :visible="bulkUploadWithPasswordModalVisible"
+      @success="handleBulkUploadWithPasswordSuccess"
+      @close="closeBulkUploadWithPasswordModal"
+    />
+
     <!-- Loading Overlay -->
     <!-- <div v-if="loading" :class="$style.loadingOverlay">
       <div :class="$style.loadingSpinner">
@@ -244,6 +259,7 @@ import AddUsersToGroupModal from '../../../components/AddUsersToGroupModal/AddUs
 import UserRoleModal from '../../../components/UserRoleModal/UserRoleModal.vue'
 import ResetPasswordModal from '../../../components/ResetPasswordModal/ResetPasswordModal.vue'
 import BulkUploadModal from '../../../components/BulkUploadModal/BulkUploadModal.vue'
+import BulkUploadWithPasswordModal from '../../../components/BulkUploadWithPasswordModal/BulkUploadWithPasswordModal.vue'
 import type { 
   User, 
   Group,
@@ -338,6 +354,9 @@ const resetPasswordLoading = ref(false)
 
 // Bulk upload modal
 const bulkUploadModalVisible = ref(false)
+
+// Bulk upload with password modal
+const bulkUploadWithPasswordModalVisible = ref(false)
 
 // Methods
 const setActiveTab = (tab: 'users' | 'groups') => {
@@ -889,6 +908,23 @@ const handleBulkUploadSuccess = async () => {
   
   // Close the modal
   closeBulkUploadModal()
+}
+
+// Bulk Upload With Password Modal Functions
+const openBulkUploadWithPasswordModal = () => {
+  bulkUploadWithPasswordModalVisible.value = true
+}
+
+const closeBulkUploadWithPasswordModal = () => {
+  bulkUploadWithPasswordModalVisible.value = false
+}
+
+const handleBulkUploadWithPasswordSuccess = async () => {
+  // Refresh the data after successful bulk upload with password
+  await initialize()
+  
+  // Close the modal
+  closeBulkUploadWithPasswordModal()
 }
 
 // Lifecycle

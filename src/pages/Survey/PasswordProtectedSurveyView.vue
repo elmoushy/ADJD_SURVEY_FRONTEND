@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div v-if="isLoading" :class="$style.loadingContainer">
       <div :class="$style.loadingSpinner"></div>
-      <p :class="$style.loadingText">جاري تحميل الاستطلاع...</p>
+      <p :class="$style.loadingText">جاري تحميل إيضاحات...</p>
     </div>
 
     <!-- Password Access Form -->
@@ -15,8 +15,8 @@
               <i class="fas fa-shield-alt"></i>
             </div>
           </div>
-          <h2 :class="$style.accessTitle">الاستطلاع محمي بكلمة مرور</h2>
-          <p :class="$style.accessDescription">يرجى إدخال كلمة المرور والمعلومات المطلوبة للوصول إلى الاستطلاع</p>
+          <h2 :class="$style.accessTitle">إيضاحات محمي بكلمة مرور</h2>
+          <p :class="$style.accessDescription">يرجى إدخال كلمة المرور والمعلومات المطلوبة للوصول إلى إيضاحات</p>
         </div>
 
         <form :class="$style.accessForm" @submit.prevent="attemptAccess">
@@ -138,7 +138,7 @@
           >
             <div v-if="isAccessAttempting" :class="$style.loadingSpinner"></div>
             <i v-else class="fas fa-unlock-alt"></i>
-            <span>دخول الاستطلاع</span>
+            <span>دخول إيضاحات</span>
           </button>
         </form>
       </div>
@@ -168,13 +168,13 @@
       <!-- Welcome Section -->
       <div :class="$style.welcomeSection">
         <div :class="$style.welcomeContent">
-          <h2 :class="$style.welcomeTitle">مرحباً بك في الاستطلاع</h2>
+          <h2 :class="$style.welcomeTitle">مرحباً بك في إيضاحات</h2>
           <p :class="$style.welcomeText">
-            نشكرك لمشاركتك في هذا الاستطلاع المحمي. إجاباتك مهمة بالنسبة لنا وستساعدنا في تحسين خدماتنا.
+            نشكرك لمشاركتك في هذا إيضاحات المحمي. إجاباتك مهمة بالنسبة لنا وستساعدنا في تحسين خدماتنا.
           </p>
           <ul :class="$style.welcomePoints">
             <li><i class="fas fa-check-circle"></i> جميع إجاباتك آمنة ومحمية</li>
-            <li><i class="fas fa-clock"></i> سيستغرق الاستطلاع حوالي {{ Math.ceil((survey.questions?.length || 0) * 0.5) }} دقائق</li>
+            <li><i class="fas fa-clock"></i> سيستغرق إيضاحات حوالي {{ Math.ceil((survey.questions?.length || 0) * 0.5) }} دقائق</li>
             <li><i class="fas fa-user-shield"></i> المشاركة بموافقتك الكاملة</li>
           </ul>
         </div>
@@ -184,7 +184,7 @@
       <div :class="$style.actionButtons">
         <button :class="$style.startButton" @click="startSurvey">
           <i class="fas fa-play"></i>
-          بدء الاستطلاع
+          بدء إيضاحات
         </button>
       </div>
     </div>
@@ -454,7 +454,7 @@
           >
             <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
             <i v-else class="fas fa-paper-plane"></i>
-            <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستطلاع' }}</span>
+            <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال إيضاحات' }}</span>
           </button>
         </div>
       </div>
@@ -737,7 +737,7 @@
         >
           <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
           <i v-else class="fas fa-paper-plane"></i>
-          <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستطلاع' }}</span>
+          <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال إيضاحات' }}</span>
         </button>
 
         <div :class="$style.navSpacer"></div>
@@ -758,10 +758,10 @@
     <!-- Error State -->
     <div v-else-if="accessError && !isAuthenticated" :class="$style.errorState">
       <div :class="$style.errorIcon">
-        <i :class="accessError === 'هذا الاستطلاع لم يعد متاحًا' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle'"></i>
+        <i :class="accessError === 'هذا إيضاحات لم يعد متاحًا' ? 'fas fa-times-circle' : 'fas fa-exclamation-triangle'"></i>
       </div>
       <h2 :class="$style.errorTitle">
-        {{ isTimeoutError ? 'انتهت مهلة الاتصال' : (accessError === 'هذا الاستطلاع لم يعد متاحًا' ? 'الاستطلاع غير متاح' : 'حدث خطأ غير متوقع') }}
+        {{ isTimeoutError ? 'انتهت مهلة الاتصال' : (accessError === 'هذا إيضاحات لم يعد متاحًا' ? 'إيضاحات غير متاح' : 'حدث خطأ غير متوقع') }}
       </h2>
       <p :class="$style.errorMessage">
         {{ isTimeoutError ? 'انتهت مهلة الاتصال بالخادم. يرجى المحاولة مرة أخرى.' : accessError }}
@@ -787,7 +787,7 @@
       <p :class="$style.errorMessage">
         {{ isTimeoutError 
           ? 'انتهت مهلة الاتصال بالخادم. يرجى المحاولة مرة أخرى.' 
-          : 'عذراً، لم نتمكن من تحميل الاستطلاع. يرجى المحاولة مرة أخرى.' 
+          : 'عذراً، لم نتمكن من تحميل إيضاحات. يرجى المحاولة مرة أخرى.' 
         }}
       </p>
       <button 
@@ -1041,7 +1041,7 @@ const checkSurveyAvailability = async () => {
       
       if (error.response?.status === 404) {
         // Survey not found - show "survey no longer available" message
-        accessError.value = 'هذا الاستطلاع لم يعد متاحًا'
+        accessError.value = 'هذا إيضاحات لم يعد متاحًا'
         return
       } else if (error.response?.status === 401) {
         // Unauthorized - survey exists but password is wrong (which is expected)
@@ -1049,7 +1049,7 @@ const checkSurveyAvailability = async () => {
         // Continue to show the password form
       } else {
         // Other error - show generic error
-        accessError.value = 'فشل في التحقق من حالة الاستطلاع'
+        accessError.value = 'فشل في التحقق من حالة إيضاحات'
         return
       }
     }
@@ -1140,7 +1140,7 @@ const attemptAccess = async () => {
       
       initializeAnswers()
     } else {
-      accessError.value = 'لا يمكن الوصول إلى هذا الاستطلاع'
+      accessError.value = 'لا يمكن الوصول إلى هذا إيضاحات'
     }
 
   } catch (error: any) {
@@ -1157,10 +1157,10 @@ const attemptAccess = async () => {
       if (errorData.message) {
         if (errorData.message.includes('email is required')) {
           requiresEmail.value = true
-          emailError.value = 'البريد الإلكتروني مطلوب للوصول إلى هذا الاستطلاع'
+          emailError.value = 'البريد الإلكتروني مطلوب للوصول إلى هذا إيضاحات'
         } else if (errorData.message.includes('phone is required')) {
           requiresPhone.value = true
-          phoneError.value = 'رقم الهاتف مطلوب للوصول إلى هذا الاستطلاع'
+          phoneError.value = 'رقم الهاتف مطلوب للوصول إلى هذا إيضاحات'
         } else if (errorData.message.includes('password')) {
           passwordError.value = 'كلمة المرور غير صحيحة'
         } else if (errorData.message.includes('email')) {
@@ -1171,7 +1171,7 @@ const attemptAccess = async () => {
           accessError.value = errorData.message
         }
       } else {
-        accessError.value = 'فشل في الوصول إلى الاستطلاع'
+        accessError.value = 'فشل في الوصول إلى إيضاحات'
       }
     } else {
       accessError.value = 'حدث خطأ غير متوقع'
@@ -1354,21 +1354,21 @@ const submitSurvey = async () => {
       handleBackendValidationErrors(error.response.data.data.validation_errors)
       await Swal.fire({
         title: 'خطأ في التحقق من صحة البيانات',
-        text: 'يرجى تصحيح الأخطاء في الاستطلاع والمحاولة مرة أخرى',
+        text: 'يرجى تصحيح الأخطاء في إيضاحات والمحاولة مرة أخرى',
         icon: 'error',
         confirmButtonText: 'موافق'
       })
       return
     }
 
-    let errorMessage = 'فشل في إرسال الاستطلاع'
+    let errorMessage = 'فشل في إرسال إيضاحات'
     
     // Check for 403 Forbidden status
     if (error.response?.status === 403) {
       errorMessage = 'هذا الشخص غير مصرح له بارسال الاجابات'
     } else if (error.message) {
       if (error.message.includes('already submitted')) {
-        errorMessage = 'لقد قمت بإرسال إجابة لهذا الاستطلاع من قبل'
+        errorMessage = 'لقد قمت بإرسال إجابة لهذا إيضاحات من قبل'
       } else {
         errorMessage = error.message
       }

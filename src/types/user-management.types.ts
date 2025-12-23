@@ -10,6 +10,7 @@ export interface User {
   initials?: string
   role: 'super_admin' | 'admin' | 'user'
   role_display: string
+  auth_type?: 'regular' | 'azure'
   is_active: boolean
   is_staff?: boolean
   date_joined: string
@@ -289,6 +290,19 @@ export interface BulkCreateUserRequest {
 
 export interface BulkCreateRequest {
   users: BulkCreateUserRequest[]
+}
+
+// Bulk Create Types (Regular Users with Password)
+export interface BulkCreateUserWithPasswordRequest {
+  email: string
+  first_name?: string
+  last_name?: string
+  role?: 'super_admin' | 'admin' | 'user'
+  password: string
+}
+
+export interface BulkCreateWithPasswordRequest {
+  users: BulkCreateUserWithPasswordRequest[]
 }
 
 export interface BulkCreateCreatedUser {

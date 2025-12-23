@@ -1527,6 +1527,94 @@
         "skippedUsers": "Skipped Users",
         "failedUsers": "Failed Users"
       }
+    },
+    "bulkUploadWithPassword": {
+      "title": "Bulk Upload Users with Password",
+      "downloadTemplate": "Download Excel Template",
+      "upload": "Upload File",
+      "uploading": "Uploading...",
+      "dragDrop": "Drag and drop Excel file here",
+      "orClick": "or click to select",
+      "preview": "Data Preview",
+      "users": "users",
+      "andMore": "and {{count}} more rows...",
+      "validationErrors": "Validation Errors",
+      "instructions": {
+        "title": "Instructions",
+        "step1": "Download the Excel template using the button below",
+        "step2": "Fill in the template with user data (Email and Password are required)",
+        "step3": "Upload the completed file to create users",
+        "note": "Note: Use this option when SSO is not available. Password must be at least 8 characters."
+      },
+      "fields": {
+        "email": "Email",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "role": "Role",
+        "password": "Password"
+      },
+      "errors": {
+        "row": "Row",
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email format",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 8 characters",
+        "invalidRole": "Invalid role. Must be one of: user, admin, super_admin",
+        "noData": "No data found in file",
+        "parseError": "Failed to parse Excel file. Please ensure it's properly formatted.",
+        "uploadFailed": "Failed to upload users. Please try again."
+      },
+      "results": {
+        "summary": "Summary",
+        "totalRequested": "Total Requested",
+        "created": "Created",
+        "skipped": "Skipped",
+        "failed": "Failed",
+        "createdUsers": "Created Users",
+        "skippedUsers": "Skipped Users",
+        "failedUsers": "Failed Users"
+      }
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "oldPassword": "Current Password",
+      "oldPasswordPlaceholder": "Enter your current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter your new password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your new password",
+      "submit": "Change Password",
+      "passwordsMatch": "Passwords match",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "requirements": {
+        "title": "Password Requirements:",
+        "minLength": "At least 8 characters",
+        "uppercase": "At least one uppercase letter",
+        "lowercase": "At least one lowercase letter",
+        "number": "At least one number",
+        "special": "At least one special character (!@#$%^&*)"
+      },
+      "strength": {
+        "none": "",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      },
+      "success": {
+        "title": "Success!",
+        "message": "Your password has been changed successfully"
+      },
+      "errors": {
+        "title": "Error",
+        "failed": "Failed to change password",
+        "minLength": "Password must be at least 8 characters",
+        "mismatch": "Passwords do not match",
+        "incorrectOldPassword": "Current password is incorrect",
+        "tooCommon": "Password is too common",
+        "tooSimilar": "Password is too similar to your personal information",
+        "onlyNumbers": "Password cannot be entirely numeric"
+      }
     }
   }
 }

@@ -9,6 +9,7 @@ export interface UserProfile {
   is_active: boolean
   date_joined: string
   last_login: string | null
+  auth_type?: 'regular' | 'azure'
 }
 
 export interface UserInfo {

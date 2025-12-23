@@ -32,7 +32,8 @@ import type {
   BulkDeleteRequest,
   BulkDeleteResponse,
   BulkCreateRequest,
-  BulkCreateResponse
+  BulkCreateResponse,
+  BulkCreateWithPasswordRequest
   // ApiResponse // Unused - commenting out
 } from '../types/user-management.types'
 
@@ -102,6 +103,21 @@ export const resetUserPassword = async (userId: number, newPassword: string): Pr
 }
 
 /**
+ * Change current user's password (regular auth users only)
+ */
+export const changePassword = async (oldPassword: string, newPassword: string, newPasswordConfirm: string): Promise<{ message: string }> => {
+  const response: AxiosResponse<{ message: string }> = await apiClient.post(
+    '/auth/change-password/',
+    {
+      old_password: oldPassword,
+      new_password: newPassword,
+      new_password_confirm: newPasswordConfirm
+    }
+  )
+  return response.data
+}
+
+/**
  * Get all groups a specific user belongs to
  */
 export const getUserGroups = async (userId: number): Promise<UserGroupsResponse> => {
@@ -130,6 +146,15 @@ export const bulkDeleteUsers = async (deleteData: BulkDeleteRequest): Promise<Bu
  */
 export const bulkCreateAzureUsers = async (createData: BulkCreateRequest): Promise<BulkCreateResponse> => {
   const response: AxiosResponse<BulkCreateResponse> = await apiClient.post('/auth/azure-users/bulk-create/', createData)
+  return response.data
+}
+
+/**
+ * Bulk create regular users with passwords (admin and super_admin only)
+ * Use this when SSO/Azure AD is not available
+ */
+export const bulkCreateUsersWithPassword = async (createData: BulkCreateWithPasswordRequest): Promise<BulkCreateResponse> => {
+  const response: AxiosResponse<BulkCreateResponse> = await apiClient.post('/auth/users/bulk-create-with-password/', createData)
   return response.data
 }
 
@@ -307,6 +332,8 @@ export default {
   inviteUser,
   bulkDeleteUsers,
   bulkCreateAzureUsers,
+  bulkCreateUsersWithPassword,
+  changePassword,
   
   // Group endpoints
   getGroups,
