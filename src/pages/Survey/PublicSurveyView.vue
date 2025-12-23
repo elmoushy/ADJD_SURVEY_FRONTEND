@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div v-if="isLoading" :class="$style.loadingContainer">
       <div :class="$style.loadingSpinner"></div>
-      <p :class="$style.loadingText">جاري تحميل الاستطلاع...</p>
+      <p :class="$style.loadingText">جاري تحميل إيضاحات...</p>
     </div>
 
     <!-- Access Denied -->
@@ -59,7 +59,7 @@
           <h3 :class="$style.welcomeTitle">أهلاً وسهلاً بك في استطلاعنا</h3>
           <p :class="$style.welcomeText">
             نقدر وقتك وآرائك القيمة. إجاباتك ستساعدنا في تحسين خدماتنا وتطوير تجربة أفضل للجميع.
-            الاستطلاع سهل وسريع، وجميع إجاباتك محفوظة بسرية تامة.
+            إيضاحات سهل وسريع، وجميع إجاباتك محفوظة بسرية تامة.
           </p>
         </div>
       </div>
@@ -68,7 +68,7 @@
       <div :class="$style.actionButtons">
         <button :class="$style.startButton" @click="startSurvey">
           <i class="fas fa-play"></i>
-          <span>ابدأ الاستطلاع الآن</span>
+          <span>ابدأ إيضاحات الآن</span>
         </button>
         
         <div :class="$style.secondaryActions">
@@ -374,7 +374,7 @@
           >
             <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
             <i v-else class="fas fa-paper-plane"></i>
-            <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستطلاع' }}</span>
+            <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال إيضاحات' }}</span>
           </button>
         </div>
       </div>
@@ -684,7 +684,7 @@
         >
           <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
           <i v-else class="fas fa-paper-plane"></i>
-          <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستطلاع' }}</span>
+          <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال إيضاحات' }}</span>
         </button>
 
         <div :class="$style.navSpacer"></div>
@@ -713,7 +713,7 @@
       <p :class="$style.errorMessage">
         {{ isTimeoutError 
           ? 'انتهت مهلة الاتصال بالخادم. يرجى المحاولة مرة أخرى.' 
-          : 'عذراً، لم نتمكن من تحميل الاستطلاع. يرجى المحاولة مرة أخرى.' 
+          : 'عذراً، لم نتمكن من تحميل إيضاحات. يرجى المحاولة مرة أخرى.' 
         }}
       </p>
       <button 
@@ -1009,7 +1009,7 @@ const loadSurvey = async () => {
       // Store additional data for potential use (like dates)
       surveyData.value = response.data
       // Use the message from the API response if available
-      accessMessage.value = response.message || 'ليس لديك صلاحية للوصول إلى هذا الاستطلاع'
+      accessMessage.value = response.message || 'ليس لديك صلاحية للوصول إلى هذا إيضاحات'
     }
   } catch (error: any) {
     // Logging removed for production
@@ -1024,7 +1024,7 @@ const loadSurvey = async () => {
     }
     
     // Extract message from error response
-    let errorMessage = 'فشل في تحميل الاستطلاع'
+    let errorMessage = 'فشل في تحميل إيضاحات'
     
     if (error.response?.data) {
       // Handle structured error response
@@ -1218,27 +1218,27 @@ const submitSurvey = async () => {
       Swal.fire({
         icon: 'error',
         title: 'خطأ في التحقق من صحة البيانات',
-        text: 'يرجى تصحيح الأخطاء في الاستطلاع والمحاولة مرة أخرى',
+        text: 'يرجى تصحيح الأخطاء في إيضاحات والمحاولة مرة أخرى',
         confirmButtonText: 'موافق'
       })
       return
     }
     
     // Handle specific API errors
-    let errorMessage = 'فشل في إرسال الاستطلاع'
+    let errorMessage = 'فشل في إرسال إيضاحات'
     
     if (error.message) {
       // Check for specific contact method errors
       if (error.message.includes('Email is required')) {
-        contactError.value = 'البريد الإلكتروني مطلوب لهذا الاستطلاع'
+        contactError.value = 'البريد الإلكتروني مطلوب لهذا إيضاحات'
         showContactForm.value = true
         return
       } else if (error.message.includes('Phone is required')) {
-        contactError.value = 'رقم الهاتف مطلوب لهذا الاستطلاع'
+        contactError.value = 'رقم الهاتف مطلوب لهذا إيضاحات'
         showContactForm.value = true
         return
       } else if (error.message.includes('already submitted')) {
-        errorMessage = 'لقد قمت بإرسال إجابة لهذا الاستطلاع من قبل'
+        errorMessage = 'لقد قمت بإرسال إجابة لهذا إيضاحات من قبل'
       } else {
         errorMessage = error.message
       }

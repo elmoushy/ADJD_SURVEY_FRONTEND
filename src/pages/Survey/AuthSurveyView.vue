@@ -3,7 +3,7 @@
     <!-- Loading State -->
     <div v-if="isLoading" :class="$style.loadingContainer">
       <div :class="$style.loadingSpinner"></div>
-      <p :class="$style.loadingText">جاري تحميل الاستطلاع...</p>
+      <p :class="$style.loadingText">جاري تحميل إيضاحات...</p>
     </div>
 
     <!-- Access Denied -->
@@ -38,7 +38,7 @@
         <i class="fas fa-clock"></i>
       </div>
       <h2 :class="$style.errorTitle">انتهت مهلة الطلب</h2>
-      <p :class="$style.errorMessage">فشل في تحميل الاستطلاع خلال 15 ثانية</p>
+      <p :class="$style.errorMessage">فشل في تحميل إيضاحات خلال 15 ثانية</p>
       <div :class="$style.errorActions">
         <button :class="$style.secondaryButton" @click="loadSurvey">
           <i class="fas fa-redo"></i>
@@ -81,8 +81,8 @@
           <div :class="$style.welcomeIcon">
             <i class="fas fa-heart"></i>
           </div>
-          <h3 :class="$style.welcomeTitle">أهلاً وسهلاً بك في الاستطلاع المحمي</h3>
-          <p :class="$style.welcomeText">نقدر وقتك وآرائك القيمة. هذا الاستطلاع محمي ويتطلب المصادقة للوصول إليه. إجاباتك ستساعدنا في تحسين خدماتنا وتطوير تجربة أفضل للجميع.</p>
+          <h3 :class="$style.welcomeTitle">أهلاً وسهلاً بك في إيضاحات المحمي</h3>
+          <p :class="$style.welcomeText">نقدر وقتك وآرائك القيمة. هذا إيضاحات محمي ويتطلب المصادقة للوصول إليه. إجاباتك ستساعدنا في تحسين خدماتنا وتطوير تجربة أفضل للجميع.</p>
         </div>
       </div>
 
@@ -91,7 +91,7 @@
       <div :class="$style.actionButtons">
         <button :class="$style.startButton" @click="startSurvey">
           <i class="fas fa-play"></i>
-          <span>ابدأ الاستطلاع الآن</span>
+          <span>ابدأ إيضاحات الآن</span>
         </button>
         
         <div :class="$style.secondaryActions">
@@ -313,7 +313,7 @@
           >
             <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
             <i v-else class="fas fa-paper-plane"></i>
-            <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستطلاع' }}</span>
+            <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال إيضاحات' }}</span>
           </button>
         </div>
       </div>
@@ -514,7 +514,7 @@
         >
           <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
           <i v-else class="fas fa-paper-plane"></i>
-          <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال الاستطلاع' }}</span>
+          <span>{{ isSubmitting ? 'جاري الإرسال...' : 'إرسال إيضاحات' }}</span>
         </button>
 
         <div :class="$style.navSpacer"></div>
@@ -660,10 +660,10 @@ const loadSurvey = async () => {
     const surveyId = route.params.id as string
 
     if (!surveyId) {
-      error.value = 'معرف الاستطلاع غير مُتاح'
+      error.value = 'معرف إيضاحات غير مُتاح'
       await Swal.fire({
         title: 'خطأ',
-        text: 'معرف الاستطلاع غير مُتاح',
+        text: 'معرف إيضاحات غير مُتاح',
         icon: 'error',
         confirmButtonText: 'موافق',
         confirmButtonColor: '#dc3545'
@@ -684,10 +684,10 @@ const loadSurvey = async () => {
       survey.value = response.data.survey
       initializeAnswers()
     } else {
-      error.value = 'الاستطلاع غير موجود'
+      error.value = 'إيضاحات غير موجود'
       await Swal.fire({
         title: 'خطأ',
-        text: 'الاستطلاع غير موجود',
+        text: 'إيضاحات غير موجود',
         icon: 'error',
         confirmButtonText: 'موافق',
         confirmButtonColor: '#dc3545'
@@ -697,7 +697,7 @@ const loadSurvey = async () => {
     // Logging removed for production
     
     // Extract error message from response if available
-    let errorMessage = err.message || 'فشل في تحميل الاستطلاع'
+    let errorMessage = err.message || 'فشل في تحميل إيضاحات'
     
     // Check if error has a response with message field
     if (err.response?.data?.message) {
@@ -708,7 +708,7 @@ const loadSurvey = async () => {
       timeoutError.value = true
       await Swal.fire({
         title: 'انتهت مهلة الطلب',
-        text: 'فشل في تحميل الاستطلاع خلال 15 ثانية. يرجى المحاولة مرة أخرى.',
+        text: 'فشل في تحميل إيضاحات خلال 15 ثانية. يرجى المحاولة مرة أخرى.',
         icon: 'error',
         confirmButtonText: 'موافق',
         confirmButtonColor: '#dc3545'
@@ -731,7 +731,7 @@ const loadSurvey = async () => {
     } else {
       error.value = errorMessage
       await Swal.fire({
-        title: 'خطأ في تحميل الاستطلاع',
+        title: 'خطأ في تحميل إيضاحات',
         text: errorMessage,
         icon: 'error',
         confirmButtonText: 'موافق',
@@ -839,7 +839,7 @@ const submitSurvey = async () => {
     // Show success message and then thank you modal
     await Swal.fire({
       title: 'تم الإرسال بنجاح',
-      text: 'تم إرسال إجابات الاستطلاع بنجاح. شكراً لمشاركتك!',
+      text: 'تم إرسال إجابات إيضاحات بنجاح. شكراً لمشاركتك!',
       icon: 'success',
       confirmButtonText: 'موافق',
       confirmButtonColor: '#28a745'
@@ -854,7 +854,7 @@ const submitSurvey = async () => {
       handleBackendValidationErrors(err.response.data.data.validation_errors)
       await Swal.fire({
         title: 'خطأ في التحقق من صحة البيانات',
-        text: 'يرجى تصحيح الأخطاء في الاستطلاع والمحاولة مرة أخرى',
+        text: 'يرجى تصحيح الأخطاء في إيضاحات والمحاولة مرة أخرى',
         icon: 'error',
         confirmButtonText: 'موافق',
         confirmButtonColor: '#dc3545'
@@ -865,7 +865,7 @@ const submitSurvey = async () => {
     // Logging removed for production
     
     // Extract error message from response if available
-    let errorMessage = err.message || 'فشل في إرسال إجابات الاستطلاع'
+    let errorMessage = err.message || 'فشل في إرسال إجابات إيضاحات'
     
     // Check if error has a response with message field
     if (err.response?.data?.message) {

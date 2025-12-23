@@ -51,7 +51,7 @@
       <!-- Number row: unit + number (in RTL: number left, unit to its right) -->
       <div :class="$style.kpiMain">
         <span :class="$style.kpiNumber">{{ card.value }}</span>
-        <span :class="$style.kpiUnit">{{ card.unit }}</span>
+        <span :class="$style.kpiUnit">إيضاحات</span>
       </div>
 
       <!-- Bottom row -->
