@@ -1190,8 +1190,16 @@ const handleSave = async () => {
     const contactMethod = selectedAccess.value === 'PUBLIC' && !perDeviceAccessEnabled.value ? selectedContactMethod.value : undefined
     const surveyId = String(props.survey.id) // Ensure ID is string
     
-    // First, update the survey access settings
-    await surveyService.updateSurveyAccess(surveyId, accessLevel, contactMethod, perDeviceAccessEnabled.value)
+    // For GROUPS visibility, use the audience endpoint directly (which handles both visibility + group assignment)
+    if (selectedAccess.value === 'GROUPS' && selectedGroups.value.length > 0) {
+      await surveyService.setSurveyAudience(surveyId, {
+        visibility: 'GROUPS',
+        group_ids: selectedGroups.value.map(g => g.id)
+      })
+    } else {
+      // For other visibilities, use the standard PATCH approach
+      await surveyService.updateSurveyAccess(surveyId, accessLevel, contactMethod, perDeviceAccessEnabled.value)
+    }
     
     // If this is a submission flow (draft -> submitted), also call the submit endpoint
     if (props.isSubmissionFlow && props.survey.status === 'draft') {
@@ -1213,13 +1221,6 @@ const handleSave = async () => {
         emails: [] // Email invitations removed from compact UI
       }
       await surveyService.shareSurvey(surveyId, shareData)
-    }
-
-    // Handle group access sharing if needed
-    if (selectedAccess.value === 'GROUPS' && selectedGroups.value.length > 0) {
-      // Note: Group sharing would require an additional API endpoint
-      // For now, we just save the groups selection to the visibility
-      // Logging removed for production)
     }
     
     // Show information about token invalidation if visibility changed from PUBLIC

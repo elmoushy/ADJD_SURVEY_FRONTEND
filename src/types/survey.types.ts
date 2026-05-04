@@ -218,6 +218,7 @@ export interface SurveyAudienceRequest {
   visibility: SurveyVisibility
   user_ids?: number[]
   emails?: string[]
+  group_ids?: number[]
 }
 
 // Public link management
