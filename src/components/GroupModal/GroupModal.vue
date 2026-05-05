@@ -9,7 +9,74 @@
       </div>
       
       <div :class="$style.modalBody">
-        <form @submit.prevent="handleSubmit">
+        <!-- VIEW MODE: show members and admins -->
+        <div v-if="mode.type === 'view'">
+          <div :class="$style.formGroup">
+            <label :class="$style.label">{{ t('userManagement.forms.group.name') }}</label>
+            <div :class="$style.viewValue">{{ formData.name }}</div>
+          </div>
+
+          <!-- Loading group details -->
+          <div v-if="loadingDetails" :class="$style.loadingUsers">
+            <i class="fas fa-spinner fa-spin"></i>
+            {{ t('common.loading') }}...
+          </div>
+
+          <template v-else>
+            <!-- Admins Section -->
+            <div :class="$style.membersSection">
+              <div :class="$style.membersSectionHeader">
+                <i class="fas fa-user-shield" :class="$style.sectionIcon"></i>
+                <span>{{ isRTL ? 'مديرو المجموعة' : 'Group Admins' }}</span>
+                <span :class="$style.membersBadge">{{ groupAdmins.length }}</span>
+              </div>
+              <div v-if="groupAdmins.length > 0" :class="$style.membersList">
+                <div v-for="member in groupAdmins" :key="member.id" :class="$style.memberItem">
+                  <div :class="$style.memberAvatar">{{ getInitials(member.full_name) }}</div>
+                  <div :class="$style.memberInfo">
+                    <div :class="$style.memberName">{{ member.full_name }}</div>
+                    <div :class="$style.memberEmail">{{ member.email }}</div>
+                  </div>
+                  <span :class="[$style.memberTag, $style.adminTag]">
+                    {{ isRTL ? 'مدير' : 'Admin' }}
+                  </span>
+                </div>
+              </div>
+              <div v-else :class="$style.emptyMembers">
+                <i class="fas fa-user-slash"></i>
+                <span>{{ isRTL ? 'لا يوجد مديرون' : 'No admins' }}</span>
+              </div>
+            </div>
+
+            <!-- Members Section -->
+            <div :class="$style.membersSection">
+              <div :class="$style.membersSectionHeader">
+                <i class="fas fa-users" :class="$style.sectionIcon"></i>
+                <span>{{ isRTL ? 'أعضاء المجموعة' : 'Group Members' }}</span>
+                <span :class="$style.membersBadge">{{ groupMembers.length }}</span>
+              </div>
+              <div v-if="groupMembers.length > 0" :class="$style.membersList">
+                <div v-for="member in groupMembers" :key="member.id" :class="$style.memberItem">
+                  <div :class="$style.memberAvatar">{{ getInitials(member.full_name) }}</div>
+                  <div :class="$style.memberInfo">
+                    <div :class="$style.memberName">{{ member.full_name }}</div>
+                    <div :class="$style.memberEmail">{{ member.email }}</div>
+                  </div>
+                  <span :class="[$style.memberTag, $style.memberTagUser]">
+                    {{ isRTL ? 'عضو' : 'Member' }}
+                  </span>
+                </div>
+              </div>
+              <div v-else :class="$style.emptyMembers">
+                <i class="fas fa-user-slash"></i>
+                <span>{{ isRTL ? 'لا يوجد أعضاء' : 'No members' }}</span>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- CREATE / EDIT MODE -->
+        <form v-else @submit.prevent="handleSubmit">
           <div :class="$style.formGroup">
             <label :class="$style.label">{{ t('userManagement.forms.group.name') }}</label>
             <input 
@@ -17,19 +84,8 @@
               type="text" 
               required
               :class="[$style.input, !formData.name.trim() && formData.name !== '' ? $style.inputError : '']"
-              :disabled="mode.type === 'view'"
             />
           </div>
-          
-          <!-- <div :class="$style.formGroup">
-            <label :class="$style.label">{{ t('userManagement.forms.group.description') }}</label>
-            <textarea 
-              v-model="formData.description"
-              :class="$style.textarea"
-              rows="3"
-              :disabled="mode.type === 'view'"
-            ></textarea>
-          </div> -->
           
           <div v-if="mode.type === 'create'" :class="$style.formGroup">
             <label :class="$style.label">{{ t('userManagement.forms.group.admins') }}</label>
@@ -141,14 +197,38 @@ const translations = computed(() => ({
     ? 'اختر المستخدمين الذين سيكونوا مديري هذه المجموعة (مطلوب مدير واحد على الأقل)'
     : 'Select users who will be administrators of this group (at least one admin is required)',
   selectedAdmins: isRTL.value
-    ? 'مدير(ين) محدد'
+    ? 'مدير(اء) محدد'
     : 'admin(s) selected'
 }))
 
 const visible = computed(() => true)
 const searchQuery = ref('')
 const loadingUsers = ref(false)
+const loadingDetails = ref(false)
 const allUsers = ref<User[]>([])
+
+// View mode: detailed members/admins from API
+const groupDetails = ref<{ user_groups: Array<{ user: { id: number; full_name: string; email: string }; is_group_admin: boolean }> } | null>(null)
+
+const groupAdmins = computed(() =>
+  (groupDetails.value?.user_groups ?? [])
+    .filter(ug => ug.is_group_admin)
+    .map(ug => ug.user)
+)
+
+const groupMembers = computed(() =>
+  (groupDetails.value?.user_groups ?? [])
+    .filter(ug => !ug.is_group_admin)
+    .map(ug => ug.user)
+)
+
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map(n => n[0]?.toUpperCase() ?? '')
+    .join('')
+}
 
 const formData = ref({
   name: '',
@@ -158,22 +238,13 @@ const formData = ref({
 
 // Form validation computed property
 const isFormValid = computed(() => {
-  // Group name is required
-  if (!formData.value.name.trim()) {
-    return false
-  }
-  
-  // For create mode, at least one admin is required
-  if (props.mode.type === 'create' && formData.value.admin_user_ids.length === 0) {
-    return false
-  }
-  
+  if (!formData.value.name.trim()) return false
+  if (props.mode.type === 'create' && formData.value.admin_user_ids.length === 0) return false
   return true
 })
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return allUsers.value
-  
   return allUsers.value.filter(user => 
     user.full_name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -195,18 +266,27 @@ const loadUsers = async () => {
     const response = await userManagementService.getUsers()
     allUsers.value = response.users
   } catch (error) {
-    // Logging removed for production
-    // Could emit an error event or show a notification here
+    // error loading users
   } finally {
     loadingUsers.value = false
   }
 }
 
-const handleSubmit = () => {
-  // Use form validation instead of manual checks
-  if (!isFormValid.value) {
-    return
+const loadGroupDetails = async () => {
+  if (!props.group?.id) return
+  try {
+    loadingDetails.value = true
+    const data = await userManagementService.getGroupDetails(props.group.id)
+    groupDetails.value = data as any
+  } catch (error) {
+    // error loading group details
+  } finally {
+    loadingDetails.value = false
   }
+}
+
+const handleSubmit = () => {
+  if (!isFormValid.value) return
   
   const submitData = {
     name: formData.value.name.trim(),
@@ -214,36 +294,29 @@ const handleSubmit = () => {
   }
   
   if (props.mode.type === 'create') {
-    emit('save', {
-      ...submitData,
-      admin_user_ids: formData.value.admin_user_ids
-    })
+    emit('save', { ...submitData, admin_user_ids: formData.value.admin_user_ids })
   } else {
     emit('save', submitData)
   }
 }
 
-// Load users when component mounts and modal is for creating
 onMounted(() => {
   if (props.mode.type === 'create') {
     loadUsers()
+  } else if (props.mode.type === 'view') {
+    loadGroupDetails()
   }
 })
 
-// Initialize form data when group prop changes
 watch(() => props.group, (group) => {
   if (group) {
-    formData.value = {
-      name: group.name,
-      description: group.description || '',
-      admin_user_ids: []
-    }
+    formData.value = { name: group.name, description: group.description || '', admin_user_ids: [] }
   } else {
-    formData.value = {
-      name: '',
-      description: '',
-      admin_user_ids: []
-    }
+    formData.value = { name: '', description: '', admin_user_ids: [] }
+  }
+  // Refresh details whenever the group changes in view mode
+  if (props.mode.type === 'view') {
+    loadGroupDetails()
   }
 }, { immediate: true })
 </script>
@@ -597,6 +670,140 @@ watch(() => props.group, (group) => {
   color: var(--text-muted) !important;
   cursor: not-allowed !important;
   opacity: 0.6;
+}
+
+/* View mode styles */
+.viewValue {
+  padding: 0.75rem;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.membersSection {
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.membersSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  background: var(--bg-glass);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.sectionIcon {
+  color: var(--accent-primary);
+}
+
+.membersBadge {
+  margin-inline-start: auto;
+  background: var(--accent-primary);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-width: 22px;
+  text-align: center;
+}
+
+.membersList {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.15s;
+}
+
+.memberItem:last-child {
+  border-bottom: none;
+}
+
+.memberItem:hover {
+  background: var(--bg-glass);
+}
+
+.memberAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberEmail {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberTag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.adminTag {
+  background: rgba(174, 93, 90, 0.12);
+  color: #AE5D5A;
+  border: 1px solid rgba(174, 93, 90, 0.25);
+}
+
+.memberTagUser {
+  background: rgba(207, 163, 101, 0.12);
+  color: var(--accent-primary);
+  border: 1px solid rgba(207, 163, 101, 0.25);
+}
+
+.emptyMembers {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  justify-content: center;
 }
 
 .saveBtn:disabled {

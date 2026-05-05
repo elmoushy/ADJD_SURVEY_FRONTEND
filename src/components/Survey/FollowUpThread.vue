@@ -2,6 +2,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useFollowUpsStore } from '@/stores/followUps'
+import { useSimpleAuth } from '@/composables/useSimpleAuth'
 import FollowUpDecisionPanel from './FollowUpDecisionPanel.vue'
 import type { FollowUpThread } from '@/types/survey.types'
 
@@ -9,6 +10,17 @@ const props = defineProps<{ thread: FollowUpThread; isAdmin?: boolean }>()
 
 const { t } = useI18n()
 const store = useFollowUpsStore()
+const { user } = useSimpleAuth()
+
+// The decision panel is only shown when:
+// 1. The user has an admin role (isAdmin prop)
+// 2. The user is NOT the respondent of this specific thread
+const canDecide = computed(() => {
+  if (!props.isAdmin) return false
+  const currentEmail = user.value?.email
+  if (!currentEmail) return false
+  return currentEmail !== props.thread.respondent_email
+})
 
 const replyBody = ref('')
 const sending = ref(false)
@@ -81,9 +93,9 @@ async function sendReply() {
       </div>
     </div>
 
-    <!-- Decision panel: admin sees this when responder has replied -->
+    <!-- Decision panel: only shown when user is admin AND not the respondent of this thread -->
     <FollowUpDecisionPanel
-      v-if="isAdmin && thread.status === 'replied'"
+      v-if="canDecide && thread.status === 'replied'"
       :thread-id="thread.id"
     />
 

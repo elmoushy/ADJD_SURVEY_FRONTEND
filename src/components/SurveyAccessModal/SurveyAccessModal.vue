@@ -30,6 +30,7 @@
           
           <div :class="$style.accessOptions">
             <!-- Public Access -->
+            <template v-if="false">
             <div 
               :class="[$style.accessOption, { [$style.selected]: selectedAccess === 'PUBLIC' }]"
               @click="handleAccessChange('PUBLIC')"
@@ -360,6 +361,7 @@
                 </div>
               </div>
             </div>
+            </template>
 
             <!-- Authenticated Users Access -->
             <div 
@@ -466,7 +468,8 @@ import type {
   PasswordProtectedLinkResponse,
   PasswordProtectedLinkRequest,
   User,
-  PublicContactMethod
+  PublicContactMethod,
+  AdminGroup
 } from '../../types/survey.types'
 
 // Props
@@ -1115,7 +1118,8 @@ const loadSharedUsers = async () => {
     pickerUsers.value = users.map(u => ({
       id: u.id,
       email: u.email,
-      full_name: (u as any).full_name || (u as any).name || ''
+      full_name: (u as any).full_name || (u as any).name || '',
+      type: 'user' as const
     }))
   } catch {
     // non-critical — picker just starts empty

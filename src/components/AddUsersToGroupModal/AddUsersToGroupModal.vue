@@ -39,8 +39,8 @@
             />
           </div>
 
-          <!-- Make Group Admin Toggle -->
-          <div :class="$style.adminToggle">
+          <!-- Make Group Admin Toggle: hidden during group creation flow -->
+          <div v-if="!isCreateFlow" :class="$style.adminToggle">
             <label :class="$style.adminToggleLabel">
               <input 
                 type="checkbox" 
@@ -120,10 +120,12 @@ import { ref, computed, watch } from 'vue'
 import { useAppStore } from '../../stores/useAppStore'
 import userManagementService from '../../services/userManagementService'
 import type { Group, User } from '../../types/user-management.types'
+import Swal from 'sweetalert2'
 
 interface Props {
   visible: boolean
   group: Group | null
+  isCreateFlow?: boolean
 }
 
 const props = defineProps<Props>()
@@ -240,10 +242,24 @@ const handleAddUsers = async () => {
     selectedUserIds.value = []
     makeGroupAdmin.value = false
     searchQuery.value = ''
-    
-  } catch (error) {
-    // Logging removed for production
-    // You could show an error notification here
+
+    await Swal.fire({
+      icon: 'success',
+      title: isRTL.value ? 'تمت الإضافة بنجاح' : 'Users Added',
+      text: isRTL.value ? 'تمت إضافة المستخدمين إلى المجموعة بنجاح' : 'Users have been added to the group successfully.',
+      confirmButtonText: isRTL.value ? 'موافق' : 'OK',
+      confirmButtonColor: '#28a745'
+    })
+
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || error?.message || (isRTL.value ? 'فشل في إضافة المستخدمين' : 'Failed to add users')
+    await Swal.fire({
+      icon: 'error',
+      title: isRTL.value ? 'خطأ' : 'Error',
+      text: msg,
+      confirmButtonText: isRTL.value ? 'موافق' : 'OK',
+      confirmButtonColor: '#dc3545'
+    })
   } finally {
     saving.value = false
   }

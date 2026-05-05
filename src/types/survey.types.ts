@@ -156,6 +156,7 @@ export interface FollowUpThread {
     submitted_at: string
   }
   opened_by: string | null
+  respondent_email: string | null
   status: FollowUpStatus
   decision_reason: string
   decided_by: string | null

@@ -41,16 +41,10 @@
       <table :class="$style.table">
         <thead :class="$style.tableHead">
           <tr>
-            <th :class="$style.checkboxColumn">
-              <input type="checkbox" :class="$style.checkbox" />
-            </th>
             <th :class="$style.nameColumn">
               {{ t("userManagement.groups.columns.name") }}
             </th>
-            <th :class="$style.countColumn">
-              {{ t("userManagement.groups.columns.adminCount") }}
-            </th>
-            <th :class="$style.countColumn">
+            <th :class="[$style.countColumn, $style.centerCell]">
               {{ t("userManagement.groups.columns.userCount") }}
             </th>
             <th :class="$style.actionsColumn">
@@ -60,12 +54,8 @@
         </thead>
         <tbody :class="$style.tableBody">
           <tr v-for="group in groups" :key="group.id" :class="$style.tableRow">
-            <td :class="$style.checkboxCell">
-              <input type="checkbox" :class="$style.checkbox" />
-            </td>
             <td :class="$style.nameCell">{{ group.name }}</td>
-            <td :class="$style.countCell">{{ group.admin_count }}</td>
-            <td :class="$style.countCell">{{ group.user_count }}</td>
+            <td :class="[$style.countCell, $style.centerCell]">{{ group.user_count }}</td>
             <td :class="$style.actionsCell">
               <div :class="$style.actionButtons">
                 <button
@@ -291,8 +281,20 @@ const handleAddUsersClick = (group: Group) => {
 }
 
 .countColumn {
-  width: 120px;
+  width: 160px;
+  white-space: nowrap;
+}
+
+.centerCell {
   text-align: center !important;
+}
+
+.tableHead th.countColumn {
+  text-align: center;
+}
+
+.tableRow td.countCell {
+  text-align: center;
 }
 
 .actionsColumn {

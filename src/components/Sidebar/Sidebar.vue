@@ -43,7 +43,7 @@ const navGroups = computed<NavGroup[]>(() => {
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'إيضاحات' },
     { name: 'my-follow-ups', path: '/my-follow-ups', icon: 'fas fa-comments', label: 'متابعاتي', badge: unread || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة إيضاحات' ,requiresRole: 'admin'},
-    { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'ادارة المنسقيت الماليين', requiresRole: 'admin' },
+    { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'ادارة المنسقين الماليين', requiresRole: 'admin' },
     { name: 'communication-center', path: '/control/communication', icon: 'fas fa-envelope-open-text', label: 'التواصل'},
     { name: 'message-management', path: '/control/messages', icon: 'fas fa-envelopes-bulk', label: 'إدارة الرسائل', requiresRole: 'admin' },
     // { name: 'file-management', path: '/control/files', icon: 'fas fa-folder-tree', label: 'إدارة الملفات', requiresRole: 'admin' },

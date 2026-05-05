@@ -1044,7 +1044,7 @@ onMounted(() => {
                 <tr>
                   <th :class="$style.headCell">المعرف</th>
                   <th :class="$style.headCell">الاسم الكامل</th>
-                  <th :class="$style.headCell">البريد الإلكتروني</th>
+                  <th :class="[$style.headCell, $style.emailCell]">البريد الإلكتروني</th>
                 </tr>
               </thead>
               <tbody>
@@ -1426,7 +1426,7 @@ onMounted(() => {
               <span v-if="getFieldError('cc_emails')" :class="$style.errorText">
                 {{ getFieldError('cc_emails') }}
               </span>
-              <small :class="$style.fieldHint">المديرون والمشرفون الذين يحتاجون إلى متابعة الرسائل - أدخل البريد الإلكتروني يدوياً أو ارفع ملف Excel</small>
+              <small :class="$style.fieldHint">المدراء والمشرفون الذين يحتاجون إلى متابعة الرسائل - أدخل البريد الإلكتروني يدوياً أو ارفع ملف Excel</small>
             </div>
 
             <div :class="$style.formField">

@@ -186,6 +186,7 @@
     <AddUsersToGroupModal
       :visible="addUsersToGroupModalVisible"
       :group="selectedGroupForAddUsers"
+      :isCreateFlow="addUsersToGroupIsCreateFlow"
       @success="handleAddUsersToGroupSuccess"
       @close="closeAddUsersToGroupModal"
     />
@@ -346,6 +347,7 @@ const bulkActionMode = ref<BulkActionMode>({ type: 'add_to_group', selected_user
 // New modals
 const addUsersToGroupModalVisible = ref(false)
 const selectedGroupForAddUsers = ref<Group | null>(null)
+const addUsersToGroupIsCreateFlow = ref(false)
 const userRoleModalVisible = ref(false)
 const selectedUserForRole = ref<User | null>(null)
 const resetPasswordModalVisible = ref(false)
@@ -653,7 +655,7 @@ const handleGroupAction = async (action: string, group: Group) => {
         }
         break
       case 'add_users':
-        // Logging removed for production
+        addUsersToGroupIsCreateFlow.value = false
         openAddUsersToGroupModal(group)
         break
       case 'view_members':
@@ -741,8 +743,9 @@ const handleGroupSave = async (groupData: any) => {
     
     // If group was just created, optionally show add users modal
     if (createdGroup && groupModalMode.value.type === 'create') {
-      // Auto-open the add users modal for newly created groups
+      // Auto-open the add users modal for newly created groups (create flow - hide admin toggle)
       setTimeout(() => {
+        addUsersToGroupIsCreateFlow.value = true
         openAddUsersToGroupModal(createdGroup!)
       }, 300) // Small delay to allow modal transition
     }
@@ -854,6 +857,7 @@ const openAddUsersToGroupModal = async (group: Group) => {
 const closeAddUsersToGroupModal = () => {
   addUsersToGroupModalVisible.value = false
   selectedGroupForAddUsers.value = null
+  addUsersToGroupIsCreateFlow.value = false
 }
 
 const handleAddUsersToGroupSuccess = async () => {
