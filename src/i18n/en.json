@@ -813,6 +813,12 @@
       "answersProvided": "answers provided",
       "authenticatedUser": "Authenticated User",
       "anonymousUser": "Anonymous User",
+      "registeredUser": "Registered User",
+      "viaGroup": "via group: {name}",
+      "viewProfile": "View Profile",
+      "role": "Role",
+      "department": "Department",
+      "joinedAt": "Joined",
       "respondent": "Respondent",
       "submittedAt": "Submitted At",
       "status": "Status",
@@ -1616,5 +1622,67 @@
         "onlyNumbers": "Password cannot be entirely numeric"
       }
     }
+  },
+  "followUp": {
+    "myFollowUps": "My Follow-ups",
+    "askFollowUp": "Ask Follow-up",
+    "sendReply": "Send Reply",
+    "replyPlaceholder": "Write your reply here...",
+    "threadClosed": "This conversation is closed",
+    "noThreads": "No follow-up threads yet",
+    "surveyLabel": "Survey",
+    "openedAt": "Opened on",
+    "auditLog": "Audit Log",
+    "adminRole": "Admin",
+    "userRole": "Respondent",
+    "presetMessage": "Preset message",
+    "pending": "Pending",
+    "decisionTitle": "Make a Decision",
+    "decisionHint": "The respondent has replied to the follow-up. You can accept or reject their response.",
+    "error": {
+      "generic": "An error occurred. Please try again."
+    },
+    "status": {
+      "pending_reply": "Awaiting Reply",
+      "replied": "Replied",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "closed": "Closed"
+    },
+    "decision": {
+      "accept": "Accept",
+      "reject": "Reject",
+      "reasonPlaceholder": "Reason for decision (optional)"
+    },
+    "timeline": {
+      "opened": "Follow-up Opened",
+      "replied": "Reply Received",
+      "decided": "Decision Made"
+    },
+    "preset": {
+      "request_more_info": "Request more details",
+      "verify_identity": "Verify identity",
+      "clarify_attachment": "Clarify attachment"
+    },
+    "notif": {
+      "opened": "ADJD Team requested clarification on your response",
+      "message": "New message in follow-up",
+      "accepted": "Your response has been accepted",
+      "rejected": "Your response has been rejected"
+    }
+  },
+  "access": {
+    "visibility": {
+      "selected": "Specific people and groups"
+    },
+    "searchPlaceholder": "Search by name, email, or group...",
+    "groupPrivacyHint": "Members of selected groups will appear as \"Registered User\" — their email won't be revealed.",
+    "removeItem": "Remove",
+    "sectionUsers": "Users",
+    "sectionGroups": "Groups",
+    "members": "members",
+    "searchUsers": "Search by name or email...",
+    "searchGroups": "Search groups...",
+    "noResults": "No results found"
   }
 }

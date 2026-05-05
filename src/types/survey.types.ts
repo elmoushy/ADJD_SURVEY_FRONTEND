@@ -107,16 +107,89 @@ export interface SurveyAnswer {
   created_at: string
 }
 
+// Discriminated union for who submitted a response
+export interface AuthenticatedRespondentInfo {
+  type: 'authenticated'
+  id: number
+  email: string
+  name: string
+  avatar_initials: string
+  role?: string | null
+  department?: string | null
+  joined_at?: string | null
+}
+
+export interface GroupMemberRespondentInfo {
+  type: 'group_member'
+  display_label: 'registered_user'
+  group_name?: string | null
+}
+
+export interface AnonymousRespondentInfo {
+  type: 'anonymous'
+  email: string
+}
+
+export type RespondentInfo =
+  | AuthenticatedRespondentInfo
+  | GroupMemberRespondentInfo
+  | AnonymousRespondentInfo
+
+export type FollowUpStatus = 'pending_reply' | 'replied' | 'accepted' | 'rejected' | 'closed'
+
+export interface FollowUpMessage {
+  id: string
+  sender_email: string | null
+  sender_role: 'admin' | 'responder'
+  body: string
+  is_preset: boolean
+  preset_key: string
+  created_at: string
+  read_at: string | null
+}
+
+export interface FollowUpThread {
+  id: string
+  response_id: string
+  response_summary: {
+    survey_title: string
+    submitted_at: string
+  }
+  opened_by: string | null
+  status: FollowUpStatus
+  decision_reason: string
+  decided_by: string | null
+  decided_at: string | null
+  created_at: string
+  updated_at: string
+  messages: FollowUpMessage[]
+}
+
+export interface FollowUpPreset {
+  key: string
+  text: string
+}
+
+export interface SharedAudience {
+  users: Array<{ id: number; email: string; full_name: string; type: 'user' }>
+  groups: Array<{ id: number; name: string; member_count: number; type: 'group' }>
+}
+
 // Survey Response interface
 export interface SurveyResponse {
   id: string
   survey: string // UUID of the survey
   respondent: number | null // User ID or null for anonymous
+  respondent_info: RespondentInfo
   respondent_email: string | null
   respondent_phone: string | null
   submitted_at: string
   is_complete: boolean
+  is_group_submission: boolean
+  latest_follow_up_status: FollowUpStatus | null
+  latest_follow_up_id: string | null
   answers: SurveyAnswer[]
+  answer_count?: number
 }
 
 // Main Survey interface

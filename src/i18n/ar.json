@@ -221,9 +221,9 @@
         "comingSoon": "قريباً"
       },
       "users": {
-        "title": "إدارة المستخدمين",
+        "title": "ادارة المنسقيت الماليين",
         "description": "إدارة حسابات المستخدمين والصلاحيات والمجموعات",
-        "button": "إدارة المستخدمين"
+        "button": "ادارة المنسقيت الماليين"
       },
       "analytics": {
         "title": "إدارة التحليلات",
@@ -978,6 +978,12 @@
       "answersProvided": "إجابات مقدمة",
       "authenticatedUser": "مستخدم مسجل",
       "anonymousUser": "مستخدم مجهول",
+      "registeredUser": "مستخدم مسجل",
+      "viaGroup": "عبر مجموعة: {name}",
+      "viewProfile": "عرض الملف الشخصي",
+      "role": "الدور",
+      "department": "الإدارة",
+      "joinedAt": "تاريخ الانضمام",
       "respondent": "المجيب",
       "submittedAt": "تم الإرسال في",
       "status": "الحالة",
@@ -1076,10 +1082,10 @@
     "descriptionTooLong": "وصف الإيضاحات يجب أن يكون أقل من 1000 حرف"
   },
   "userManagement": {
-    "title": "إدارة المستخدمين",
-    "subtitle": "إدارة المستخدمين والمجموعات والأذونات",
+    "title": "ادارة المنسقيت الماليين",
+    "subtitle": "ادارة المنسقيت الماليين والمجموعات والأذونات",
     "dashboard": {
-      "title": "لوحة تحكم إدارة المستخدمين",
+      "title": "لوحة تحكم ادارة المنسقيت الماليين",
       "totalUsers": "إجمالي المستخدمين",
       "totalGroups": "إجمالي المجموعات",
       "activeUsers": "المستخدمون النشطون",
@@ -1585,5 +1591,67 @@
         "onlyNumbers": "كلمة المرور لا يمكن أن تكون أرقام فقط"
       }
     }
+  },
+  "followUp": {
+    "myFollowUps": "متابعاتي",
+    "askFollowUp": "طرح سؤال متابعة",
+    "sendReply": "إرسال الرد",
+    "replyPlaceholder": "اكتب ردك هنا...",
+    "threadClosed": "هذه المحادثة مغلقة",
+    "noThreads": "لا توجد متابعات حتى الآن",
+    "surveyLabel": "الاستبيان",
+    "openedAt": "تاريخ الفتح",
+    "auditLog": "سجل المتابعة",
+    "adminRole": "الإدارة",
+    "userRole": "المستجيب",
+    "presetMessage": "رسالة جاهزة",
+    "pending": "قيد الانتظار",
+    "decisionTitle": "اتخاذ قرار",
+    "decisionHint": "المستجيب رد على طلب المتابعة. يمكنك قبول إجابته أو رفضها.",
+    "error": {
+      "generic": "حدث خطأ. يرجى المحاولة مرة أخرى."
+    },
+    "status": {
+      "pending_reply": "بانتظار الرد",
+      "replied": "تم الرد",
+      "accepted": "مقبول",
+      "rejected": "مرفوض",
+      "closed": "مغلق"
+    },
+    "decision": {
+      "accept": "قبول",
+      "reject": "رفض",
+      "reasonPlaceholder": "سبب القرار (اختياري)"
+    },
+    "timeline": {
+      "opened": "تم فتح المتابعة",
+      "replied": "تم الرد",
+      "decided": "تم اتخاذ القرار"
+    },
+    "preset": {
+      "request_more_info": "طلب توضيح إضافي",
+      "verify_identity": "التحقق من الهوية",
+      "clarify_attachment": "توضيح المرفق"
+    },
+    "notif": {
+      "opened": "ADJD Team طلب توضيحاً على ردك",
+      "message": "رسالة جديدة في متابعة",
+      "accepted": "تم قبول إجابتك",
+      "rejected": "تم رفض إجابتك"
+    }
+  },
+  "access": {
+    "visibility": {
+      "selected": "أشخاص ومجموعات محددة"
+    },
+    "searchPlaceholder": "ابحث بالاسم أو البريد أو المجموعة...",
+    "groupPrivacyHint": "أعضاء المجموعات المحددة سيظهرون كـ \"مستخدم مسجل\" — لن يتم كشف بريدهم الإلكتروني.",
+    "removeItem": "إزالة",
+    "sectionUsers": "المستخدمون",
+    "sectionGroups": "المجموعات",
+    "members": "عضو",
+    "searchUsers": "ابحث بالاسم أو البريد...",
+    "searchGroups": "ابحث عن مجموعة...",
+    "noResults": "لا توجد نتائج"
   }
 }

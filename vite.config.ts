@@ -1,7 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-// import vueDevTools from 'vite-plugin-vue-devtools'
 import mkcert from 'vite-plugin-mkcert'
 
 // https://vitejs.dev/config/
@@ -26,8 +25,7 @@ export default defineConfig(({ command, mode }) => {
     build: {
       // Security: Ensure proper build configuration
       sourcemap: isDevelopment,
-       minify: isProduction,
-      // Rollup options to ensure stable chunk names
+      minify: isProduction,
       rollupOptions: {
         output: {
           manualChunks: undefined,

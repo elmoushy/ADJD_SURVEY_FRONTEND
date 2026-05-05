@@ -46,6 +46,8 @@ const FileManagement = () =>
 // Surveys
 const Surveys = () => import("../pages/Survey/Surveys.vue");
 const SurveyResponses = () => import("../pages/Survey/SurveyResponses.vue");
+const MyFollowUps = () => import("../pages/Survey/MyFollowUps.vue");
+const FollowUpThreadPage = () => import("../pages/Survey/FollowUpThreadPage.vue");
 const SurveyAnalytics = () => import("../pages/Survey/SurveyAnalytics.vue");
 const PublicSurveyView = () => import("../pages/Survey/PublicSurveyView.vue");
 const PasswordProtectedSurveyView = () =>
@@ -120,6 +122,20 @@ const routes: RouteRecordRaw[] = [
     name: "Notifications",
     component: Notifications,
     meta: { title: "Notifications - WPC | ADJD App", requiresAuth: true },
+  },
+
+  // Follow-up inbox (responder)
+  {
+    path: "/my-follow-ups",
+    name: "MyFollowUps",
+    component: MyFollowUps,
+    meta: { title: "متابعاتي - WPC | ADJD App", requiresAuth: true },
+  },
+  {
+    path: "/my-follow-ups/:id",
+    name: "FollowUpThread",
+    component: FollowUpThreadPage,
+    meta: { title: "متابعة - WPC | ADJD App", requiresAuth: true },
   },
 
   // WebSocket Test (Development only)

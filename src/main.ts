@@ -1,7 +1,10 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { createI18n } from 'vue-i18n'
 import App from './App.vue'
 import router from './router'
+import en from './i18n/en.json'
+import ar from './i18n/ar.json'
 import { azureSsoService } from './services/azureSsoService'
 import './styles/reset.module.css'
 import './styles/theme.css'
@@ -45,6 +48,12 @@ if (import.meta.env.DEV) {
 // Initialize app
 const app = createApp(App)
 const pinia = createPinia()
+const i18n = createI18n({
+  legacy: false,
+  locale: 'ar',
+  fallbackLocale: 'ar',
+  messages: { en, ar }
+})
 
 // Load fonts
 // loadFonts() // COMMENTED OUT FOR CORS COMPLIANCE
@@ -60,6 +69,7 @@ AOS.init({
 // Setup app
 app.use(pinia)
 app.use(router)
+app.use(i18n)
 
 // Initialize Azure SSO and mount app
 const initializeApp = async () => {

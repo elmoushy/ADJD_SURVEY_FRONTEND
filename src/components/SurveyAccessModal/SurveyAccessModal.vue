@@ -379,16 +379,15 @@
               </div>
             </div>
 
-            <!-- Group Access -->
-            <div 
-              :class="[$style.accessOption, { [$style.selected]: selectedAccess === 'GROUPS' }]"
+            <!-- Selected (unified users + groups) -->
+            <div
+              :class="[$style.accessOption, { [$style.selected]: selectedAccess === 'GROUPS' || selectedAccess === 'PRIVATE' }]"
               @click="handleAccessChange('GROUPS')"
             >
               <div :class="$style.optionContent">
                 <div :class="$style.optionLeft">
-                  <!-- <i class="fas fa-users-cog" :class="[$style.optionIcon, $style.groups]"></i> -->
                   <div :class="$style.optionText">
-                    <span :class="$style.optionTitle">{{ getText('survey.access.groups.title') }}</span>
+                    <span :class="$style.optionTitle">{{ getText('access.visibility.selected') || 'أشخاص ومجموعات محددة' }}</span>
                     <small :class="$style.optionDescription">{{ getText('survey.access.groups.description') }}</small>
                   </div>
                 </div>
@@ -396,153 +395,15 @@
                 </div>
               </div>
               
-              <!-- Compact Group Management -->
-              <div v-if="selectedAccess === 'GROUPS'" :class="$style.groupsSection">
-                <div :class="$style.groupManagement">
-                  <!-- Selected Groups Count -->
-                
-                  <!-- Groups List -->
-                  <div v-if="availableGroups.length > 0" :class="$style.groupsList">
-                    <div 
-                      v-for="group in availableGroups" 
-                      :key="group.id"
-                      :class="[$style.groupCard, { [$style.selected]: isGroupSelected(group.id) }]"
-                      @click="toggleGroupSelection(group)"
-                      role="button"
-                      :aria-pressed="isGroupSelected(group.id)"
-                      :tabindex="0"
-                      @keydown.enter="toggleGroupSelection(group)"
-                      @keydown.space.prevent="toggleGroupSelection(group)"
-                    >
-                      <div :class="$style.groupCardContent">
-                        <div :class="$style.groupIconWrapper">
-                          <i class="fas fa-users"></i>
-                        </div>
-                        <div :class="$style.groupTextContent">
-                          <h5 :class="$style.groupName">{{ group.name }}</h5>
-                          <p :class="$style.groupDescription">
-                            {{ group.user_count }} {{ getText('survey.access.members') }}
-                            <span v-if="group.admin_level" :class="$style.adminLevel">
-                              • {{ getText(`userManagement.adminLevel.${group.admin_level}`) || group.admin_level }}
-                            </span>
-                          </p>
-                        </div>
-                        <div :class="$style.groupCheckboxContainer">
-                          <input 
-                            type="checkbox"
-                            :checked="isGroupSelected(group.id)"
-                            :id="`group-${group.id}`"
-                            :class="$style.hiddenCheckbox"
-                            @click.stop
-                            @change="toggleGroupSelection(group)"
-                          />
-                          <label 
-                            :for="`group-${group.id}`" 
-                            :class="$style.customCheckbox"
-                            @click.stop
-                          >
-                            <i v-if="isGroupSelected(group.id)" class="fas fa-check"></i>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Select All/None Actions -->
-                  <div v-if="availableGroups.length > 0" :class="$style.bulkActions">
-                    <button 
-                      :class="$style.bulkActionButton"
-                      @click="selectAllGroups"
-                      :disabled="selectedGroups.length === availableGroups.length"
-                    >
-<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_137_8979)">
-<path d="M1.66797 10.0001C1.66797 6.07171 1.66797 4.10752 2.88836 2.88714C4.10875 1.66675 6.07293 1.66675 10.0013 1.66675C13.9297 1.66675 15.8939 1.66675 17.1142 2.88714C18.3346 4.10752 18.3346 6.07171 18.3346 10.0001C18.3346 13.9285 18.3346 15.8926 17.1142 17.113C15.8939 18.3334 13.9297 18.3334 10.0013 18.3334C6.07293 18.3334 4.10875 18.3334 2.88836 17.113C1.66797 15.8926 1.66797 13.9285 1.66797 10.0001Z" stroke="white" stroke-width="1.5"/>
-<path d="M5 13.1667L5.95238 14.1667L8.33333 11.6667" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M5 7.33325L5.95238 8.33325L8.33333 5.83325" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M10.832 7.5L14.9987 7.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M10.832 13.3333L14.9987 13.3333" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-</g>
-<defs>
-<clipPath id="clip0_137_8979">
-<rect width="20" height="20" fill="white"/>
-</clipPath>
-</defs>
-</svg>
-                      {{ getText('survey.access.selectAll') }}
-                    </button>
-                    <button 
-                      :class="$style.bulkActionButton"
-                      @click="clearAllGroups"
-                      :disabled="selectedGroups.length === 0"
-                    >
-                      <!-- <i class="fas fa-times"></i> -->
-                      {{ getText('survey.access.clearAll') }}
-                    </button>
-                  </div>
-                  
-                  <!-- Loading/Empty State -->
-                  <div v-else-if="isLoadingGroups" :class="$style.loadingState">
-                    <div :class="$style.loadingSpinner"></div>
-                    <span>{{ getText('survey.access.loadingGroups') }}</span>
-                  </div>
-                  
-                  <div v-else :class="$style.emptyState">
-                    <i class="fas fa-users-slash"></i>
-                    <span>{{ getText('survey.access.noGroups') }}</span>
-                  </div>
-                </div>
+              <!-- AccessPicker: unified user+group selector -->
+              <div v-if="selectedAccess === 'GROUPS' || selectedAccess === 'PRIVATE'" :class="$style.groupsSection" @click.stop>
+                <AccessPicker
+                  :initial-users="pickerUsers"
+                  :initial-groups="pickerGroups"
+                  @change="onPickerChange"
+                />
               </div>
             </div>
-
-            <!-- Private Access -->
-            <!-- <div 
-              :class="[$style.accessOption, { [$style.selected]: selectedAccess === 'PRIVATE' }]"
-              @click="handleAccessChange('PRIVATE')"
-            >
-              <div :class="$style.optionContent">
-                <div :class="$style.optionLeft">
-                  <div :class="$style.optionText">
-                    <span :class="$style.optionTitle">{{ getText('survey.access.private.title') }}</span>
-                    <small :class="$style.optionDescription">{{ getText('survey.access.private.description') }}</small>
-                  </div>
-                </div>
-                <div :class="$style.optionRadio">
-                </div>
-              </div>
-              
-              <div v-if="selectedAccess === 'PRIVATE'" :class="$style.privateUsersSection">
-                <div :class="$style.userManagement">
-                  <div :class="$style.userSearch">
-                    <input
-                      type="text"
-                      :class="$style.searchInput"
-                      :placeholder="getText('survey.access.searchUsers')"
-                      v-model="userSearchQuery"
-                      @input="handleUserSearch"
-                    />
-                    <i class="fas fa-search" :class="$style.searchIcon"></i>
-                    
-                    <div v-if="userSearchResults.length > 0" :class="$style.searchResults">
-                      <div 
-                        v-for="user in userSearchResults" 
-                        :key="user.id"
-                        :class="$style.searchResultItem"
-                        @click="addUser(user)"
-                      >
-                        <span :class="$style.userName">{{ user.name }}</span>
-                        <i class="fas fa-plus"></i>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div v-if="selectedUsers.length > 0" :class="$style.usersCount">
-                    <i class="fas fa-users"></i>
-                    <span>{{ selectedUsers.length }} {{ getText('survey.access.usersSelected') }}</span>
-                  </div>
-                </div>
-              </div>
-            </div> -->
           </div>
         </div>
 
@@ -596,15 +457,15 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '../../stores/useAppStore'
 import { surveyService } from '../../services/surveyService'
 import LinkSharingModal from '../LinkSharingModal/LinkSharingModal.vue'
-import type { 
-  Survey, 
-  SurveyVisibility, 
+import AccessPicker from '../Survey/AccessPicker.vue'
+import type { SharedAudience } from '../../types/survey.types'
+import type {
+  Survey,
+  SurveyVisibility,
   PublicLinkResponse,
   PasswordProtectedLinkResponse,
   PasswordProtectedLinkRequest,
   User,
-  ShareRequest,
-  AdminGroup,
   PublicContactMethod
 } from '../../types/survey.types'
 
@@ -633,36 +494,16 @@ const currentLanguage = computed(() => store.currentLanguage)
 // Check if save button should be disabled
 const isSaveDisabled = computed(() => {
   if (isSaving.value) return true
-  
-  // Disable if no access level is selected
   if (!selectedAccess.value) return true
-  
-  // Disable save if GROUPS is selected but no groups available
-  if (selectedAccess.value === 'GROUPS' && availableGroups.value.length === 0 && !isLoadingGroups.value) {
-    return true
-  }
-  
   return false
 })
 
 // Tooltip text for disabled save button
 const saveButtonTooltip = computed(() => {
-  if (isSaving.value) {
-    return currentLanguage.value === 'ar' ? 'جاري الحفظ...' : 'Saving...'
-  }
-  
+  if (isSaving.value) return currentLanguage.value === 'ar' ? 'جاري الحفظ...' : 'Saving...'
   if (!selectedAccess.value) {
-    return currentLanguage.value === 'ar' 
-      ? 'يرجى اختيار مستوى الوصول'
-      : 'Please select an access level'
+    return currentLanguage.value === 'ar' ? 'يرجى اختيار مستوى الوصول' : 'Please select an access level'
   }
-  
-  if (selectedAccess.value === 'GROUPS' && availableGroups.value.length === 0 && !isLoadingGroups.value) {
-    return currentLanguage.value === 'ar' 
-      ? 'لا يمكن الحفظ - لا توجد مجموعات متاحة للمشاركة'
-      : 'Cannot save - No groups available for sharing'
-  }
-  
   return currentLanguage.value === 'ar' ? 'حفظ التغييرات' : 'Save Changes'
 })
 
@@ -747,6 +588,7 @@ const translations = computed(() => {
     'survey.access.private.description': 'مستخدمون محددون فقط',
     'survey.access.searchUsers': 'البحث عن المستخدمين...',
     'survey.access.usersSelected': 'مستخدمين محددين',
+    'access.visibility.selected': 'أشخاص ومجموعات محددة',
     
     // Common
     'common.cancel': 'إلغاء',
@@ -836,6 +678,7 @@ const translations = computed(() => {
     'survey.access.private.description': 'Specific users only',
     'survey.access.searchUsers': 'Search users...',
     'survey.access.usersSelected': 'users selected',
+    'access.visibility.selected': 'Specific people and groups',
     
     // Common
     'common.cancel': 'Cancel',
@@ -855,8 +698,8 @@ const getText = (key: string, fallback?: string) => {
   return translations.value[key] || fallback || key
 }
 
-// State
-const selectedAccess = ref<SurveyVisibility | ''>('') // Start with no selection
+// State — pre-select the survey's current visibility
+const selectedAccess = ref<SurveyVisibility | ''>(props.survey.visibility || '')
 const selectedContactMethod = ref<PublicContactMethod>(props.survey.public_contact_method || 'email')
 const perDeviceAccessEnabled = ref(props.survey.per_device_access || false)
 const publicLink = ref<PublicLinkResponse | null>(null)
@@ -878,10 +721,14 @@ const selectedUsers = ref<User[]>([])
 // const inviteEmail = ref('')
 // const invitedEmails = ref<string[]>([])
 
-// Group management
-const availableGroups = ref<AdminGroup[]>([])
-const selectedGroups = ref<AdminGroup[]>([])
-const isLoadingGroups = ref(false)
+// Access picker state (unified users + groups for SELECTED visibility)
+const pickerUsers = ref<SharedAudience['users']>([])
+const pickerGroups = ref<SharedAudience['groups']>([])
+
+function onPickerChange(audience: { users: SharedAudience['users']; groups: SharedAudience['groups'] }) {
+  pickerUsers.value = audience.users
+  pickerGroups.value = audience.groups
+}
 
 // Password protection
 const passwordProtectionEnabled = ref(false)
@@ -937,7 +784,7 @@ const closeLinkSharingModal = () => {
       publicContactMethod: selectedContactMethod.value,
       users: selectedUsers.value,
       emails: [] as string[], // Email invitations removed from compact UI
-      groups: selectedGroups.value,
+      groups: [],
       passwordProtected: passwordProtectionEnabled.value,
       passwordOptions: passwordProtectionEnabled.value ? {
         passwordAccessMode: passwordAccessMode.value,
@@ -1079,61 +926,6 @@ const removePhone = (index: number) => {
   }
 }
 
-// Group Management
-const loadAdminGroups = async () => {
-  if (selectedAccess.value === 'GROUPS') {
-    try {
-      isLoadingGroups.value = true
-      // Fallback to service method
-      const response = await surveyService.getMyAdminGroups()
-      
-      // The service returns ApiResponse<AdminGroupsResponse> where AdminGroupsResponse has .groups property
-      availableGroups.value = response.data?.groups || []
-    
-      
-      if (availableGroups.value.length === 0) {
-        setStatusMessage(currentLanguage.value === 'ar' ? 'لا توجد مجموعات متاحة' : 'No groups available', 'info')
-      } else {
-        // Logging removed for production // Debug
-      }
-    } catch (error: any) {
-      // Logging removed for production
-      // Logging removed for production // Debug
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to load groups'
-      setStatusMessage(errorMessage, 'error')
-      availableGroups.value = []
-    } finally {
-      isLoadingGroups.value = false
-    }
-  }
-}
-
-const isGroupSelected = (groupId: number): boolean => {
-  return selectedGroups.value.some(group => group.id === groupId)
-}
-
-const toggleGroupSelection = (group: AdminGroup) => {
-  const index = selectedGroups.value.findIndex(selected => selected.id === group.id)
-  if (index >= 0) {
-    selectedGroups.value.splice(index, 1)
-    setStatusMessage(`Removed ${group.name} from shared groups`, 'success')
-  } else {
-    selectedGroups.value.push(group)
-    setStatusMessage(`Added ${group.name} to shared groups`, 'success')
-  }
-}
-
-// Multi-select helper methods
-const selectAllGroups = () => {
-  selectedGroups.value = [...availableGroups.value]
-  setStatusMessage(currentLanguage.value === 'ar' ? 'تم تحديد جميع المجموعات' : 'All groups selected', 'success')
-}
-
-const clearAllGroups = () => {
-  selectedGroups.value = []
-  setStatusMessage(currentLanguage.value === 'ar' ? 'تم إلغاء تحديد جميع المجموعات' : 'All groups deselected', 'success')
-}
-
 // Save Changes using PATCH API
 const handleSave = async () => {
   try {
@@ -1158,46 +950,28 @@ const handleSave = async () => {
       return
     }
 
-    // Validate groups access
-    if (selectedAccess.value === 'GROUPS' && availableGroups.value.length === 0) {
-      const message = currentLanguage.value === 'ar' 
-        ? 'لا يمكن حفظ الاستطلاع مع مستوى وصول المجموعات - لا توجد مجموعات متاحة للمشاركة'
-        : 'Cannot save survey with Groups access - No groups available for sharing'
-      setStatusMessage(message, 'error')
-      return
-    }
-
     // Map visibility to access level for the PATCH API
     let accessLevel: 'public' | 'authenticated' | 'private' | 'groups'
     switch (selectedAccess.value) {
-      case 'PUBLIC':
-        accessLevel = 'public'
-        break
-      case 'AUTH':
-        accessLevel = 'authenticated'
-        break
-      case 'PRIVATE':
-        accessLevel = 'private'
-        break
-      case 'GROUPS':
-        accessLevel = 'groups'
-        break
-      default:
-        accessLevel = 'private'
+      case 'PUBLIC':  accessLevel = 'public'; break
+      case 'AUTH':    accessLevel = 'authenticated'; break
+      case 'PRIVATE': accessLevel = 'private'; break
+      case 'GROUPS':  accessLevel = 'groups'; break
+      default:        accessLevel = 'private'
     }
 
-    // Call the survey service to update using the existing updateSurveyAccess method
     const contactMethod = selectedAccess.value === 'PUBLIC' && !perDeviceAccessEnabled.value ? selectedContactMethod.value : undefined
-    const surveyId = String(props.survey.id) // Ensure ID is string
-    
-    // For GROUPS visibility, use the audience endpoint directly (which handles both visibility + group assignment)
-    if (selectedAccess.value === 'GROUPS' && selectedGroups.value.length > 0) {
+    const surveyId = String(props.survey.id)
+
+    // SELECTED (GROUPS or PRIVATE): use audience endpoint — handles both users + groups in one call
+    if (selectedAccess.value === 'GROUPS' || selectedAccess.value === 'PRIVATE') {
       await surveyService.setSurveyAudience(surveyId, {
-        visibility: 'GROUPS',
-        group_ids: selectedGroups.value.map(g => g.id)
+        visibility: 'PRIVATE',
+        user_ids: pickerUsers.value.map(u => u.id),
+        group_ids: pickerGroups.value.map(g => g.id)
       })
     } else {
-      // For other visibilities, use the standard PATCH approach
+      // PUBLIC / AUTH: standard PATCH
       await surveyService.updateSurveyAccess(surveyId, accessLevel, contactMethod, perDeviceAccessEnabled.value)
     }
     
@@ -1212,15 +986,6 @@ const handleSave = async () => {
       )
     } else {
       setStatusMessage('Survey access updated successfully', 'success')
-    }
-    
-    // Handle private access sharing if needed
-    if (selectedAccess.value === 'PRIVATE' && selectedUsers.value.length > 0) {
-      const shareData: ShareRequest = {
-        user_ids: selectedUsers.value.map(user => user.id),
-        emails: [] // Email invitations removed from compact UI
-      }
-      await surveyService.shareSurvey(surveyId, shareData)
     }
     
     // Show information about token invalidation if visibility changed from PUBLIC
@@ -1287,7 +1052,7 @@ const handleSave = async () => {
           publicContactMethod: selectedContactMethod.value,
           users: selectedUsers.value,
           emails: [] as string[],
-          groups: selectedGroups.value,
+          groups: [],
           passwordProtected: passwordProtectionEnabled.value,
           passwordOptions: passwordProtectionEnabled.value ? {
             passwordAccessMode: passwordAccessMode.value,
@@ -1305,7 +1070,7 @@ const handleSave = async () => {
         publicContactMethod: selectedAccess.value === 'PUBLIC' ? selectedContactMethod.value : undefined,
         users: selectedUsers.value,
         emails: [] as string[], // Email invitations removed from compact UI
-        groups: selectedGroups.value,
+        groups: [],
         passwordProtected: selectedAccess.value === 'PUBLIC' ? passwordProtectionEnabled.value : false,
         passwordOptions: selectedAccess.value === 'PUBLIC' && passwordProtectionEnabled.value ? {
           passwordAccessMode: passwordAccessMode.value,
@@ -1337,31 +1102,27 @@ const handleSave = async () => {
   }
 }
 
-// Load existing shared users for private surveys
+// Load existing shared users to pre-populate the picker
 const loadSharedUsers = async () => {
-  if (props.survey.visibility === 'PRIVATE') {
-    try {
-      if (!props.survey?.id) {
-        throw new Error('Survey ID is required')
-      }
-      const surveyId = String(props.survey.id)
-      const response = await surveyService.getSharedUsers(surveyId)
-      selectedUsers.value = response.data.shared_users || []
-      // Note: invited emails are not tracked separately in the current backend implementation
-    } catch (error) {
-      // Logging removed for production
-      setStatusMessage('Failed to load shared users', 'error')
-    }
+  const vis = props.survey.visibility
+  if (vis !== 'PRIVATE' && vis !== 'GROUPS') return
+  try {
+    if (!props.survey?.id) return
+    const surveyId = String(props.survey.id)
+    const response = await surveyService.getSharedUsers(surveyId)
+    const users = response.data.shared_users || []
+    selectedUsers.value = users
+    pickerUsers.value = users.map(u => ({
+      id: u.id,
+      email: u.email,
+      full_name: (u as any).full_name || (u as any).name || ''
+    }))
+  } catch {
+    // non-critical — picker just starts empty
   }
 }
 
 // Watchers
-watch(() => selectedAccess.value, (newAccess) => {
-  // Only load admin groups for GROUPS access (no need to prevent initialization for this)
-  if (newAccess === 'GROUPS') {
-    loadAdminGroups()
-  }
-})
 
 // Watch password access mode to automatically set contact method
 watch(() => passwordAccessMode.value, (newMode) => {
@@ -1396,13 +1157,8 @@ watch(() => perDeviceAccessEnabled.value, (isEnabled) => {
 
 // Lifecycle
 onMounted(() => {
-  // Prevent body scroll when modal is open
   document.body.classList.add('modal-open')
-  
   loadSharedUsers()
-  if (props.survey.visibility === 'GROUPS') {
-    loadAdminGroups()
-  }
 })
 
 // Cleanup when component unmounts

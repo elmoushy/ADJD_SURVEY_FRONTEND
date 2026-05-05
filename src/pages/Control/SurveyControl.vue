@@ -680,7 +680,7 @@ const loadSurveys = async (resetPage = false) => {
     const response = await surveyService.getAllSurveys(params)
 
     if (response && 'results' in response) {
-      surveys.value = response.results.map((s: Survey) => ({ ...s, questions: s.questions || [] }))
+      surveys.value = response.results.filter((s: Survey) => s && s.id).map((s: Survey) => ({ ...s, questions: s.questions || [] }))
       totalPages.value = response.total_pages || 0
       const totalCount = response.count ?? response.results?.length ?? 0
       totalItems.value = typeof totalCount === 'number' ? totalCount : 0
@@ -904,7 +904,10 @@ const closeLinkSharingModal = () => {
 const handleLinkGenerated = (link: any) => { publicLinkForSharing.value = link }
 const handleStatusUpdate = (_msg: string, _type: string) => {}
 
-const viewResponses = (surveyId: string) => router.push({ name: 'SurveyResponses', params: { surveyId } })
+const viewResponses = (surveyId: string | undefined) => {
+  if (!surveyId) return
+  router.push({ name: 'SurveyResponses', params: { surveyId } })
+}
 
 const cloneSurvey = async (surveyId: string) => {
   try {
@@ -915,7 +918,8 @@ const cloneSurvey = async (surveyId: string) => {
   }
 }
 
-const deleteSurvey = async (surveyId: string) => {
+const deleteSurvey = async (surveyId: string | undefined) => {
+  if (!surveyId) return
   const result = await Swal.fire({
     icon: 'warning',
     title: 'تأكيد الحذف',
@@ -931,8 +935,9 @@ const deleteSurvey = async (surveyId: string) => {
       await surveyService.deleteSurvey(surveyId)
       await Promise.all([loadSurveys(), loadAnalytics()])
       Swal.fire({ icon: 'success', title: 'تم الحذف', text: 'تم حذف الإيضاحات بنجاح', confirmButtonText: 'موافق' })
-    } catch {
-      Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في حذف الإيضاحات', confirmButtonText: 'موافق' })
+    } catch (error: any) {
+      const msg = error?.message || 'فشل في حذف الإيضاحات'
+      Swal.fire({ icon: 'error', title: 'خطأ', text: msg, confirmButtonText: 'موافق' })
     }
   }
 }

@@ -143,68 +143,37 @@
                 @click="expandResponse(response.id)"
               >
                 <div :class="$style.respondentInfo">
-               
-                  <div :class="$style.respondentDetails">
-                  
-                    
-                    <div :class="$style.respondentMeta">
-                      <span :class="$style.respondentType">
-                        {{
-                          response.respondent.type === "authenticated"
-                            ? t("survey.responses.authenticatedUser")
-                            : t("survey.responses.anonymousUser")
-                        }}
-                      </span>
-                      <span :class="$style.submissionDate">
-                        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M1.25 7.5C1.25 5.14298 1.25 3.96447 1.98223 3.23223C2.71447 2.5 3.89298 2.5 6.25 2.5H8.75C11.107 2.5 12.2855 2.5 13.0178 3.23223C13.75 3.96447 13.75 5.14298 13.75 7.5V8.75C13.75 11.107 13.75 12.2855 13.0178 13.0178C12.2855 13.75 11.107 13.75 8.75 13.75H6.25C3.89298 13.75 2.71447 13.75 1.98223 13.0178C1.25 12.2855 1.25 11.107 1.25 8.75V7.5Z" stroke="#717784" stroke-width="0.9375"/>
-                          <path d="M4.375 2.5V1.5625" stroke="#717784" stroke-width="0.9375" stroke-linecap="round"/>
-                          <path d="M10.625 2.5V1.5625" stroke="#717784" stroke-width="0.9375" stroke-linecap="round"/>
-                          <path d="M1.5625 5.625H13.4375" stroke="#717784" stroke-width="0.9375" stroke-linecap="round"/>
-                          <path d="M11.25 10.625C11.25 10.9702 10.9702 11.25 10.625 11.25C10.2798 11.25 10 10.9702 10 10.625C10 10.2798 10.2798 10 10.625 10C10.9702 10 11.25 10.2798 11.25 10.625Z" fill="#717784"/>
-                          <path d="M11.25 8.125C11.25 8.47018 10.9702 8.75 10.625 8.75C10.2798 8.75 10 8.47018 10 8.125C10 7.77982 10.2798 7.5 10.625 7.5C10.9702 7.5 11.25 7.77982 11.25 8.125Z" fill="#717784"/>
-                          <path d="M8.125 10.625C8.125 10.9702 7.84518 11.25 7.5 11.25C7.15482 11.25 6.875 10.9702 6.875 10.625C6.875 10.2798 7.15482 10 7.5 10C7.84518 10 8.125 10.2798 8.125 10.625Z" fill="#717784"/>
-                          <path d="M8.125 8.125C8.125 8.47018 7.84518 8.75 7.5 8.75C7.15482 8.75 6.875 8.47018 6.875 8.125C6.875 7.77982 7.15482 7.5 7.5 7.5C7.84518 7.5 8.125 7.77982 8.125 8.125Z" fill="#717784"/>
-                          <path d="M5 10.625C5 10.9702 4.72018 11.25 4.375 11.25C4.02982 11.25 3.75 10.9702 3.75 10.625C3.75 10.2798 4.02982 10 4.375 10C4.72018 10 5 10.2798 5 10.625Z" fill="#717784"/>
-                          <path d="M5 8.125C5 8.47018 4.72018 8.75 4.375 8.75C4.02982 8.75 3.75 8.47018 3.75 8.125C3.75 7.77982 4.02982 7.5 4.375 7.5C4.72018 7.5 5 7.77982 5 8.125Z" fill="#717784"/>
-                        </svg>
-                        <div>{{ formatDate(response.submitted_at).date }}</div>
-                        <div>{{ formatDate(response.submitted_at).time }}</div>
-                      </span>
-                    </div>
-                  </div>
-                     <div :class="$style.respondentAvatar">
-               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M0 24C0 10.7452 10.7452 0 24 0C37.2548 0 48 10.7452 48 24C48 37.2548 37.2548 48 24 48C10.7452 48 0 37.2548 0 24Z" fill="#F5F5F5"/>
-<path d="M31 33V31C31 29.9391 30.5786 28.9217 29.8284 28.1716C29.0783 27.4214 28.0609 27 27 27H21C19.9391 27 18.9217 27.4214 18.1716 28.1716C17.4214 28.9217 17 29.9391 17 31V33" stroke="#4A5565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M24 23C26.2091 23 28 21.2091 28 19C28 16.7909 26.2091 15 24 15C21.7909 15 20 16.7909 20 19C20 21.2091 21.7909 23 24 23Z" stroke="#4A5565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+                  <!-- Respondent chip (3-way: authenticated / group_member / anonymous) -->
+                  <RespondentChip
+                    v-if="response.respondent_info"
+                    :respondent="response.respondent_info"
+                    @click="openProfile"
+                  />
 
-                  </div>
+                  <span :class="$style.submissionDate">
+                    <svg width="13" height="13" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1.25 7.5C1.25 5.14298 1.25 3.96447 1.98223 3.23223C2.71447 2.5 3.89298 2.5 6.25 2.5H8.75C11.107 2.5 12.2855 2.5 13.0178 3.23223C13.75 3.96447 13.75 5.14298 13.75 7.5V8.75C13.75 11.107 13.75 12.2855 13.0178 13.0178C12.2855 13.75 11.107 13.75 8.75 13.75H6.25C3.89298 13.75 2.71447 13.75 1.98223 13.0178C1.25 12.2855 1.25 11.107 1.25 8.75V7.5Z" stroke="#717784" stroke-width="0.9375"/>
+                      <path d="M1.5625 5.625H13.4375" stroke="#717784" stroke-width="0.9375" stroke-linecap="round"/>
+                    </svg>
+                    {{ formatDate(response.submitted_at).date }}
+                  </span>
                 </div>
 
+                <!-- Follow-up status (replaces misleading is_complete badge) -->
                 <div :class="$style.responseStatus">
-                  <span
-                    :class="[
-                      $style.statusBadge,
-                      response.is_complete
-                        ? $style.complete
-                        : $style.incomplete,
-                    ]"
+                  <button
+                    v-if="response.latest_follow_up_status && response.latest_follow_up_id"
+                    :class="$style.followUpLink"
+                    @click.stop="router.push(`/my-follow-ups/${response.latest_follow_up_id}`)"
                   >
-                    <i
-                      :class="
-                        response.is_complete
-                          ? 'fas fa-check-circle'
-                          : 'fas fa-clock'
-                      "
-                    ></i>
-                    {{
-                      response.is_complete
-                        ? t("survey.responses.completed")
-                        : t("survey.responses.incomplete")
-                    }}
-                  </span>
+                    <FollowUpStatusBadge :status="response.latest_follow_up_status" />
+                    <i class="fas fa-external-link-alt" :class="$style.followUpLinkIcon"></i>
+                  </button>
+                  <AskFollowUpButton
+                    v-else-if="response.respondent_info?.type === 'authenticated'"
+                    :response-id="response.id"
+                    @opened="onFollowUpOpened"
+                  />
                 </div>
               </div>
 
@@ -812,6 +781,20 @@
       </div>
     </div>
   </div>
+
+  <!-- Profile drawer (slides in when clicking an authenticated respondent chip) -->
+  <ProfileDrawer
+    :respondent="profileDrawerRespondent"
+    :open="profileDrawerOpen"
+    @close="profileDrawerOpen = false"
+  />
+
+  <!-- Follow-up drawer -->
+  <FollowUpDrawer
+    :response-id="activeFollowUpResponseId"
+    :open="followUpDrawerOpen"
+    @close="followUpDrawerOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -822,6 +805,14 @@ import { apiClient } from "../../services/jwtAuthService";
 import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import { addAmiriFont } from "../../lib/fonts/Amiri-normal";
+
+// Follow-up + respondent components
+import RespondentChip from "../../components/Survey/RespondentChip.vue";
+import ProfileDrawer from "../../components/Survey/ProfileDrawer.vue";
+import FollowUpStatusBadge from "../../components/Survey/FollowUpStatusBadge.vue";
+import AskFollowUpButton from "../../components/Survey/AskFollowUpButton.vue";
+import FollowUpDrawer from "../../components/Survey/FollowUpDrawer.vue";
+import type { AuthenticatedRespondentInfo, FollowUpThread } from "../../types/survey.types";
 
 // Analytics Components
 import SurveyAnalytics from "../../components/Analytics/SurveyAnalytics.vue";
@@ -851,6 +842,29 @@ const store = useAppStore();
 const currentTheme = computed(() => store.currentTheme);
 const isRTL = computed(() => store.currentLanguage === "ar");
 const t = computed(() => store.t);
+
+// Profile drawer state
+const profileDrawerOpen = ref(false);
+const profileDrawerRespondent = ref<AuthenticatedRespondentInfo | null>(null);
+
+function openProfile(respondentId: number) {
+  const response = responses.value.find(
+    (r: any) => r.respondent_info?.type === 'authenticated' && r.respondent_info?.id === respondentId
+  );
+  if (response?.respondent_info?.type === 'authenticated') {
+    profileDrawerRespondent.value = response.respondent_info as AuthenticatedRespondentInfo;
+    profileDrawerOpen.value = true;
+  }
+}
+
+// Follow-up drawer state
+const followUpDrawerOpen = ref(false);
+const activeFollowUpResponseId = ref<string | null>(null);
+
+function onFollowUpOpened(thread: FollowUpThread) {
+  activeFollowUpResponseId.value = thread.response_id;
+  followUpDrawerOpen.value = true;
+}
 
 // Clean Unicode direction markers that cause display issues in PDF
 function cleanDirectionMarkers(text: string): string {

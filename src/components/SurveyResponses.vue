@@ -117,7 +117,6 @@
                   <th>{{ t('responses.surveyTitle') }}</th>
                   <th>{{ t('responses.respondent') }}</th>
                   <th>{{ t('responses.submittedAt') }}</th>
-                  <th>{{ t('responses.status') }}</th>
                   <th :class="$style.actionsHeader">{{ t('responses.actions') }}</th>
                 </tr>
               </thead>
@@ -131,18 +130,8 @@
                   <td :class="$style.submittedAt">
                     {{ formatDate(response.submitted_at) }}
                   </td>
-                  <td>
-                    <span 
-                      :class="[
-                        $style.statusBadge,
-                        response.is_complete ? $style.completed : $style.incomplete
-                      ]"
-                    >
-                      {{ response.is_complete ? t('responses.completed') : t('responses.incomplete') }}
-                    </span>
-                  </td>
                   <td :class="$style.actions">
-                    <button 
+                    <button
                       :class="$style.viewBtn"
                       @click="viewResponseDetails(response)"
                     >

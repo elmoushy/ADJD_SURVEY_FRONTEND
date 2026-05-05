@@ -62,7 +62,7 @@
               <span>{{ isRTL ? 'حفظ كمسودة' : 'Save as Draft' }}</span>
             </button>
             <button :class="[$style.headerButton, $style.publishButton]" @click="handlePublish" :disabled="!canPublish">
-              <span>{{ isRTL ? 'نشر' : 'Publish' }}</span>
+              <span>{{ isRTL ? 'ارسال' : 'Publish' }}</span>
             </button>
           </template>
         </div>

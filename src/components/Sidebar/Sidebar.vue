@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useFollowUpsStore } from '@/stores/followUps'
 
 const props = defineProps<{
   theme?: 'day' | 'night'
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const router = useRouter()
+const followUpsStore = useFollowUpsStore()
 
 /** collapse state mirrors v-model */
 const internalCollapsed = ref<boolean>(props.modelValue ?? false)
@@ -36,10 +38,12 @@ type NavItem = {
 type NavGroup = { id: string; items: NavItem[] }
 
 const navGroups = computed<NavGroup[]>(() => {
+  const unread = followUpsStore.unreadCount
   const primary: NavItem[] = [
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'إيضاحات' },
+    { name: 'my-follow-ups', path: '/my-follow-ups', icon: 'fas fa-comments', label: 'متابعاتي', badge: unread || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة إيضاحات' ,requiresRole: 'admin'},
-    { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },
+    { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'ادارة المنسقيت الماليين', requiresRole: 'admin' },
     { name: 'communication-center', path: '/control/communication', icon: 'fas fa-envelope-open-text', label: 'التواصل'},
     { name: 'message-management', path: '/control/messages', icon: 'fas fa-envelopes-bulk', label: 'إدارة الرسائل', requiresRole: 'admin' },
     // { name: 'file-management', path: '/control/files', icon: 'fas fa-folder-tree', label: 'إدارة الملفات', requiresRole: 'admin' },
@@ -73,7 +77,10 @@ const onKey = (e: KeyboardEvent) => {
     internalCollapsed.value = !internalCollapsed.value
   }
 }
-onMounted(() => document.addEventListener('keydown', onKey))
+onMounted(() => {
+  document.addEventListener('keydown', onKey)
+  followUpsStore.loadInbox().catch(() => {})
+})
 onUnmounted(() => document.removeEventListener('keydown', onKey))
 
 /** actions */
@@ -355,13 +362,14 @@ const logoSrc = computed(() => isCollapsed.value ? '/moblogoadjd.png' : '/ADJDlo
   justify-content:flex-start;
   gap:10px;
   inline-size:100%;
-  padding:5px 12px;
+  padding:8px 12px;
   border-radius:20px;
   font-weight:600;
-  font-size:16px;
+  font-size:15px;
   color:#0f172a;
   cursor:pointer;
   transition: background .2s ease, color .2s ease, transform .2s ease;
+  min-block-size: 48px;
 }
 .item:hover{
   background:rgba(255,255,255,.95);
@@ -393,10 +401,12 @@ const logoSrc = computed(() => isCollapsed.value ? '/moblogoadjd.png' : '/ADJDlo
 
 .itemText{
   flex:1;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:unset;
   text-align:right;
+  line-height:1.3;
+  word-break:keep-all;
 }
 .badge{
   font-size:12px;

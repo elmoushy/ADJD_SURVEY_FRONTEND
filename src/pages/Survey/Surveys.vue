@@ -435,7 +435,7 @@ const loadSurveys = async () => {
     if ('count' in response) {
       // Paginated response
       const paginatedResponse = response as PaginatedApiResponse<SharedSurvey>
-      surveys.value = paginatedResponse.results
+      surveys.value = paginatedResponse.results.filter((s: SharedSurvey) => s && s.id)
       pagination.value.total = paginatedResponse.count
       
       // Estimate access summary from current page data
