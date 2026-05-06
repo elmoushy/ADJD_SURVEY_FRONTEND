@@ -22,7 +22,7 @@
           <div v-if="mode.type === 'add_to_group'" :class="$style.formGroup">
             <label :class="$style.label">{{ t('userManagement.modals.bulkActions.addToGroup') }}</label>
             <select v-model="formData.group_id" :class="$style.select" required>
-              <option value="">{{ t('userManagement.forms.group.selectAdmins') }}</option>
+              <option value="" disabled>{{ t('userManagement.forms.group.selectAdmins') }}</option>
               <option v-for="group in groups" :key="group.id" :value="group.id">
                 {{ group.name }}
               </option>
@@ -74,7 +74,7 @@ interface Props {
 const props = defineProps<Props>()
 
 interface Emits {
-  (e: 'apply', data: any): void
+  (e: 'save', data: any): void
   (e: 'close'): void
 }
 
@@ -102,14 +102,15 @@ const getModalTitle = () => {
 
 const handleSubmit = () => {
   if (props.mode.type === 'add_to_group') {
-    emit('apply', {
+    if (!formData.value.group_id) return
+    emit('save', {
       group_id: formData.value.group_id,
       user_ids: props.mode.selected_users.map(user => user.id),
       is_group_admin: formData.value.is_group_admin
     })
   } else if (props.mode.type === 'change_role') {
-    // This would need to be implemented as multiple individual API calls
-    emit('apply', {
+    if (!formData.value.role) return
+    emit('save', {
       role: formData.value.role,
       user_ids: props.mode.selected_users.map(user => user.id)
     })
