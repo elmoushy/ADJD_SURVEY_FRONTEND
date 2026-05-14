@@ -40,6 +40,14 @@
                   <span :class="[$style.memberTag, $style.adminTag]">
                     {{ isRTL ? 'مدير' : 'Admin' }}
                   </span>
+                  <button
+                    :class="$style.removeUserBtn"
+                    @click="handleRemoveUser(member.id)"
+                    :disabled="removingUserId === member.id"
+                    :title="isRTL ? 'إزالة من المجموعة' : 'Remove from group'"
+                  >
+                    <i :class="removingUserId === member.id ? 'fas fa-spinner fa-spin' : 'fas fa-user-minus'"></i>
+                  </button>
                 </div>
               </div>
               <div v-else :class="$style.emptyMembers">
@@ -65,6 +73,14 @@
                   <span :class="[$style.memberTag, $style.memberTagUser]">
                     {{ isRTL ? 'عضو' : 'Member' }}
                   </span>
+                  <button
+                    :class="$style.removeUserBtn"
+                    @click="handleRemoveUser(member.id)"
+                    :disabled="removingUserId === member.id"
+                    :title="isRTL ? 'إزالة من المجموعة' : 'Remove from group'"
+                  >
+                    <i :class="removingUserId === member.id ? 'fas fa-spinner fa-spin' : 'fas fa-user-minus'"></i>
+                  </button>
                 </div>
               </div>
               <div v-else :class="$style.emptyMembers">
@@ -209,6 +225,7 @@ const allUsers = ref<User[]>([])
 
 // View mode: detailed members/admins from API
 const groupDetails = ref<{ user_groups: Array<{ user: { id: number; full_name: string; email: string }; is_group_admin: boolean }> } | null>(null)
+const removingUserId = ref<number | null>(null)
 
 const groupAdmins = computed(() =>
   (groupDetails.value?.user_groups ?? [])
@@ -285,6 +302,19 @@ const loadGroupDetails = async () => {
   }
 }
 
+const handleRemoveUser = async (userId: number) => {
+  if (!props.group?.id || removingUserId.value !== null) return
+  removingUserId.value = userId
+  try {
+    await userManagementService.removeUserFromGroup(props.group.id, userId)
+    await loadGroupDetails()
+  } catch (err) {
+    // removal failed
+  } finally {
+    removingUserId.value = null
+  }
+}
+
 const handleSubmit = () => {
   if (!isFormValid.value) return
   
@@ -346,6 +376,28 @@ watch(() => props.group, (group) => {
   width: 90%;
   max-height: 90vh;
   overflow: hidden;
+}
+
+.removeUserBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--danger, #ef4444);
+  cursor: pointer;
+  padding: 4px 7px;
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.removeUserBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger, #ef4444);
+}
+
+.removeUserBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .modalHeader {
