@@ -304,6 +304,13 @@
           </div>
         </div>
 
+        <!-- Attachments Section -->
+        <AttachmentUpload
+          v-if="survey?.allow_attachments && survey.allow_attachments !== 'none'"
+          ref="attachmentRef"
+          :required="survey.allow_attachments === 'required'"
+        />
+
         <!-- Submit Button Container (All Questions View) -->
         <div :class="$style.submitContainer">
           <button
@@ -547,6 +554,7 @@ import { useI18n } from '@/hooks/useI18n'
 import { surveyService } from '@/services/surveyService'
 import { ThankYouModal } from '@/components/ThankYouModal'
 import { useInputValidation } from '@/composables/useInputValidation'
+import AttachmentUpload from '@/components/Survey/AttachmentUpload.vue'
 import Swal from 'sweetalert2'
 import type { 
   AuthSurvey, 
@@ -584,6 +592,7 @@ const answers = ref<Record<string, any>>({})
 const questionError = ref('')
 const isSubmitting = ref(false)
 const showThankYouModal = ref(false)
+const attachmentRef = ref<InstanceType<typeof AttachmentUpload> | null>(null)
 
 // Computed
 const currentQuestion = computed(() => {
@@ -644,6 +653,12 @@ const canSubmit = computed(() => {
         if (answer === undefined || answer === null || answer === '') return false
       }
     }
+  }
+
+  // Check required attachments
+  if (survey.value.allow_attachments === 'required') {
+    const ref = attachmentRef.value
+    if (!ref || (ref.queuedFiles.length === 0 && ref.uploadedFiles.length === 0)) return false
   }
   
   return true
@@ -831,10 +846,16 @@ const submitSurvey = async () => {
       setTimeout(() => reject(new Error('TIMEOUT')), 15000)
     })
     
-    await Promise.race([
+    const result = await Promise.race([
       surveyService.submitAuthResponse(submissionData),
       timeoutPromise
-    ])
+    ]) as any
+    
+    // Upload attachments if any are queued
+    const responseId = result?.data?.response_id
+    if (responseId && attachmentRef.value && attachmentRef.value.queuedFiles.length > 0) {
+      await attachmentRef.value.uploadAll(responseId)
+    }
     
     // Show success message and then thank you modal
     await Swal.fire({

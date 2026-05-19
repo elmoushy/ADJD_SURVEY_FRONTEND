@@ -288,6 +288,55 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Attachments Section -->
+                  <div v-if="response.attachments && response.attachments.length" :class="$style.attachmentsSection">
+                    <div :class="$style.responseDetailsHeader">
+                      <div :class="$style.detailsHeaderIcon">
+                        <i class="fas fa-paperclip"></i>
+                      </div>
+                      <h4 :class="$style.detailsHeaderTitle">المرفقات</h4>
+                      <div :class="$style.detailsHeaderBadge">
+                        {{ response.attachments.length }} مرفق
+                      </div>
+                    </div>
+                    <div :class="$style.attachmentsGrid">
+                      <div
+                        v-for="att in response.attachments"
+                        :key="att.id"
+                        :class="$style.attachmentCard"
+                      >
+                        <div :class="$style.attachmentCardIcon">
+                          <i :class="getAttachmentIcon(att.mime_type)"></i>
+                        </div>
+                        <div :class="$style.attachmentCardInfo">
+                          <span :class="$style.attachmentFileName">{{ att.original_filename }}</span>
+                          <span :class="$style.attachmentMeta">
+                            {{ formatFileSize(att.file_size) }}
+                            <span v-if="att.uploaded_by_email"> · {{ att.uploaded_by_email }}</span>
+                          </span>
+                        </div>
+                        <div :class="$style.attachmentCardActions">
+                          <button
+                            :class="$style.attachActionBtn"
+                            @click="downloadResponseAttachment(att)"
+                            title="تحميل"
+                          >
+                            <i class="fas fa-download"></i>
+                          </button>
+                          <button
+                            v-if="att.can_delete"
+                            :class="[$style.attachActionBtn, $style.attachDeleteBtn]"
+                            @click="deleteInlineAttachment(att, response)"
+                            title="حذف"
+                          >
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -776,6 +825,39 @@
                 </div>
               </div>
             </div>
+
+            <!-- Attachments Section -->
+            <div v-if="selectedResponse.attachments && selectedResponse.attachments.length" :class="$style.answersContainer">
+              <h4 :class="$style.answersTitle">
+                <i class="fas fa-paperclip"></i>
+                المرفقات
+              </h4>
+              <div
+                v-for="att in selectedResponse.attachments"
+                :key="att.id"
+                :class="$style.answerDetailItem"
+                style="display: flex; align-items: center; gap: 10px;"
+              >
+                <i class="fas fa-file-alt" style="color: var(--color-primary, #B78A41); font-size: 1.1rem;"></i>
+                <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ att.original_filename }}</span>
+                <span style="font-size: 0.75rem; color: #999;">{{ formatFileSize(att.file_size) }}</span>
+                <button
+                  style="background: none; border: none; cursor: pointer; color: var(--color-primary, #B78A41); padding: 4px;"
+                  @click="downloadResponseAttachment(att)"
+                  title="تحميل"
+                >
+                  <i class="fas fa-download"></i>
+                </button>
+                <button
+                  v-if="att.can_delete"
+                  style="background: none; border: none; cursor: pointer; color: #dc3545; padding: 4px;"
+                  @click="deleteResponseAttachment(att)"
+                  title="حذف"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -802,6 +884,7 @@ import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAppStore } from "../../stores/useAppStore";
 import { apiClient } from "../../services/jwtAuthService";
+import { attachmentService } from "../../services/attachmentService";
 import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import { addAmiriFont } from "../../lib/fonts/Amiri-normal";
@@ -2230,6 +2313,84 @@ function formatDate(dateString: string) {
     date: `${year}-${month}-${day}`,
     time: `${hours}:${minutes}`
   };
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+function getAttachmentIcon(mime: string): string {
+  if (mime === 'application/pdf') return 'fas fa-file-pdf'
+  if (mime.includes('word') || mime.includes('document')) return 'fas fa-file-word'
+  if (mime.includes('excel') || mime.includes('spreadsheet')) return 'fas fa-file-excel'
+  if (mime.startsWith('image/')) return 'fas fa-file-image'
+  return 'fas fa-file-alt'
+}
+
+async function downloadResponseAttachment(att: any) {
+  try {
+    const blobUrl = await attachmentService.downloadResponseAttachment(att.id)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = att.original_filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
+  } catch {
+    Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في تحميل المرفق' })
+  }
+}
+
+async function deleteResponseAttachment(att: any) {
+  const confirm = await Swal.fire({
+    title: 'تأكيد حذف المرفق',
+    html: `<p style="text-align:center;margin:0">هل أنت متأكد من حذف المرفق؟<br><strong style="color:#B78A41">${att.original_filename}</strong></p>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، احذف',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#B78A41',
+    cancelButtonColor: '#6c757d',
+    reverseButtons: true,
+    customClass: { popup: 'swal-rtl-popup' }
+  })
+  if (!confirm.isConfirmed) return
+  try {
+    await attachmentService.deleteResponseAttachment(att.id)
+    if (selectedResponse.value?.attachments) {
+      selectedResponse.value.attachments = selectedResponse.value.attachments.filter((a: any) => a.id !== att.id)
+    }
+  } catch (err: any) {
+    Swal.fire({ icon: 'error', title: 'خطأ', text: err.response?.data?.message || 'فشل في حذف المرفق' })
+  }
+}
+
+async function deleteInlineAttachment(att: any, response: any) {
+  const confirm = await Swal.fire({
+    title: 'تأكيد حذف المرفق',
+    html: `<p style="text-align:center;margin:0">هل أنت متأكد من حذف المرفق؟<br><strong style="color:#B78A41">${att.original_filename}</strong></p>`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'نعم، احذف',
+    cancelButtonText: 'إلغاء',
+    confirmButtonColor: '#B78A41',
+    cancelButtonColor: '#6c757d',
+    reverseButtons: true,
+    customClass: { popup: 'swal-rtl-popup' }
+  })
+  if (!confirm.isConfirmed) return
+  try {
+    await attachmentService.deleteResponseAttachment(att.id)
+    if (response.attachments) {
+      response.attachments = response.attachments.filter((a: any) => a.id !== att.id)
+      response.attachment_count = response.attachments.length
+    }
+  } catch (err: any) {
+    Swal.fire({ icon: 'error', title: 'خطأ', text: err.response?.data?.message || 'فشل في حذف المرفق' })
+  }
 }
 
 const formatAnswer = (answer: any) => {

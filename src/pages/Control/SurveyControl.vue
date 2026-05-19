@@ -134,7 +134,7 @@
             <i class="fas fa-pause"></i>
             {{ t('survey.bulk.operations.deactivate') }}
           </button>
-          <button :class="[$style.bulkButton, $style.danger]" @click="bulkDelete" :disabled="bulkOperationLoading">
+          <button v-if="isSuperAdmin" :class="[$style.bulkButton, $style.danger]" @click="bulkDelete" :disabled="bulkOperationLoading">
             <i class="fas fa-trash"></i>
             {{ t('survey.bulk.operations.delete') }}
           </button>
@@ -168,6 +168,30 @@
             <option value="title_asc">{{ t('survey.sorting.titleAZ') }}</option>
             <option value="title_desc">{{ t('survey.sorting.titleZA') }}</option>
             <option value="most_responses">{{ t('survey.sorting.mostResponses') }}</option>
+          </select>
+
+          <!-- Admin-only: Group filter -->
+          <select
+            v-if="isSuperOrAdmin"
+            :class="$style.filterSelect"
+            v-model="selectedGroup"
+            @change="applyFilters"
+          >
+            <option value="">{{ isRTL ? 'جميع المجموعات' : 'All Groups' }}</option>
+            <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+
+          <!-- Admin-only: Lifecycle status filter -->
+          <select
+            v-if="isSuperOrAdmin"
+            :class="$style.filterSelect"
+            v-model="selectedLifecycleStatus"
+            @change="applyFilters"
+          >
+            <option value="">{{ isRTL ? 'جميع الحالات' : 'All Statuses' }}</option>
+            <option value="draft">{{ isRTL ? 'مسودة' : 'Draft' }}</option>
+            <option value="submitted">{{ isRTL ? 'منشور' : 'Published' }}</option>
+            <option value="expired">{{ isRTL ? 'منتهي' : 'Expired' }}</option>
           </select>
         </div>
 
@@ -300,6 +324,7 @@
               </button>
 
               <button
+                v-if="isSuperAdmin"
                 :class="[$style.actionButton, $style.dangerAction]"
                 @click.stop="deleteSurvey(survey.id)"
                 :title="t('survey.card.delete')"
@@ -432,7 +457,7 @@
                     <i class="fas fa-copy"></i>
                     {{ t('survey.card.clone') }}
                   </button>
-                  <button :class="[$style.actionMenuItem, $style.danger]" @click.stop="deleteSurvey(survey.id)">
+                  <button v-if="isSuperAdmin" :class="[$style.actionMenuItem, $style.danger]" @click.stop="deleteSurvey(survey.id)">
                     <i class="fas fa-trash"></i>
                     {{ t('survey.card.delete') }}
                   </button>
@@ -542,7 +567,9 @@ import { ref, computed, onMounted, onUnmounted, defineComponent, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '../../stores/useAppStore'
+import { useSimpleAuth } from '../../composables/useSimpleAuth'
 import { surveyService } from '../../services/surveyService'
+import { apiClient } from '../../services/jwtAuthService'
 import type {
   Survey,
   SurveyAnalytics,
@@ -565,10 +592,15 @@ const router = useRouter()
 const route = useRoute()
 const store = useAppStore()
 const { currentTheme, currentLanguage } = storeToRefs(store)
+const { user: authUser } = useSimpleAuth()
 
 // Theme & i18n
 const isRTL = computed(() => currentLanguage.value === 'ar')
 const t = store.t
+
+// Role check
+const isSuperAdmin = computed(() => authUser.value?.role === 'super_admin')
+const isSuperOrAdmin = computed(() => ['super_admin', 'admin'].includes(authUser.value?.role || ''))
 
 // State
 const surveys = ref<Survey[]>([])
@@ -583,6 +615,11 @@ const viewMode = ref<'grid' | 'list'>('grid')
 const selectedSurveys = ref<string[]>([])
 const bulkOperationLoading = ref(false)
 const activeActionMenu = ref<string | null>(null)
+
+// Admin-only filters
+const groups = ref<{id: number; name: string}[]>([])
+const selectedGroup = ref('')
+const selectedLifecycleStatus = ref('')
 
 const createButtonRef = ref<HTMLElement | null>(null)
 const showCreateDropdown = ref(false)
@@ -676,6 +713,8 @@ const loadSurveys = async (resetPage = false) => {
     if (debouncedSearch.value.trim()) params.search = debouncedSearch.value.trim()
     if (selectedFilter.value && selectedFilter.value !== 'all') params.survey_status = selectedFilter.value
     if (selectedSort.value) params.sort_by = selectedSort.value
+    if (selectedGroup.value) params.shared_group = selectedGroup.value
+    if (selectedLifecycleStatus.value) params.lifecycle_status = selectedLifecycleStatus.value
 
     const response = await surveyService.getAllSurveys(params)
 
@@ -807,7 +846,19 @@ const loadAnalytics = async () => {
 }
 
 const refreshData = async () => {
-  await Promise.all([loadSurveys(), loadAnalytics()])
+  await Promise.all([loadSurveys(), loadAnalytics(), loadGroups()])
+}
+
+const loadGroups = async () => {
+  if (!isSuperOrAdmin.value) return
+  try {
+    const res = await apiClient.get('/auth/groups/dropdown/')
+    // API returns { groups: [{id, name}, ...] }
+    const data = res.data?.groups || res.data?.data?.groups || res.data?.data || res.data?.results || []
+    groups.value = Array.isArray(data) ? data : []
+  } catch {
+    groups.value = []
+  }
 }
 
 // Search/Filters/Sorting

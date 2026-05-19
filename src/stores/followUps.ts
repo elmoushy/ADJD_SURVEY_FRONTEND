@@ -60,6 +60,7 @@ export const useFollowUpsStore = defineStore('followUps', () => {
         // Refresh thread status
         await loadThread(threadId)
       }
+      return msg
     } catch (e) {
       // Rollback optimistic update
       const thread = threadsById.value[threadId]

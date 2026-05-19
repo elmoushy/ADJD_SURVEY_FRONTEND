@@ -365,6 +365,13 @@
           </div>
         </div>
 
+        <!-- Attachments Section -->
+        <AttachmentUpload
+          v-if="survey?.allow_attachments && survey.allow_attachments !== 'none'"
+          ref="attachmentRef"
+          :required="survey.allow_attachments === 'required'"
+        />
+
         <!-- Submit Button for All Questions View -->
         <div :class="$style.submitContainer">
           <button
@@ -756,6 +763,7 @@ import { useAppStore } from '../../stores/useAppStore'
 import { surveyService } from '../../services/surveyService'
 import { ThankYouModal } from '../../components/ThankYouModal'
 import { useInputValidation } from '../../composables/useInputValidation'
+import AttachmentUpload from '../../components/Survey/AttachmentUpload.vue'
 import type { Survey } from '../../types/survey.types'
 import type { CountryCode } from '../../types/country.types'
 import countryCodesData from '../../data/countryCodes.json'
@@ -795,6 +803,7 @@ const currentQuestionIndex = ref(0)
 const answers = ref<Record<string, any>>({})
 const questionError = ref('')
 const isSubmitting = ref(false)
+const attachmentRef = ref<InstanceType<typeof AttachmentUpload> | null>(null)
 const userEmail = ref('')
 const userPhone = ref('')
 const selectedCountryCode = ref('+971') // Default to UAE
@@ -852,6 +861,12 @@ const canSubmit = computed(() => {
         if (answer === undefined || answer === null || answer === '') return false
       }
     }
+  }
+
+  // Check required attachments
+  if (survey.value.allow_attachments === 'required') {
+    const ref = attachmentRef.value
+    if (!ref || (ref.queuedFiles.length === 0 && ref.uploadedFiles.length === 0)) return false
   }
   
   return true
@@ -1206,7 +1221,13 @@ const submitSurvey = async () => {
     }
     
     // Call the new anonymous response endpoint
-    await surveyService.submitAnonymousResponse(submissionData)
+    const result = await surveyService.submitAnonymousResponse(submissionData)
+    
+    // Upload attachments if any are queued
+    const responseId = result?.data?.response_id
+    if (responseId && attachmentRef.value && attachmentRef.value.queuedFiles.length > 0) {
+      await attachmentRef.value.uploadAll(responseId)
+    }
     
     // Success - Show thank you modal
     showThankYouModal.value = true

@@ -201,6 +201,7 @@ export interface Survey {
   visibility: SurveyVisibility
   public_contact_method?: PublicContactMethod // Only applies to PUBLIC surveys
   per_device_access?: boolean // For device-based access control
+  allow_attachments?: 'none' | 'optional' | 'required' // Attachment upload setting
   shared_with: any[] // Array of user IDs or groups
   creator: number
   creator_email: string
@@ -669,6 +670,7 @@ export interface AuthSurvey {
   estimated_time?: number
   questions_count: number
   questions: SurveyQuestion[]
+  allow_attachments?: 'none' | 'optional' | 'required'
 }
 
 export interface AuthSurveyResponse {

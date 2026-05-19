@@ -1623,6 +1623,23 @@
   color: #9aa0a6;
 }
 
+.settingSelect {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.editorContainer[data-theme="night"] .settingSelect {
+  background: #3c4043;
+  border-color: #5f6368;
+  color: #e8eaed;
+}
+
 .toggle {
   position: relative;
   width: 3rem;

@@ -869,6 +869,26 @@
                 <span :class="$style.toggleSlider"></span>
               </label>
             </div>
+
+            <div :class="$style.settingItem">
+              <div :class="$style.settingContent">
+                <h4 :class="$style.settingTitle">
+                  <i class="fas fa-paperclip"></i>
+                  {{ isRTL ? 'المرفقات' : 'Attachments' }}
+                </h4>
+                <p :class="$style.settingDescription">
+                  {{ isRTL ? 'التحكم في إمكانية إرفاق ملفات من قبل المستجيبين' : 'Control attachment upload for respondents' }}
+                </p>
+              </div>
+              <select
+                v-model="surveySettings.allow_attachments"
+                :class="$style.settingSelect"
+              >
+                <option value="none">{{ isRTL ? 'بدون مرفقات' : 'None' }}</option>
+                <option value="optional">{{ isRTL ? 'اختياري' : 'Optional' }}</option>
+                <option value="required">{{ isRTL ? 'مطلوب' : 'Required' }}</option>
+              </select>
+            </div>
           </div>
           <div :class="$style.modalFooter">
             <button :class="[$style.modalButton, $style.cancelButton]" @click="closeSurveySettingsModal">
@@ -996,7 +1016,8 @@ const schedulingSettings = ref({
   end_date: null as string | null
 })
 const surveySettings = ref({
-  is_active: true
+  is_active: true,
+  allow_attachments: 'none'
 })
 
 // Computed
@@ -1235,7 +1256,8 @@ const initializeSurvey = () => {
       
       // Load survey settings if available
       surveySettings.value = {
-        is_active: (props.template as any).is_active !== undefined ? (props.template as any).is_active : true
+        is_active: (props.template as any).is_active !== undefined ? (props.template as any).is_active : true,
+        allow_attachments: (props.template as any).allow_attachments !== undefined ? (props.template as any).allow_attachments : 'none'
       }
       console.log('⚙️ Survey settings:', surveySettings.value)
     }
@@ -1872,6 +1894,7 @@ const prepareSurveyData = () => {
     description: surveyData.value.description,
     visibility: 'AUTH',
     is_active: surveySettings.value.is_active,
+    allow_attachments: surveySettings.value.allow_attachments,
     start_date: schedulingSettings.value.start_date,
     end_date: schedulingSettings.value.end_date,
     questions: surveyData.value.questions.map(q => {
