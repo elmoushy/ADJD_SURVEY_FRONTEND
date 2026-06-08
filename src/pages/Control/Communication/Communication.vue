@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 import { useAppStore } from "../../../stores/useAppStore";
+import { useSimpleAuth } from '../../../composables/useSimpleAuth';
 import { QuillEditor } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import Swal from 'sweetalert2';
@@ -11,12 +12,19 @@ import type { InboxItem, InboxItemDetail, EmailLog, DraftItem, EmailStatus } fro
 
 type TabKey = "inbox" | "outbox" | "drafts" | "history";
 
-const tabs: Array<{ id: TabKey; label: string }> = [
+const { user } = useSimpleAuth();
+const isRegularUser = computed(() => user.value?.role === 'user');
+
+const allTabs: Array<{ id: TabKey; label: string; adminOnly?: boolean }> = [
   { id: "inbox", label: "الصندوق الوارد" },
-  { id: "outbox", label: "الصندوق الصادر" },
-  { id: "drafts", label: "المسودات" },
+  { id: "outbox", label: "الصندوق الصادر", adminOnly: true },
+  { id: "drafts", label: "المسودات", adminOnly: true },
   { id: "history", label: "سجل العمليات" },
 ];
+
+const tabs = computed(() =>
+  isRegularUser.value ? allTabs.filter(t => !t.adminOnly) : allTabs
+);
 
 const activeTab = ref<TabKey>("inbox");
 const searchInput = ref("");
@@ -690,7 +698,7 @@ const closeEmailDetailModal = () => {
       <div :class="$style.titleBlock">
         <h1 :class="$style.title">التواصل</h1>
       </div>
-      <button type="button" :class="$style.primaryAction" @click="openComposeModal">
+      <button v-if="!isRegularUser" type="button" :class="$style.primaryAction" @click="openComposeModal">
        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M10 2.83331V16.1666" stroke="white" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M3.33594 9.5H16.6693" stroke="white" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
