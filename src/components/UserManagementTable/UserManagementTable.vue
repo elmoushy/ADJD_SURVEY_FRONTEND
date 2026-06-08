@@ -181,6 +181,15 @@
                   <i class="fas fa-edit"></i>
                 </button>
 
+                <button
+                  v-if="canEditUser(user) && user.auth_type !== 'azure'"
+                  :class="[$style.actionBtn, $style.resetPasswordBtn]"
+                  @click="$emit('user-action', 'reset_password', user)"
+                  :title="t('userManagement.tooltips.resetPassword')"
+                >
+                  <i class="fas fa-key"></i>
+                </button>
+
               </div>
             </td>
           </tr>
