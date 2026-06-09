@@ -615,7 +615,76 @@ export const authAPI = {
   healthCheck: async (): Promise<HealthCheckResponse> => {
     const response = await apiClient.get<HealthCheckResponse>('/health/')
     return response.data
-  }
+  },
+
+  // ── Forgot-password flow (all three steps are unauthenticated) ──────────
+
+  // Step 1: request a 6-digit OTP by email
+  forgotPassword: async (email: string): Promise<{ message: string }> => {
+    const response = await apiClient.post(
+      '/auth/forgot-password/',
+      { email },
+      { validateStatus: (s) => s < 500 }
+    )
+    if (response.status === 429) {
+      const err: any = new Error(response.data?.detail || 'Too many requests')
+      err.type = 'rate_limit'
+      err.retryAfter = response.data?.retry_after_seconds ?? 90
+      throw err
+    }
+    if (response.status !== 200) {
+      const msg =
+        response.data?.detail ||
+        response.data?.errors?.email?.[0] ||
+        'An error occurred'
+      const err: any = new Error(msg)
+      err.type = 'error'
+      throw err
+    }
+    return response.data
+  },
+
+  // Step 2: verify the OTP — returns a short-lived signed token
+  verifyResetCode: async (
+    email: string,
+    code: string
+  ): Promise<{ token: string }> => {
+    const response = await apiClient.post(
+      '/auth/verify-reset-code/',
+      { email, code },
+      { validateStatus: (s) => s < 500 }
+    )
+    if (response.status !== 200) {
+      const msg = response.data?.detail || 'Invalid or expired code'
+      const err: any = new Error(msg)
+      err.type = 'error'
+      throw err
+    }
+    return response.data
+  },
+
+  // Step 3: set the new password using the token from step 2
+  resetPassword: async (
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<{ message: string }> => {
+    const response = await apiClient.post(
+      '/auth/reset-password/',
+      { token, new_password: newPassword, confirm_password: confirmPassword },
+      { validateStatus: (s) => s < 500 }
+    )
+    if (response.status !== 200) {
+      const msg =
+        response.data?.detail ||
+        response.data?.errors?.new_password?.[0] ||
+        'Failed to reset password'
+      const err: any = new Error(msg)
+      err.type = 'error'
+      throw err
+    }
+    return response.data
+  },
 }
 
 // Error handling utility

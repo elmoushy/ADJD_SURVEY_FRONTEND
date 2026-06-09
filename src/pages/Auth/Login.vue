@@ -1,5 +1,6 @@
 <template>
-  <div :class="styles.loginPage" :data-theme="currentTheme" dir="rtl">
+  <ForgotPasswordModal :visible="showForgotPassword" @close="showForgotPassword = false" />
+<div :class="styles.loginPage" :data-theme="currentTheme" dir="rtl">
     <!-- Background Elements -->
     <div :class="styles.backgroundLayer">
       <div :class="styles.floatingParticles">
@@ -124,9 +125,9 @@
                     كلمة المرور
                     <span style="width: 4px; height: 4px; background: linear-gradient(135deg, #AE5D5A 0%, #CFA365 100%); border-radius: 50%; box-shadow: 0 0 8px rgba(174, 93, 90, 0.4);"></span>
                   </label>
-                  <input 
+                  <input
                     v-model="emailForm.password"
-                    type="password" 
+                    type="password"
                     style="padding: 1rem 1.25rem; border: 2px solid rgba(174, 93, 90, 0.15); border-radius: 14px; font-size: 0.95rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); font-family: 'Segoe UI', 'Arial', sans-serif; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), inset 0 1px 2px rgba(255, 255, 255, 0.8);"
                     placeholder="••••••••"
                     required
@@ -136,6 +137,13 @@
                     @mouseenter="handleInputMouseEnter"
                     @mouseleave="handleInputMouseLeave"
                   />
+                  <div style="text-align: right; margin-top: 0.4rem;">
+                    <button
+                      type="button"
+                      @click="showForgotPassword = true"
+                      style="background: none; border: none; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: #AE5D5A; padding: 0; text-decoration: underline; transition: color 0.2s; font-family: 'Segoe UI', Arial, sans-serif;"
+                    >نسيت كلمة المرور؟</button>
+                  </div>
                 </div>
 
                 <button 
@@ -178,6 +186,7 @@ import { onMounted, computed, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAzureSso } from '../../composables/useAzureSso'
 import styles from './Login.module.css'
+import ForgotPasswordModal from '../../components/ForgotPasswordModal/ForgotPasswordModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -202,6 +211,9 @@ const {
 // Import JWT auth for email/password login
 import { useJWTAuth } from '../../composables/useJWTAuth'
 const jwtAuth = useJWTAuth()
+
+// Forgot password modal
+const showForgotPassword = ref(false)
 
 // Email/Password form state
 const emailForm = ref({
