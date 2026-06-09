@@ -184,12 +184,18 @@ const showPassword = ref(false)
 // Form validation computed properties
 const isFormValid = computed(() => {
   const { email, first_name, last_name, role, password, auth_type } = formData.value
-  
-  // Basic required fields
+
+  // In edit mode only role is editable — don't require first/last name
+  // since those fields are disabled and may legitimately be empty
+  if (props.mode.type === 'edit') {
+    return !!role && Object.keys(validationErrors.value).length === 0
+  }
+
+  // Basic required fields for create/invite modes
   if (!email || !first_name || !last_name || !role) {
     return false
   }
-  
+
   // Password validation for create mode with regular auth
   if (props.mode.type === 'create' && auth_type === 'regular') {
     if (!password) {
@@ -201,12 +207,12 @@ const isFormValid = computed(() => {
       return false
     }
   }
-  
+
   // Check if there are any validation errors
   if (Object.keys(validationErrors.value).length > 0) {
     return false
   }
-  
+
   return true
 })
 
