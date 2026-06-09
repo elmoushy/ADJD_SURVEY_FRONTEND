@@ -127,7 +127,15 @@ onMounted(async () => {
         templateData.value = response.template
       } else if (type === 'recent') {
         const response = await surveyService.getSurvey(templateId)
+        // Cloning = creating a brand-new survey. Strip the survey id AND every
+        // question id so the source survey's primary keys are never re-sent to
         const { id: _id, ...surveyAsTemplate } = response.data
+        if (Array.isArray(surveyAsTemplate.questions)) {
+          surveyAsTemplate.questions = surveyAsTemplate.questions.map((q: any) => {
+            const { id: _qid, ...questionWithoutId } = q
+            return questionWithoutId
+          })
+        }
         templateData.value = surveyAsTemplate as any
       }
     } catch (error: any) {
