@@ -470,6 +470,8 @@ color: #A17D23;
   padding: 0;
   cursor: pointer;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
 }
 
@@ -631,10 +633,11 @@ color: #A17D23;
 }
 
 .cardActions {
-  padding: 10px 24px;
+  padding: 10px 24px 18px;
   /* border-top: 1px solid rgba(161, 125, 35, 0.1); */
   display: flex;
   justify-content: center;
+  margin-top: auto;
 }
 
 .actionButton {
@@ -660,6 +663,18 @@ color: #A17D23;
 .actionButton.primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(161, 125, 35, 0.3);
+}
+
+.actionButton.secondary {
+  background: rgba(161, 125, 35, 0.08);
+  color: #A17D23;
+  border: 1.5px solid rgba(161, 125, 35, 0.35);
+}
+
+.actionButton.secondary:hover {
+  background: rgba(161, 125, 35, 0.14);
+  border-color: rgba(161, 125, 35, 0.55);
+  transform: translateY(-1px);
 }
 
 .actionButton.completed {

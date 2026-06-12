@@ -256,13 +256,13 @@
 بدء إيضاحات
             </button>
             
-            <button 
-              v-else-if="survey.access_info.has_submitted" 
-              :class="[$style.actionButton, $style.completed]"
-              disabled
+            <button
+              v-else-if="survey.access_info.has_submitted"
+              :class="[$style.actionButton, $style.secondary]"
+              @click.stop="viewMyResponse(survey)"
             >
-              <i class="fas fa-check"></i>
-              {{ t('survey.shared.card.alreadySubmitted') }}
+              <i class="fas fa-eye"></i>
+              عرض إجاباتي
             </button>
             
             <button 
@@ -512,8 +512,11 @@ const canTakeSurvey = (survey: SharedSurvey): boolean => {
 }
 
 const takeSurvey = (survey: SharedSurvey) => {
-  // Navigate to survey taking page
   router.push(`/surveys/take/${survey.id}`)
+}
+
+const viewMyResponse = (survey: SharedSurvey) => {
+  router.push(`/surveys/${survey.id}/my-response`)
 }
 
 const handleSurveyClick = (survey: SharedSurvey) => {

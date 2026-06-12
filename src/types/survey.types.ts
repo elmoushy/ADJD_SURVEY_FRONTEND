@@ -113,10 +113,12 @@ export interface AuthenticatedRespondentInfo {
   id: number
   email: string
   name: string
+  full_name?: string
   avatar_initials: string
   role?: string | null
   department?: string | null
   joined_at?: string | null
+  groups?: string[]
 }
 
 export interface GroupMemberRespondentInfo {

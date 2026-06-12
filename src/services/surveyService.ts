@@ -1153,6 +1153,12 @@ class SurveyService {
     } as ApiResponse<SharedSurveysResponse>
   }
 
+  // Fetch the current user's submitted response for a survey (read-only view)
+  async getMyResponse(surveyId: string): Promise<any> {
+    const response = await apiClient.get(`/surveys/surveys/${surveyId}/my-response/`)
+    return response.data
+  }
+
   // Authenticated Survey Access Methods
   async getAuthSurvey(surveyId: string): Promise<AuthSurveyResponse> {
     try {

@@ -53,6 +53,7 @@ const PublicSurveyView = () => import("../pages/Survey/PublicSurveyView.vue");
 const PasswordProtectedSurveyView = () =>
   import("../pages/Survey/PasswordProtectedSurveyView.vue");
 const AuthSurveyView = () => import("../pages/Survey/AuthSurveyView.vue");
+const MySurveyResponse = () => import("../pages/Survey/MySurveyResponse.vue");
 const SurveyEditorPage = () => import("../pages/Control/SurveyEditorPage.vue");
 
 // Notifications
@@ -104,6 +105,16 @@ const routes: RouteRecordRaw[] = [
     name: "Surveys",
     component: Surveys,
     meta: { title: "Surveys - WPC | ADJD App", requiresAuth: true },
+  },
+  {
+    path: "/surveys/:id/my-response",
+    name: "MySurveyResponse",
+    component: MySurveyResponse,
+    meta: {
+      title: "إجاباتي - WPC | ADJD App",
+      requiresAuth: true,
+      hideNavigation: true,
+    },
   },
   {
     path: "/surveys/take/:id",
