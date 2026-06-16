@@ -906,7 +906,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useAppStore } from '../../stores/useAppStore'
 import type { PredefinedTemplate, SurveyTemplate, RecentSurvey, Survey, QuestionType } from '../../types/survey.types'
 import FlatPickr from 'vue-flatpickr-component'
@@ -1177,8 +1177,17 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
+// Navigation-guard dirty tracking (declared here so initializeSurvey can reference them)
+const _trackDirty = ref(false)
+const isDirty = ref(false)
+
 // Methods
 const initializeSurvey = () => {
+  // Reset dirty tracking while data is being loaded
+  _trackDirty.value = false
+  isDirty.value = false
+  nextTick(() => { _trackDirty.value = true })
+
   console.log('🔧 Initializing Survey Editor with template:', props.template)
   
   if (props.template) {
@@ -1887,6 +1896,16 @@ const handleBack = async () => {
     emit('back')
   }
 }
+
+// Watch surveyData to mark form dirty after initial load
+watch(surveyData, () => {
+  if (_trackDirty.value) isDirty.value = true
+}, { deep: true })
+
+defineExpose({
+  getFormData: () => prepareSurveyData(),
+  isDirty,
+})
 
 const prepareSurveyData = () => {
   return {

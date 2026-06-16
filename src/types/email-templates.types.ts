@@ -3,6 +3,8 @@
  * Supports bilingual email templates with HTML content
  */
 
+import type { EmailAttachment } from '../services/emailAttachmentService'
+
 export interface EmailTemplateUser {
   id: number
   email: string
@@ -35,6 +37,7 @@ export interface EmailTemplateDetail extends EmailTemplate {
   body_html: string
   body_html_ar?: string
   body_text?: string
+  attachments?: EmailAttachment[]
 }
 
 export interface CreateEmailTemplateRequest {
@@ -47,6 +50,7 @@ export interface CreateEmailTemplateRequest {
   body_text?: string
   is_active?: boolean
   category: TemplateCategory
+  attachment_ids?: string[]
 }
 
 export interface UpdateEmailTemplateRequest extends Partial<CreateEmailTemplateRequest> {}

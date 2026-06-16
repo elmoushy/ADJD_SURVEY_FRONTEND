@@ -3,6 +3,8 @@
  * Types for sending emails and managing email composition
  */
 
+import type { EmailAttachment } from '../services/emailAttachmentService'
+
 // Send Types
 export type SendType = 'ANNOUNCEMENT' | 'SPECIFIC'
 
@@ -67,6 +69,7 @@ export interface SendEmailRequest {
   body_html: string
   cost_center_ids?: number[]
   template_id?: number | null
+  attachment_ids?: string[]
 }
 
 /**
@@ -126,6 +129,7 @@ export interface EmailTemplateDetail {
   body_text: string | null
   is_active: boolean
   category: string
+  attachments?: EmailAttachment[]
   created_by: {
     id: number
     email: string
@@ -181,6 +185,7 @@ export interface SaveDraftRequest {
   cost_center_ids?: number[]
   draft_name?: string
   template_id?: number | null
+  attachment_ids?: string[]
 }
 
 /**
@@ -195,6 +200,7 @@ export interface DraftResponse {
   draft_name: string | null
   template: any | null
   template_id: number | null
+  attachments?: EmailAttachment[]
   created_at: string
   updated_at: string
 }
@@ -209,4 +215,5 @@ export interface UpdateDraftRequest {
   cost_center_ids?: number[]
   draft_name?: string
   template_id?: number | null
+  attachment_ids?: string[]
 }

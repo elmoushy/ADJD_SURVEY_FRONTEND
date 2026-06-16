@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
-import { QuillEditor } from '@vueup/vue-quill'
+import { QuillEditor, Quill } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import EmailAttachments from '@/components/EmailAttachments/EmailAttachments.vue'
+import type { EmailAttachment } from '@/services/emailAttachmentService'
 import type {
   EmailTemplateDetail,
   CreateEmailTemplateRequest,
   EmailTemplateError
 } from '@/types/email-templates.types'
 import { TEMPLATE_CATEGORIES } from '@/types/email-templates.types'
+
+// Register a paperclip icon for the custom "attachment" toolbar button (once)
+const quillIcons = Quill.import('ui/icons') as Record<string, string>
+if (!quillIcons.attachment) {
+  quillIcons.attachment =
+    '<svg viewbox="0 0 18 18"><path class="ql-stroke" style="fill:none;stroke-width:1.5" d="M14.5 7.3l-6.1 6.1a3.2 3.2 0 0 1-4.6-4.6l6.1-6.1a2.1 2.1 0 0 1 3 3l-6.1 6.1a1 1 0 0 1-1.5-1.5l5.6-5.6"/></svg>'
+}
 
 interface Props {
   visible: boolean
@@ -38,20 +47,30 @@ const formData = reactive<CreateEmailTemplateRequest>({
 
 const formErrors = ref<EmailTemplateError>({})
 
-// Quill editor configuration
+// Attachments state
+const attachmentsRef = ref<{ openFilePicker: () => void } | null>(null)
+const attachments = ref<EmailAttachment[]>([])
+
+// Quill editor configuration — custom paperclip button opens the file picker
 const editorOptions = {
   modules: {
-    toolbar: [
-      [{ header: [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['blockquote', 'code-block'],
-      [{ indent: '-1' }, { indent: '+1' }],
-      ['link', 'image'],
-      ['clean']
-    ]
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'code-block'],
+        [{ indent: '-1' }, { indent: '+1' }],
+        ['link', 'image'],
+        ['attachment'],
+        ['clean']
+      ],
+      handlers: {
+        attachment: () => attachmentsRef.value?.openFilePicker()
+      }
+    }
   },
   placeholder: 'اكتب محتوى البريد الإلكتروني هنا...',
   theme: 'snow'
@@ -71,6 +90,7 @@ watch(
       formData.body_text = newTemplate.body_text || ''
       formData.is_active = newTemplate.is_active
       formData.category = newTemplate.category
+      attachments.value = newTemplate.attachments ? [...newTemplate.attachments] : []
     }
   },
   { immediate: true }
@@ -97,11 +117,15 @@ const resetForm = () => {
   formData.is_active = true
   formData.category = 'GENERAL'
   formErrors.value = {}
+  attachments.value = []
 }
 
 const handleSubmit = () => {
   formErrors.value = {}
-  emit('submit', { ...formData })
+  emit('submit', {
+    ...formData,
+    attachment_ids: attachments.value.map(a => a.id)
+  })
 }
 
 const handleClose = () => {
@@ -128,7 +152,7 @@ defineExpose({
 
 <template>
   <teleport to="body">
-    <div v-if="visible" :class="$style.modalOverlay" @click.self="handleClose">
+    <div v-if="visible" :class="$style.modalOverlay">
       <section
         :class="$style.modalContainer"
         role="dialog"
@@ -217,8 +241,14 @@ defineExpose({
               {{ getFieldError('body_html') }}
             </span>
             <small :class="$style.fieldHint">
-              استخدم شريط الأدوات لتنسيق النص، إضافة روابط، صور، وغيرها
+              استخدم شريط الأدوات لتنسيق النص، إضافة روابط، صور، ومرفقات
             </small>
+
+            <!-- Attachments -->
+            <EmailAttachments
+              ref="attachmentsRef"
+              v-model="attachments"
+            />
           </div>
 
           <!-- Active Status -->

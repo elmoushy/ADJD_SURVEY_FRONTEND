@@ -35,6 +35,8 @@ export const messageManagementAPI = {
     is_active?: boolean
     search?: string
     ordering?: string
+    page?: number
+    page_size?: number
   }): Promise<CostCentersListResponse> => {
     try {
       const response = await apiClient.get<CostCentersListResponse>('/email/cost-centers/', {

@@ -1220,3 +1220,50 @@
   border-color: rgba(248, 250, 252, 0.12);
   color: #cbd5e1;
 }
+
+/* Email detail — attachments list (read-only, clickable to download) */
+.detailAttachmentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detailAttachmentItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--control-border, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.detailAttachmentItem:hover {
+  background: rgba(161, 125, 35, 0.08);
+  border-color: #A17D23;
+}
+
+.detailAttachmentName {
+  font-size: 0.88rem;
+  color: var(--text-primary, #1a1a1a);
+  word-break: break-all;
+}
+
+.detailAttachmentSize {
+  font-size: 0.74rem;
+  color: var(--text-secondary, #6b7280);
+  flex-shrink: 0;
+}
+
+.page[data-theme="night"] .detailAttachmentItem {
+  border-color: rgba(248, 250, 252, 0.12);
+}
+
+.page[data-theme="night"] .detailAttachmentName {
+  color: #f1f5f9;
+}

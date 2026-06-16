@@ -58,6 +58,8 @@ export interface CostCentersListResponse {
   next: string | null
   previous: string | null
   results: CostCenterListItem[]
+  total_pages: number
+  page_size: number
 }
 
 export interface CreateCostCenterRequest {

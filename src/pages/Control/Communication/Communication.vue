@@ -2,13 +2,22 @@
 import { computed, reactive, ref, watch } from "vue";
 import { useAppStore } from "../../../stores/useAppStore";
 import { useSimpleAuth } from '../../../composables/useSimpleAuth';
-import { QuillEditor } from '@vueup/vue-quill';
+import { QuillEditor, Quill } from '@vueup/vue-quill';
 import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import Swal from 'sweetalert2';
 import { emailPostingAPI } from '@/services/emailPostingService';
 import { emailRetrievalAPI } from '@/services/emailRetrievalService';
+import EmailAttachments from '@/components/EmailAttachments/EmailAttachments.vue';
+import { emailAttachmentService, formatFileSize, type EmailAttachment } from '@/services/emailAttachmentService';
 import type { CostCenter, EmailTemplateOption, SendType } from '@/types/email-posting.types';
 import type { InboxItem, InboxItemDetail, EmailLog, DraftItem, EmailStatus } from '@/types/email-retrieval.types';
+
+// Register a paperclip icon for the custom "attachment" toolbar button (once)
+const quillIcons = Quill.import('ui/icons') as Record<string, string>;
+if (!quillIcons.attachment) {
+  quillIcons.attachment =
+    '<svg viewbox="0 0 18 18"><path class="ql-stroke" style="fill:none;stroke-width:1.5" d="M14.5 7.3l-6.1 6.1a3.2 3.2 0 0 1-4.6-4.6l6.1-6.1a2.1 2.1 0 0 1 3 3l-6.1 6.1a1 1 0 0 1-1.5-1.5l5.6-5.6"/></svg>';
+}
 
 type TabKey = "inbox" | "outbox" | "drafts" | "history";
 
@@ -192,18 +201,28 @@ const sendingEmail = ref(false);
 
 const isSpecificSend = computed(() => composeForm.sendType === "SPECIFIC");
 
-// Quill editor configuration
+// Attachments state (compose)
+const composeAttachmentsRef = ref<{ openFilePicker: () => void } | null>(null);
+const composeAttachments = ref<EmailAttachment[]>([]);
+
+// Quill editor configuration — custom paperclip button opens the file picker
 const editorOptions = {
   modules: {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline'],
-      [{ color: [] }, { background: [] }],
-      [{ align: [] }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      ['link'],
-      ['clean']
-    ]
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link'],
+        ['attachment'],
+        ['clean']
+      ],
+      handlers: {
+        attachment: () => composeAttachmentsRef.value?.openFilePicker()
+      }
+    }
   },
   placeholder: 'اكتب محتوى البريد الإلكتروني هنا...',
   theme: 'snow'
@@ -233,6 +252,8 @@ const openDraftForEditing = async (draftId: number) => {
     // Extract template ID from the template object (if exists)
     composeForm.templateId = draft.template ? draft.template.id : null;
     composeForm.costCenterIds = draft.cost_center_ids || [];
+    // Load the draft's own attachments (owned by the draft, not borrowed)
+    composeAttachments.value = ((draft as any).attachments as EmailAttachment[] | undefined) || [];
     
     // Open the compose modal
     await openComposeModal();
@@ -262,6 +283,7 @@ const resetComposeForm = () => {
   composeForm.templateId = null;
   composeForm.templateContent = "";
   composeForm.costCenterIds = [];
+  composeAttachments.value = [];
 };
 
 // Load cost centers for recipient selection
@@ -319,6 +341,9 @@ const loadTemplateContent = async (templateId: number | null) => {
     if (!editingDraftId.value) {
       composeForm.subject = template.subject;
       composeForm.templateContent = template.body_html;
+      // Auto-carry the template's attachments (borrowed → removing is local only)
+      const templateAttachments = (template as any).attachments as EmailAttachment[] | undefined;
+      composeAttachments.value = (templateAttachments || []).map(a => ({ ...a, _local: true }));
     }
   } catch (error) {
     console.error('Failed to load template content:', error);
@@ -326,6 +351,21 @@ const loadTemplateContent = async (templateId: number | null) => {
       icon: 'error',
       title: 'خطأ',
       text: 'فشل تحميل محتوى القالب',
+      confirmButtonText: 'حسناً'
+    });
+  }
+};
+
+// Download an attachment from the email detail view
+const downloadDetailAttachment = async (attachment: EmailAttachment) => {
+  try {
+    await emailAttachmentService.download(attachment);
+  } catch (error) {
+    console.error('Download failed:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'خطأ',
+      text: 'تعذر تحميل المرفق',
       confirmButtonText: 'حسناً'
     });
   }
@@ -393,17 +433,17 @@ const handleSendCompose = async () => {
       subject: composeForm.subject,
       body_html: composeForm.templateContent,
       cost_center_ids: composeForm.sendType === 'SPECIFIC' ? composeForm.costCenterIds : undefined,
-      template_id: composeForm.templateId
+      template_id: composeForm.templateId,
+      attachment_ids: composeAttachments.value.map(a => a.id)
     };
 
     const response = await emailPostingAPI.sendEmail(payload);
 
     await Swal.fire({
       icon: 'success',
-      title: 'نجح الإرسال',
+      title: 'تم استلام طلب الإرسال',
       html: `
-        <p>تم إرسال البريد بنجاح</p>
-        <p>عدد الرسائل المرسلة: <strong>${response.sent_count}</strong></p>
+        <p>جارٍ إرسال البريد في الخلفية وسيصل المستلمون خلال لحظات.</p>
         <p>عدد مراكز التكلفة: <strong>${response.total_cost_centers}</strong></p>
       `,
       confirmButtonText: 'حسناً'
@@ -460,7 +500,8 @@ const confirmSaveDraft = async () => {
       body_html: composeForm.templateContent,
       cost_center_ids: composeForm.sendType === 'SPECIFIC' ? composeForm.costCenterIds : undefined,
       draft_name: editingDraftId.value ? undefined : (draftNameInput.value.trim() || undefined),
-      template_id: composeForm.templateId
+      template_id: composeForm.templateId,
+      attachment_ids: composeAttachments.value.map(a => a.id)
     };
 
     let draft;
@@ -983,7 +1024,7 @@ const closeEmailDetailModal = () => {
     </div>
 
     <teleport to="body">
-      <div v-if="composeModalVisible" :class="$style.modalOverlay" @click.self="closeComposeModal">
+      <div v-if="composeModalVisible" :class="$style.modalOverlay">
         <section
           :class="$style.modalContainer"
           role="dialog"
@@ -1100,8 +1141,15 @@ const closeEmailDetailModal = () => {
                 :enable="!sendingEmail"
               />
               <small :class="$style.fieldHint">
-                استخدم شريط الأدوات لتنسيق النص وإضافة روابط
+                استخدم شريط الأدوات لتنسيق النص، إضافة روابط، ومرفقات
               </small>
+
+              <!-- Attachments -->
+              <EmailAttachments
+                ref="composeAttachmentsRef"
+                v-model="composeAttachments"
+                :disabled="sendingEmail"
+              />
             </div>
           </div>
 
@@ -1138,7 +1186,7 @@ const closeEmailDetailModal = () => {
 
     <!-- Draft Name Modal (appears above compose modal) -->
     <teleport to="body">
-      <div v-if="draftNameModalVisible" :class="$style.modalOverlay" style="z-index: 1300;" @click.self="closeDraftNameModal">
+      <div v-if="draftNameModalVisible" :class="$style.modalOverlay" style="z-index: 1300;">
         <section
           :class="$style.draftModalContainer"
           role="dialog"
@@ -1203,7 +1251,7 @@ const closeEmailDetailModal = () => {
 
     <!-- Email Detail Modal (for viewing email details) -->
     <teleport to="body">
-      <div v-if="emailDetailModalVisible" :class="$style.modalOverlay" @click.self="closeEmailDetailModal">
+      <div v-if="emailDetailModalVisible" :class="$style.modalOverlay">
         <section
           :class="$style.modalContainer"
           role="dialog"
@@ -1303,6 +1351,22 @@ const closeEmailDetailModal = () => {
             <div v-if="selectedEmailDetail.body_html" :class="$style.emailBodySection">
               <h3 :class="$style.sectionTitle">محتوى البريد:</h3>
               <div :class="$style.emailBodyContent" v-html="selectedEmailDetail.body_html"></div>
+            </div>
+
+            <!-- Attachments -->
+            <div v-if="selectedEmailDetail.attachments && selectedEmailDetail.attachments.length" :class="$style.recipientsSection">
+              <h3 :class="$style.sectionTitle">المرفقات ({{ selectedEmailDetail.attachments.length }}):</h3>
+              <ul :class="$style.detailAttachmentList">
+                <li
+                  v-for="att in selectedEmailDetail.attachments"
+                  :key="att.id"
+                  :class="$style.detailAttachmentItem"
+                  @click="downloadDetailAttachment(att)"
+                >
+                  <span :class="$style.detailAttachmentName">📎 {{ att.original_filename }}</span>
+                  <span :class="$style.detailAttachmentSize">{{ formatFileSize(att.file_size) }}</span>
+                </li>
+              </ul>
             </div>
 
             <!-- Recipients List -->

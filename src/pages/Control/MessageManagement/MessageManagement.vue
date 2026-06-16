@@ -43,6 +43,11 @@ const usersCount = ref(0)
 // Cost Centers data
 const costCenters = ref<CostCenterListItem[]>([])
 const costCentersCount = ref(0)
+const costCentersPage = ref(1)
+const costCentersPageSize = ref(20)
+const costCentersHasNext = ref(false)
+const costCentersHasPrev = ref(false)
+const costCentersTotalPages = ref(1)
 
 // Modal state
 const costCenterModalVisible = ref(false)
@@ -405,7 +410,9 @@ const fetchUsers = async () => {
 const fetchCostCenters = async () => {
   try {
     isLoading.value = true
-    const params: any = {}
+    const params: any = {
+      page: costCentersPage.value,
+    }
     if (searchQuery.value) {
       params.search = searchQuery.value
     }
@@ -414,10 +421,14 @@ const fetchCostCenters = async () => {
     } else if (selectedFilter.value === "inactive") {
       params.is_active = false
     }
-    
+
     const response = await messageManagementAPI.getAllCostCenters(params)
     costCenters.value = response.results
     costCentersCount.value = response.count
+    costCentersHasNext.value = response.next !== null
+    costCentersHasPrev.value = response.previous !== null
+    costCentersTotalPages.value = response.total_pages ?? 1
+    costCentersPageSize.value = response.page_size ?? costCentersPageSize.value
   } catch (error) {
     console.error("Failed to fetch cost centers:", error)
     Swal.fire({
@@ -598,8 +609,31 @@ const handleToggleStatus = async (id: number, currentStatus: boolean) => {
 
 // Apply search
 const applySearch = () => {
+  costCentersPage.value = 1
   searchQuery.value = searchInput.value.trim()
 }
+
+// Pagination handlers for cost centers
+const changeCostCentersPage = (page: number) => {
+  if (page < 1) return
+  if (page > costCentersPage.value && !costCentersHasNext.value) return
+  if (page > costCentersTotalPages.value) return
+  costCentersPage.value = page
+  fetchCostCenters()
+}
+
+const costCentersVisiblePages = computed(() => {
+  const total = costCentersTotalPages.value
+  const current = costCentersPage.value
+  const delta = 2
+  const pages: number[] = []
+  const start = Math.max(1, current - delta)
+  const end = Math.min(total, current + delta)
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  return pages
+})
 
 // Filtered users
 const filteredUsers = computed(() => {
@@ -832,10 +866,11 @@ watch(activeTab, (newTab) => {
   searchInput.value = ""
   searchQuery.value = ""
   selectedFilter.value = ""
-  
+
   if (newTab === "users") {
     fetchUsers()
   } else if (newTab === "cost-centers") {
+    costCentersPage.value = 1
     fetchCostCenters()
   } else if (newTab === "email-templates") {
     fetchEmailTemplates()
@@ -845,6 +880,7 @@ watch(activeTab, (newTab) => {
 // Watch search query and filter
 watch([searchQuery, selectedFilter], () => {
   if (activeTab.value === "cost-centers") {
+    costCentersPage.value = 1
     fetchCostCenters()
   } else if (activeTab.value === "email-templates") {
     fetchEmailTemplates()
@@ -1033,6 +1069,47 @@ onMounted(() => {
           </svg>
           <p>لا توجد مراكز تكلفة مطابقة للمعايير الحالية.</p>
         </div>
+
+        <!-- Cost Centers Pagination -->
+        <div v-if="costCentersCount > 0" :class="$style.paginationSection">
+          <div :class="$style.paginationInfo">
+            عرض
+            {{ (costCentersPage - 1) * costCentersPageSize + 1 }} -
+            {{ Math.min(costCentersPage * costCentersPageSize, costCentersCount) }}
+            من {{ costCentersCount }}
+          </div>
+
+          <div :class="$style.paginationControls">
+            <button
+              :class="$style.pageButton"
+              @click="changeCostCentersPage(costCentersPage - 1)"
+              :disabled="!costCentersHasPrev"
+            >
+              <i class="fas fa-chevron-right"></i>
+              السابق
+            </button>
+
+            <span :class="$style.pageNumbers">
+              <button
+                v-for="page in costCentersVisiblePages"
+                :key="page"
+                :class="[$style.pageNumber, { [$style.active]: page === costCentersPage }]"
+                @click="changeCostCentersPage(page)"
+              >
+                {{ page }}
+              </button>
+            </span>
+
+            <button
+              :class="$style.pageButton"
+              @click="changeCostCentersPage(costCentersPage + 1)"
+              :disabled="!costCentersHasNext"
+            >
+              التالي
+              <i class="fas fa-chevron-left"></i>
+            </button>
+          </div>
+        </div>
       </template>
 
       <!-- Users Tab -->
@@ -1163,7 +1240,7 @@ onMounted(() => {
 
     <!-- Cost Center Modal -->
     <teleport to="body">
-      <div v-if="costCenterModalVisible" :class="$style.modalOverlay" @click.self="closeCostCenterModal">
+      <div v-if="costCenterModalVisible" :class="$style.modalOverlay">
         <section
           :class="$style.modalContainer"
           role="dialog"

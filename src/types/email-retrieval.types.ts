@@ -42,6 +42,7 @@ export interface EmailLog {
   email_error?: string | null
   recipient_count: number
   sent_at: string
+  attachments?: import('../services/emailAttachmentService').EmailAttachment[]
   metadata?: {
     sent_from_draft?: boolean
     draft_id?: number | null

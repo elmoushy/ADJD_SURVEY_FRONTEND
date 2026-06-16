@@ -1,5 +1,6 @@
 <template>
   <SurveyEditor
+    ref="editorRef"
     :template="templateData"
     :isCreatingPredefinedTemplate="isCreatingPredefinedTemplate"
     @back="handleBack"
@@ -11,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useAppStore } from '../../stores/useAppStore'
 import { surveyService } from '../../services/surveyService'
 import { templateService } from '../../services/templateService'
@@ -22,6 +23,12 @@ import Swal from 'sweetalert2'
 const router = useRouter()
 const route = useRoute()
 const store = useAppStore()
+
+// Ref to the SurveyEditor component — used by the navigation guard
+const editorRef = ref<InstanceType<typeof SurveyEditor> | null>(null)
+
+// When set to true the leave guard is skipped (intentional navigation after save/publish)
+const skipLeaveGuard = ref(false)
 
 const templateData = ref<PredefinedTemplate | SurveyTemplate | RecentSurvey | Survey | null>(null)
 const isCreatingPredefinedTemplate = ref(false)
@@ -150,7 +157,77 @@ onMounted(async () => {
   }
 })
 
+// ── Navigation guard helpers ──────────────────────────────────────────────
+
+/**
+ * Save the current form data as a draft silently (no redirect).
+ * Called by the navigation guard when the user chooses "حفظ كمسودة".
+ */
+const saveDraftQuiet = async (data: any): Promise<void> => {
+  const surveyId = route.params.id as string
+  Swal.fire({
+    title: 'جاري حفظ المسودة...',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  })
+  try {
+    if (surveyId) {
+      await surveyService.updateSurvey(surveyId, data)
+    } else {
+      await surveyService.createDraft(data)
+    }
+    Swal.close()
+  } catch (error: any) {
+    await Swal.fire({
+      icon: 'error',
+      title: 'خطأ في الحفظ',
+      text: error.message || 'فشل في حفظ المسودة',
+      confirmButtonText: 'موافق'
+    })
+    throw error
+  }
+}
+
+/**
+ * Intercept every navigation away from the editor.
+ * Skip the guard when the user intentionally saved/published (skipLeaveGuard = true).
+ */
+onBeforeRouteLeave(async () => {
+  if (skipLeaveGuard.value) return true
+  if (!editorRef.value?.isDirty) return true
+
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'لديك تغييرات غير محفوظة',
+    text: 'هل تريد حفظ تغييراتك كمسودة قبل المغادرة؟',
+    showDenyButton: true,
+    showCancelButton: true,
+    confirmButtonText: 'حفظ كمسودة',
+    denyButtonText: 'مغادرة بدون حفظ',
+    cancelButtonText: 'البقاء في الصفحة',
+    confirmButtonColor: '#A17D23',
+    denyButtonColor: '#6b7280',
+    reverseButtons: false,
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await saveDraftQuiet(editorRef.value!.getFormData())
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  if (result.isDenied) return true   // leave without saving
+  return false                        // stay on page
+})
+
+// ─────────────────────────────────────────────────────────────────────────
+
 const handleBack = () => {
+  // SurveyEditor already shows its own "تأكيد الخروج" dialog — skip our guard
+  skipLeaveGuard.value = true
   router.push({ name: 'SurveyControl' })
 }
 
@@ -158,27 +235,28 @@ const handleSaveDraft = async (data: any) => {
   try {
     const isArabic = store.currentLanguage === 'ar'
     const surveyId = route.params.id as string
-    
+
     Swal.fire({
       title: isArabic ? 'جاري حفظ المسودة...' : 'Saving Draft...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     })
-    
+
     if (surveyId) {
       await surveyService.updateSurvey(surveyId, data)
     } else {
       await surveyService.createDraft(data)
     }
-    
+
     Swal.close()
-    
+
     await Swal.fire({
       icon: 'success',
       title: isArabic ? 'تم الحفظ بنجاح' : 'Saved Successfully',
       confirmButtonText: isArabic ? 'موافق' : 'OK'
     })
-    
+
+    skipLeaveGuard.value = true
     router.push({ name: 'SurveyControl' })
   } catch (error: any) {
     const isArabic = store.currentLanguage === 'ar'
@@ -195,13 +273,13 @@ const handlePublish = async (data: any) => {
   try {
     const isArabic = store.currentLanguage === 'ar'
     const surveyId = route.params.id as string
-    
+
     Swal.fire({
       title: isArabic ? 'جاري حفظ الاستطلاع...' : 'Saving Survey...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     })
-    
+
     let created: Survey
     if (surveyId) {
       const update = await surveyService.updateSurvey(surveyId, data)
@@ -210,14 +288,13 @@ const handlePublish = async (data: any) => {
       const draft = await surveyService.createDraft(data)
       created = draft.data
     }
-    
+
     Swal.close()
-    
-    // Navigate to access management with the created survey
-    // The access modal will handle the final submission after access is configured
+
+    skipLeaveGuard.value = true
     router.push({
       name: 'SurveyControl',
-      query: { 
+      query: {
         openAccess: 'true',
         surveyId: created.id,
         isSubmission: 'true'
@@ -237,26 +314,27 @@ const handlePublish = async (data: any) => {
 const handleSaveTemplate = async (templateData: any) => {
   try {
     const isArabic = store.currentLanguage === 'ar'
-    
+
     Swal.fire({
       title: isArabic ? 'جاري حفظ القالب...' : 'Saving Template...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     })
-    
+
     await templateService.createPredefinedTemplate(templateData)
-    
+
     Swal.close()
-    
+
     await Swal.fire({
       icon: 'success',
       title: isArabic ? 'تم الحفظ بنجاح' : 'Saved Successfully',
-      text: isArabic 
-        ? 'تم حفظ القالب المحدد مسبقاً بنجاح وهو الآن متاح لجميع المستخدمين' 
+      text: isArabic
+        ? 'تم حفظ القالب المحدد مسبقاً بنجاح وهو الآن متاح لجميع المستخدمين'
         : 'Predefined template saved successfully and is now available to all users',
       confirmButtonText: isArabic ? 'موافق' : 'OK'
     })
-    
+
+    skipLeaveGuard.value = true
     router.push({ name: 'SurveyControl' })
   } catch (error: any) {
     const isArabic = store.currentLanguage === 'ar'

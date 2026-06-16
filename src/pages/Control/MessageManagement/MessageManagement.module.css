@@ -1087,6 +1087,121 @@
   color: #f8fafc;
 }
 
+/* Pagination */
+.paginationSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: var(--control-background, rgba(255, 255, 255, 0.9));
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--control-border, rgba(161, 125, 35, 0.2));
+  border-radius: 16px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page[data-theme="night"] .paginationSection {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(107, 114, 128, 0.3);
+  color: #f9fafb;
+}
+
+.paginationInfo {
+  font-size: 0.9rem;
+  color: var(--control-text, #4D4D4F);
+}
+
+.page[data-theme="night"] .paginationInfo {
+  color: #d1d5db;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageButton {
+  padding: 10px 16px;
+  border: 1px solid var(--control-border, rgba(161, 125, 35, 0.2));
+  border-radius: 8px;
+  background: var(--control-background, rgba(255, 255, 255, 0.9));
+  color: var(--brand, #A17D23);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand, #A17D23) 12%, var(--control-background, #fff));
+  border-color: var(--brand, #A17D23);
+}
+
+.pageButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page[data-theme="night"] .pageButton {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(107, 114, 128, 0.3);
+  color: #d1d5db;
+}
+
+.page[data-theme="night"] .pageButton:hover:not(:disabled) {
+  background: rgba(107, 114, 128, 0.2);
+  border-color: rgba(107, 114, 128, 0.5);
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 4px;
+  margin: 0 8px;
+}
+
+.pageNumber {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--control-border, rgba(161, 125, 35, 0.2));
+  border-radius: 8px;
+  background: var(--control-background, rgba(255, 255, 255, 0.9));
+  color: var(--brand, #A17D23);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageNumber:hover {
+  background: color-mix(in srgb, var(--brand, #A17D23) 12%, var(--control-background, #fff));
+  border-color: var(--brand, #A17D23);
+}
+
+.pageNumber.active {
+  background: linear-gradient(135deg, #A17D23, #B78A41);
+  color: white;
+  border-color: #A17D23;
+}
+
+.page[data-theme="night"] .pageNumber {
+  background: rgba(17, 24, 39, 0.8);
+  border-color: rgba(107, 114, 128, 0.3);
+  color: #d1d5db;
+}
+
+.page[data-theme="night"] .pageNumber:hover {
+  background: rgba(107, 114, 128, 0.2);
+  border-color: rgba(107, 114, 128, 0.5);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .page {
@@ -1137,6 +1252,16 @@
 
   .table {
     min-width: 540px;
+  }
+
+  .paginationSection {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .paginationControls {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .modalContainer {
