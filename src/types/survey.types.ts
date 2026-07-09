@@ -36,6 +36,20 @@ export interface PaginatedApiResponse<T> {
       label_en: string
     }>
   }
+  // Analytics fields included by the surveys list endpoint
+  total_surveys?: number
+  active_surveys?: number
+  total_responses?: number
+  avg_response_rate?: number
+  recent_activity?: {
+    new_surveys_this_week: number
+    new_responses_this_week: number
+  }
+  trends?: {
+    total?: number
+    active?: number
+    responses?: number
+  }
 }
 
 // Survey visibility levels

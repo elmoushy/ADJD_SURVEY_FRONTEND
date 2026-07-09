@@ -264,6 +264,25 @@
 
             <div :class="$style.cardActions">
               <button
+                :class="[$style.actionButton, $style.outlinedAction]"
+                @click.stop="previewSurveyQuestions(survey)"
+                :title="isRTL ? 'معاينة الأسئلة' : 'Preview Questions'"
+              >
+                <i class="fas fa-eye"></i>
+                <span :class="$style.actionButtonText">{{ isRTL ? 'معاينة' : 'Preview' }}</span>
+              </button>
+
+              <button
+                v-if="canSendReminder(survey)"
+                :class="[$style.actionButton, $style.outlinedAction]"
+                @click.stop="sendReminder(survey)"
+                :title="isRTL ? 'إرسال تذكير لغير المستجيبين' : 'Send reminder to non-responders'"
+              >
+                <i class="fas fa-bell"></i>
+                <span :class="$style.actionButtonText">{{ isRTL ? 'تذكير' : 'Reminder' }}</span>
+              </button>
+
+              <button
                 v-if="survey.status === 'draft'"
                 :class="[$style.actionButton, $style.primaryAction]"
                 @click.stop="submitDraftSurvey(survey.id)"
@@ -413,6 +432,14 @@
                   <i class="fas fa-ellipsis-v"></i>
                 </button>
                 <div :class="[$style.actionsMenu, { [$style.active]: activeActionMenu === survey.id }]">
+                  <button :class="$style.actionMenuItem" @click.stop="previewSurveyQuestions(survey)">
+                    <i class="fas fa-eye"></i>
+                    {{ isRTL ? 'معاينة الأسئلة' : 'Preview Questions' }}
+                  </button>
+                  <button v-if="canSendReminder(survey)" :class="$style.actionMenuItem" @click.stop="sendReminder(survey)">
+                    <i class="fas fa-bell"></i>
+                    {{ isRTL ? 'إرسال تذكير' : 'Send Reminder' }}
+                  </button>
                   <button v-if="survey.status === 'draft'" :class="$style.actionMenuItem" @click.stop="editSurvey(survey)">
                     <i class="fas fa-edit"></i>
                     {{ t('survey.card.edit') }}
@@ -534,6 +561,12 @@
 
       <AnalyticsModal v-if="showAnalytics" :analytics="analytics" @close="showAnalytics = false" />
 
+      <SurveyQuestionsPreviewModal
+        v-if="showQuestionsPreview && selectedSurveyForPreview"
+        :survey="selectedSurveyForPreview"
+        @close="closeQuestionsPreview"
+      />
+
       <SurveyAccessModal
         v-if="showAccessModal && selectedSurveyForAccess"
         :survey="selectedSurveyForAccess"
@@ -583,6 +616,7 @@ import type {
 import SurveyModal from '../../components/SurveyModal/SurveyModal.vue'
 import AnalyticsModal from '../../components/AnalyticsModal/AnalyticsModal.vue'
 import SurveyAccessModal from '../../components/SurveyAccessModal/SurveyAccessModal.vue'
+import SurveyQuestionsPreviewModal from '../../components/SurveyQuestionsPreviewModal/SurveyQuestionsPreviewModal.vue'
 import LinkSharingModal from '../../components/LinkSharingModal/LinkSharingModal.vue'
 import TemplateGalleryModal from '../../components/TemplateGalleryModal/TemplateGalleryModal.vue'
 import Swal from 'sweetalert2'
@@ -629,10 +663,12 @@ const showAnalytics = ref(false)
 const showAccessModal = ref(false)
 const showLinkSharingModal = ref(false)
 const showTemplateGallery = ref(false)
+const showQuestionsPreview = ref(false)
 
 const selectedSurveyForEdit = ref<Survey | null>(null)
 const selectedSurveyForAccess = ref<Survey | null>(null)
 const selectedSurveyForLinkSharing = ref<Survey | null>(null)
+const selectedSurveyForPreview = ref<Survey | null>(null)
 const publicLinkForSharing = ref<any | null>(null)
 const isSubmissionFlow = ref(false)
 
@@ -917,6 +953,16 @@ const manageSurveyAccess = (survey: Survey) => {
   showAccessModal.value = true
 }
 
+const previewSurveyQuestions = (survey: Survey) => {
+  selectedSurveyForPreview.value = survey
+  showQuestionsPreview.value = true
+}
+
+const closeQuestionsPreview = () => {
+  showQuestionsPreview.value = false
+  selectedSurveyForPreview.value = null
+}
+
 const openLinkSharingModal = (survey: Survey) => {
   selectedSurveyForLinkSharing.value = survey
   publicLinkForSharing.value = null
@@ -966,6 +1012,85 @@ const cloneSurvey = async (surveyId: string) => {
     await loadSurveys()
   } catch {
     Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في نسخ الإيضاحات', confirmButtonText: 'موافق' })
+  }
+}
+
+// Reminder is only meaningful for submitted surveys whose audience is an
+// identifiable set of users (AUTH / PRIVATE / GROUPS). PUBLIC is anonymous.
+// Visible only to the survey creator or a super admin (not other admins).
+const canSendReminder = (survey: Survey): boolean => {
+  const isCreator = !!authUser.value?.id && authUser.value.id === survey.creator
+  const isSuper = authUser.value?.role === 'super_admin'
+  return (
+    (isCreator || isSuper) &&
+    survey.status === 'submitted' &&
+    ['AUTH', 'PRIVATE', 'GROUPS'].includes(survey.visibility)
+  )
+}
+
+const sendReminder = async (survey: Survey) => {
+  if (!survey?.id) return
+  const isArabic = store.currentLanguage === 'ar'
+  try {
+    // 1) Preview: how many assigned users have not responded yet
+    const preview = await surveyService.getReminderPreview(survey.id)
+
+    if (!preview.applicable) {
+      Swal.fire({
+        icon: 'info',
+        title: isArabic ? 'غير متاح' : 'Not available',
+        text: isArabic
+          ? 'التذكير متاح فقط للإيضاحات المرسلة المشاركة مع مستخدمين أو مجموعات.'
+          : 'Reminders are only available for submitted surveys shared with users or groups.',
+        confirmButtonText: isArabic ? 'موافق' : 'OK'
+      })
+      return
+    }
+
+    if (preview.count === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: isArabic ? 'لا يوجد مستخدمون' : 'No pending users',
+        text: isArabic
+          ? 'جميع المستخدمين المعنيين قد استجابوا بالفعل لهذا الإيضاح.'
+          : 'All assigned users have already responded to this survey.',
+        confirmButtonText: isArabic ? 'موافق' : 'OK'
+      })
+      return
+    }
+
+    // 2) Confirmation with the count only
+    const result = await Swal.fire({
+      icon: 'question',
+      title: isArabic ? 'تأكيد إرسال التذكير' : 'Confirm reminder',
+      text: isArabic
+        ? `هل أنت متأكد أنك تريد إرسال تذكير إلى ${preview.count} مستخدم لم يستجيبوا لهذا الإيضاح؟`
+        : `Are you sure you want to send a reminder to ${preview.count} user(s) who have not responded?`,
+      showCancelButton: true,
+      confirmButtonText: isArabic ? 'نعم، أرسل التذكير' : 'Yes, send reminder',
+      cancelButtonText: isArabic ? 'إلغاء' : 'Cancel',
+      confirmButtonColor: '#A17D23',
+      cancelButtonColor: '#6b7280'
+    })
+    if (!result.isConfirmed) return
+
+    // 3) Fire the send (emails go out in the background on the server)
+    const { count } = await surveyService.sendReminder(survey.id)
+    Swal.fire({
+      icon: 'success',
+      title: isArabic ? 'تم الإرسال' : 'Sent',
+      text: isArabic
+        ? `تم إرسال التذكير إلى ${count} مستخدم بنجاح.`
+        : `Reminder sent to ${count} user(s) successfully.`,
+      confirmButtonText: isArabic ? 'موافق' : 'OK'
+    })
+  } catch (error: any) {
+    Swal.fire({
+      icon: 'error',
+      title: isArabic ? 'خطأ' : 'Error',
+      text: error?.message || (isArabic ? 'فشل في إرسال التذكير' : 'Failed to send reminder'),
+      confirmButtonText: isArabic ? 'موافق' : 'OK'
+    })
   }
 }
 

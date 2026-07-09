@@ -120,6 +120,11 @@ class SurveyService {
       const responseData = response.data?.data || response.data
       
       if (responseData && 'results' in responseData) {
+        // Analytics fields (total_surveys, active_surveys, etc.) are injected at
+        // the ROOT of the response body — outside the nested "data" object.
+        // responseData = response.data.data (paginated results only)
+        // response.data  = full body (status + data + analytics at root)
+        const root = response.data
         return {
           count: responseData.count || 0,
           total_pages: responseData.total_pages || 0,
@@ -128,14 +133,21 @@ class SurveyService {
           next: responseData.next || null,
           previous: responseData.previous || null,
           results: responseData.results || [],
-          applied_filters: response.data?.applied_filters || responseData.applied_filters || {},
-          available_filters: responseData.available_filters || {}
+          applied_filters: root?.applied_filters || responseData.applied_filters || {},
+          available_filters: responseData.available_filters || {},
+          total_surveys: root?.total_surveys ?? responseData.total_surveys,
+          active_surveys: root?.active_surveys ?? responseData.active_surveys,
+          total_responses: root?.total_responses ?? responseData.total_responses,
+          avg_response_rate: root?.avg_response_rate ?? responseData.avg_response_rate,
+          recent_activity: root?.recent_activity ?? responseData.recent_activity,
+          trends: root?.trends ?? responseData.trends,
         } as PaginatedApiResponse<Survey>
       }
-      
-      // Check if it's the direct nested structure from your API
+
+      // Fallback: flat response (no status wrapper)
       if (response.data?.status === 'success' && response.data?.data) {
         const data = response.data.data
+        const root = response.data
         return {
           count: data.count || 0,
           total_pages: data.total_pages || 0,
@@ -144,8 +156,14 @@ class SurveyService {
           next: data.next || null,
           previous: data.previous || null,
           results: data.results || [],
-          applied_filters: response.data.applied_filters || {},
-          available_filters: data.available_filters || {}
+          applied_filters: root.applied_filters || data.applied_filters || {},
+          available_filters: data.available_filters || {},
+          total_surveys: root.total_surveys ?? data.total_surveys,
+          active_surveys: root.active_surveys ?? data.active_surveys,
+          total_responses: root.total_responses ?? data.total_responses,
+          avg_response_rate: root.avg_response_rate ?? data.avg_response_rate,
+          recent_activity: root.recent_activity ?? data.recent_activity,
+          trends: root.trends ?? data.trends,
         } as PaginatedApiResponse<Survey>
       }
       
@@ -300,6 +318,22 @@ class SurveyService {
     return this.apiCall<ApiResponse<Survey>>(`surveys/${surveyId}/clone/`, {
       method: 'POST'
     })
+  }
+
+  // Reminders: notify assigned users who have not responded yet
+  async getReminderPreview(surveyId: string): Promise<{ applicable: boolean; count: number }> {
+    const res = await this.apiCall<ApiResponse<{ applicable: boolean; count: number }>>(
+      `surveys/${surveyId}/reminder-preview/`
+    )
+    return res.data
+  }
+
+  async sendReminder(surveyId: string): Promise<{ count: number }> {
+    const res = await this.apiCall<ApiResponse<{ count: number }>>(
+      `surveys/${surveyId}/send-reminder/`,
+      { method: 'POST' }
+    )
+    return res.data
   }
 
   // Audience management
@@ -884,32 +918,29 @@ class SurveyService {
   // Analytics - Using existing responses endpoint with analytics data
   async getAnalyticsDashboard(): Promise<ApiResponse<SurveyAnalytics>> {
     try {
-      // Note: Analytics data is included in the responses endpoint
-      // This is a placeholder implementation that aggregates from existing endpoints
       const surveys = await this.getAllSurveys()
-      
-      // Safely handle the surveys data - check if it exists and has the expected structure
       const surveysData = surveys?.results || []
-      
-      // Transform survey data into analytics format
+
+      // Use backend-computed totals (covers all pages, not just page 1).
+      // Fall back to page-1 counts only when the backend fields are absent.
       const analyticsData: SurveyAnalytics = {
-        total_surveys: surveysData.length,
-        active_surveys: surveysData.filter((s: Survey) => s?.is_active).length,
-        total_responses: surveysData.reduce((sum: number, s: Survey) => sum + (s?.response_count || 0), 0),
-        avg_response_rate: 0.75, // Placeholder calculation
-        recent_activity: {
-          new_surveys_this_week: 0, // Placeholder - would need date filtering
-          new_responses_this_week: 0 // Placeholder - would need date filtering
+        total_surveys: surveys.total_surveys ?? surveys.count ?? surveysData.length,
+        active_surveys: surveys.active_surveys ?? surveysData.filter((s: Survey) => s?.is_active).length,
+        total_responses: surveys.total_responses ?? surveysData.reduce((sum: number, s: Survey) => sum + (s?.response_count || 0), 0),
+        avg_response_rate: surveys.avg_response_rate ?? 0,
+        recent_activity: surveys.recent_activity ?? {
+          new_surveys_this_week: 0,
+          new_responses_this_week: 0
         },
         top_surveys: surveysData
-          .filter((s: Survey) => s && s.id && s.title) // Filter out any null/undefined surveys
+          .filter((s: Survey) => s && s.id && s.title)
           .sort((a: Survey, b: Survey) => (b?.response_count || 0) - (a?.response_count || 0))
           .slice(0, 5)
           .map((survey: Survey) => ({
             id: survey.id,
             title: survey.title,
             response_count: survey.response_count || 0,
-            completion_rate: 0.85 // Placeholder calculation
+            completion_rate: 0.85
           }))
       }
 
