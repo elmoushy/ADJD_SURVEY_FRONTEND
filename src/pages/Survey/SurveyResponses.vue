@@ -337,6 +337,124 @@
                     </div>
                   </div>
 
+                  <!-- Follow-up Section (shown only when a follow-up exists) -->
+                  <div
+                    v-if="response.follow_ups && response.follow_ups.length"
+                    :class="$style.followUpSection"
+                  >
+                    <div
+                      v-for="thread in response.follow_ups"
+                      :key="thread.id"
+                      :class="$style.followUpThread"
+                    >
+                      <!-- Thread header: basic info -->
+                      <div :class="$style.responseDetailsHeader">
+                        <div :class="$style.detailsHeaderIcon">
+                          <i class="fas fa-comments"></i>
+                        </div>
+                        <h4 :class="$style.detailsHeaderTitle">
+                          {{ isRTL ? "المتابعة" : "Follow-up" }}
+                        </h4>
+                        <span
+                          :class="$style.followUpBadge"
+                          :style="{
+                            background: followUpStatusMeta(thread.status).color + '22',
+                            color: followUpStatusMeta(thread.status).color,
+                            border: '1px solid ' + followUpStatusMeta(thread.status).color + '55',
+                          }"
+                        >
+                          <i :class="followUpStatusMeta(thread.status).icon"></i>
+                          {{ followUpStatusMeta(thread.status).label }}
+                        </span>
+                      </div>
+
+                      <!-- Basic info row -->
+                      <div :class="$style.followUpMeta">
+                        <div :class="$style.followUpMetaItem">
+                          <span :class="$style.followUpMetaLabel">
+                            <i class="fas fa-user-shield"></i>
+                            {{ isRTL ? "بواسطة" : "Opened by" }}
+                          </span>
+                          <span :class="$style.followUpMetaValue">
+                            {{ thread.opened_by_name || thread.opened_by_email || (isRTL ? "غير معروف" : "Unknown") }}
+                          </span>
+                        </div>
+                        <div :class="$style.followUpMetaItem">
+                          <span :class="$style.followUpMetaLabel">
+                            <i class="fas fa-calendar-alt"></i>
+                            {{ isRTL ? "بتاريخ" : "Opened on" }}
+                          </span>
+                          <span :class="$style.followUpMetaValue" dir="ltr">
+                            {{ formatFollowUpDateTime(thread.created_at) }}
+                          </span>
+                        </div>
+                        <div
+                          v-if="thread.decided_at"
+                          :class="$style.followUpMetaItem"
+                        >
+                          <span :class="$style.followUpMetaLabel">
+                            <i class="fas fa-gavel"></i>
+                            {{ isRTL ? "القرار" : "Decision" }}
+                          </span>
+                          <span :class="$style.followUpMetaValue" dir="ltr">
+                            {{ (thread.decided_by_name || thread.decided_by_email || "") }} · {{ formatFollowUpDateTime(thread.decided_at) }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Chat messages -->
+                      <div :class="$style.followUpChat">
+                        <div
+                          v-for="msg in thread.messages"
+                          :key="msg.id"
+                          :class="[
+                            $style.chatRow,
+                            msg.sender_role === 'admin' ? $style.chatRowAdmin : $style.chatRowResponder,
+                          ]"
+                        >
+                          <div
+                            :class="[
+                              $style.chatAvatar,
+                              msg.sender_role === 'admin' ? $style.chatAvatarAdmin : $style.chatAvatarResponder,
+                            ]"
+                          >
+                            {{ followUpSenderInitial(msg) }}
+                          </div>
+                          <div :class="$style.chatBubbleWrap">
+                            <div :class="$style.chatMeta">
+                              <span :class="$style.chatSender">{{ followUpSenderLabel(msg) }}</span>
+                              <span :class="$style.chatTime" dir="ltr">{{ formatFollowUpDateTime(msg.created_at) }}</span>
+                            </div>
+                            <div
+                              :class="[
+                                $style.chatBubble,
+                                msg.sender_role === 'admin' ? $style.chatBubbleAdmin : $style.chatBubbleResponder,
+                              ]"
+                            >
+                              {{ msg.body }}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div
+                          v-if="!thread.messages || !thread.messages.length"
+                          :class="$style.followUpEmpty"
+                        >
+                          {{ isRTL ? "لا توجد رسائل بعد" : "No messages yet" }}
+                        </div>
+                      </div>
+
+                      <!-- Decision reason (if any) -->
+                      <div
+                        v-if="thread.decision_reason"
+                        :class="$style.followUpReason"
+                      >
+                        <i class="fas fa-quote-right"></i>
+                        {{ thread.decision_reason }}
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -751,8 +869,7 @@
                     >{{ t("survey.responses.respondent") }}:</span
                   >
                   <span :class="$style.metadataValue">{{
-                    selectedResponse.respondent.email ||
-                    t("survey.responses.anonymousUser")
+                    getRespondentName(selectedResponse)
                   }}</span>
                 </div>
                 <div :class="$style.metadataItem">
@@ -973,19 +1090,6 @@ function shapeArabicText(text: string, rtl: boolean): string {
   }
 }
 
-const ARABIC_DIGIT_MAP: Record<string, string> = {
-  "0": "٠",
-  "1": "١",
-  "2": "٢",
-  "3": "٣",
-  "4": "٤",
-  "5": "٥",
-  "6": "٦",
-  "7": "٧",
-  "8": "٨",
-  "9": "٩",
-};
-
 // Dynamic PDF colors based on theme
 const getPdfColors = (theme: string) => {
   // Light theme colors (matching design-tokens.css)
@@ -1046,8 +1150,8 @@ function isArabicLine(s: string): boolean {
 //   return `${RLI}${s}${PDI}`;
 // };
 
-const localizeDigits = (value: string, rtl: boolean) =>
-  rtl ? value.replace(/[0-9]/g, (digit) => ARABIC_DIGIT_MAP[digit] ?? digit) : value;
+// Digits are always kept in Latin (English) form in the report, regardless of language.
+const localizeDigits = (value: string, _rtl: boolean) => value;
 
 const formatWithDigits = (
   value: number | string,
@@ -1617,8 +1721,8 @@ const downloadAsPDF = async (responses: any[]) => {
     const theme = currentTheme.value;
     const pdfColors = getPdfColors(theme);
     
-    const locale = rtl ? 'ar-SA' : 'en-US';
-    const numberFormatter = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+    // Always use an English number formatter so digits render as 1, 2, 3 (not ١، ٢، ٣).
+    const numberFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
     const formatDateForPdf = (value?: string) => {
       if (!value) return '';
@@ -1626,16 +1730,16 @@ const downloadAsPDF = async (responses: any[]) => {
       if (Number.isNaN(date.getTime())) return '';
       
       if (rtl) {
-        // Format manually for Arabic to avoid Unicode markers
+        // Format manually for Arabic to avoid Unicode markers.
+        // Keep date + HH:MM only (no seconds).
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        
-        // Format as: YYYY/MM/DD HH:MM:SS and convert to Arabic numerals
-        const formatted = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+
+        // Format as: YYYY/MM/DD HH:MM
+        const formatted = `${year}/${month}/${day} ${hours}:${minutes}`;
         return localizeDigits(formatted, true);
       } else {
         return date.toLocaleString('en-US', {
@@ -1644,7 +1748,6 @@ const downloadAsPDF = async (responses: any[]) => {
           day: '2-digit',
           hour: '2-digit',
           minute: '2-digit',
-          second: '2-digit',
         });
       }
     };
@@ -1668,6 +1771,26 @@ const downloadAsPDF = async (responses: any[]) => {
       noAnswersAvailable: rtl ? 'لا توجد إجابات متاحة' : 'No answers available',
       pageIndicator: rtl ? 'صفحة' : 'Page',
       ofIndicator: rtl ? 'من' : 'of',
+      followUpTitle: rtl ? 'المتابعة' : 'Follow-up',
+      followUpOpenedBy: rtl ? 'بواسطة' : 'Opened by',
+      followUpOpenedOn: rtl ? 'بتاريخ' : 'Opened on',
+      followUpStatus: rtl ? 'الحالة' : 'Status',
+      adminLabel: rtl ? 'المشرف' : 'Admin',
+      responderLabel: rtl ? 'المستجيب' : 'Respondent',
+      followUpDecision: rtl ? 'القرار' : 'Decision',
+      followUpReason: rtl ? 'السبب' : 'Reason',
+    };
+
+    const followUpStatusText = (status: string) => {
+      const map: Record<string, { ar: string; en: string }> = {
+        pending_reply: { ar: 'بانتظار الرد', en: 'Awaiting reply' },
+        replied: { ar: 'تم الرد', en: 'Replied' },
+        accepted: { ar: 'مقبول', en: 'Accepted' },
+        rejected: { ar: 'مرفوض', en: 'Rejected' },
+        closed: { ar: 'مغلق', en: 'Closed' },
+      };
+      const m = map[status];
+      return m ? (rtl ? m.ar : m.en) : status;
     };
 
     const localizedCount = formatWithDigits(responses.length, numberFormatter, rtl);
@@ -1685,6 +1808,82 @@ const downloadAsPDF = async (responses: any[]) => {
         pdf.setFont('Amiri', 'normal');
         yPosition = margin;
       }
+    };
+
+    // Draw a "label: value" row. In RTL the Arabic label is anchored to the
+    // right edge and the value is drawn to its left, so English values
+    // (names, dates) keep their natural left-to-right order.
+    const drawInfoRow = (
+      label: string,
+      value: string,
+      opts: { size?: number; labelColor?: string; valueColor?: string; gap?: number } = {},
+    ) => {
+      const size = opts.size ?? 11;
+      const labelColor = opts.labelColor ?? pdfColors.secondary;
+      const valueColor = opts.valueColor ?? pdfColors.subtitle;
+      const rawValue = String(value ?? '');
+      const labelHasArabic = isArabicLine(label);
+      const valueHasArabic = isArabicLine(rawValue);
+      const lineGap = opts.gap ?? 8;
+      ensureSpace(lineGap + 2);
+
+      if (rtl && labelHasArabic) {
+        const labelText = `${label}:`;
+        pdf.setFont('Amiri', 'normal');
+        pdf.setFontSize(size);
+        const shapedLabel = shapeArabicText(cleanDirectionMarkers(labelText), true);
+        const labelWidth = pdf.getTextWidth(shapedLabel);
+        drawText(pdf, labelText, pageWidth - margin, yPosition + 4, {
+          rtl: true,
+          size,
+          color: labelColor,
+          align: 'right',
+        });
+        drawText(pdf, rawValue, pageWidth - margin - labelWidth - 3, yPosition + 4, {
+          rtl: valueHasArabic,
+          size,
+          color: valueColor,
+          align: 'right',
+        });
+        yPosition += lineGap;
+      } else {
+        const fullLine = `${label}: ${rawValue}`;
+        yPosition = drawParagraph(pdf, fullLine, margin, yPosition, contentWidth, {
+          rtl: false,
+          size,
+          color: valueColor,
+          lineHeight: 6,
+        }) + 2;
+      }
+    };
+
+    // Draw a gold-filled highlight band with a white "label: value" line.
+    // Used to make the follow-up status stand out.
+    const drawGoldBand = (label: string, value: string, opts: { size?: number } = {}) => {
+      const size = opts.size ?? 10;
+      const bandHeight = 9;
+      ensureSpace(bandHeight + 4);
+      pdf.setFillColor(pdfColors.primary);
+      pdf.roundedRect(margin, yPosition, contentWidth, bandHeight, 2, 2, 'F');
+      const labelText = `${label}:`;
+      const rawValue = String(value ?? '');
+      if (rtl && isArabicLine(label)) {
+        pdf.setFont('Amiri', 'normal');
+        pdf.setFontSize(size);
+        const shaped = shapeArabicText(cleanDirectionMarkers(labelText), true);
+        const w = pdf.getTextWidth(shaped);
+        drawText(pdf, labelText, pageWidth - margin - 4, yPosition + 6, {
+          rtl: true, size, weight: 'bold', color: '#FFFFFF', align: 'right',
+        });
+        drawText(pdf, rawValue, pageWidth - margin - 4 - w - 3, yPosition + 6, {
+          rtl: isArabicLine(rawValue), size, weight: 'bold', color: '#FFFFFF', align: 'right',
+        });
+      } else {
+        drawText(pdf, `${labelText} ${rawValue}`, margin + 4, yPosition + 6, {
+          rtl: false, size, weight: 'bold', color: '#FFFFFF', align: 'left',
+        });
+      }
+      yPosition += bandHeight + 4;
     };
 
     pdf.setFillColor(pdfColors.primary);
@@ -1733,14 +1932,11 @@ const downloadAsPDF = async (responses: any[]) => {
       const infoRows = [
         {
           label: strings.respondent,
-          value: response?.respondent?.email || strings.anonymousRespondent,
+          value: getRespondentName(response),
         },
         {
           label: strings.respondentType,
-          value:
-            response?.respondent?.type === 'authenticated'
-              ? strings.registeredUser
-              : strings.anonymousUser,
+          value: getRespondentTypeLabel(response),
         },
         {
           label: strings.status,
@@ -1753,31 +1949,8 @@ const downloadAsPDF = async (responses: any[]) => {
       ];
 
       infoRows.forEach(({ label, value }) => {
-        ensureSpace(10);
         const rawValue = typeof value === 'string' ? value : String(value ?? '');
-        const valueHasArabic = isArabicLine(rawValue);
-        const labelHasArabic = isArabicLine(label);
-        
-        // Determine if the whole line should be RTL (when both label and value are Arabic)
-        const lineRtl = rtl && labelHasArabic && valueHasArabic;
-        
-        // Simple formatting without direction markers
-        const fullLine = `${label}: ${rawValue}`;
-        const anchorX = lineRtl ? pageWidth - margin : margin;
-        
-        yPosition = drawParagraph(
-          pdf,
-          fullLine,
-          anchorX,
-          yPosition,
-          contentWidth,
-          {
-            rtl: lineRtl,
-            size: 11,
-            color: pdfColors.subtitle,
-            lineHeight: 6,
-          },
-        ) + 2;
+        drawInfoRow(label, rawValue);
       });
 
       ensureSpace(12);
@@ -1891,6 +2064,114 @@ const downloadAsPDF = async (responses: any[]) => {
         });
       }
 
+      // ── Follow-up section (only when a follow-up thread exists) ──
+      const followUps = Array.isArray(response?.follow_ups) ? response.follow_ups : [];
+      followUps.forEach((thread: any) => {
+        ensureSpace(16);
+        yPosition += 2;
+        // Section title
+        const fuTitleRtl = isArabicLine(strings.followUpTitle);
+        drawText(
+          pdf,
+          strings.followUpTitle,
+          fuTitleRtl ? pageWidth - margin : margin,
+          yPosition + 5,
+          {
+            rtl: fuTitleRtl,
+            size: 12,
+            weight: 'bold',
+            color: pdfColors.primary,
+          },
+        );
+        yPosition += 12;
+
+        // Basic info (label right / value left in RTL; dates stay English).
+        const openedByName = thread.opened_by_name || thread.opened_by_email || '—';
+        drawInfoRow(strings.followUpOpenedBy, openedByName, { size: 10 });
+        drawInfoRow(strings.followUpOpenedOn, formatFollowUpDateTime(thread.created_at), { size: 10 });
+
+        // Status shown in Arabic inside a highlighted gold band.
+        drawGoldBand(strings.followUpStatus, followUpStatusText(thread.status));
+
+        // When accepted/rejected, show who decided and when (extra context).
+        if (thread.status === 'accepted' || thread.status === 'rejected') {
+          const decidedBy = thread.decided_by_name || thread.decided_by_email || '';
+          const decidedAt = formatFollowUpDateTime(thread.decided_at);
+          const parts: string[] = [];
+          if (decidedBy) parts.push(decidedBy);
+          if (decidedAt) parts.push(decidedAt);
+          if (parts.length) {
+            drawInfoRow(strings.followUpDecision, parts.join(' · '), { size: 9.5 });
+          }
+        }
+
+        // Decision reason (if provided)
+        if (thread.decision_reason) {
+          drawInfoRow(strings.followUpReason, thread.decision_reason, { size: 9.5 });
+        }
+
+        // Extra space before the conversation.
+        yPosition += 6;
+
+        // Messages — sender name and timestamp drawn separately so the
+        // English date is never reversed by Arabic shaping.
+        const messages = Array.isArray(thread.messages) ? thread.messages : [];
+        messages.forEach((msg: any) => {
+          ensureSpace(20);
+          const senderName =
+            msg.sender_name ||
+            msg.sender_email ||
+            (msg.sender_role === 'admin' ? strings.adminLabel : strings.responderLabel);
+          const timeText = formatFollowUpDateTime(msg.created_at);
+          const senderColor = msg.sender_role === 'admin' ? pdfColors.primary : pdfColors.secondary;
+          const senderIsArabic = isArabicLine(senderName);
+
+          if (rtl && senderIsArabic) {
+            // Admin (Arabic name) → right side, time to the left (LTR).
+            pdf.setFont('Amiri', 'normal');
+            pdf.setFontSize(9.5);
+            const shapedName = shapeArabicText(cleanDirectionMarkers(senderName), true);
+            const nameWidth = pdf.getTextWidth(shapedName);
+            drawText(pdf, senderName, pageWidth - margin, yPosition + 4, {
+              rtl: true, size: 9.5, weight: 'bold', color: senderColor, align: 'right',
+            });
+            drawText(pdf, timeText, pageWidth - margin - nameWidth - 4, yPosition + 4, {
+              rtl: false, size: 8.5, color: pdfColors.textMuted, align: 'right',
+            });
+          } else {
+            // Responder / English name → left side, time after it (LTR).
+            pdf.setFont('Amiri', 'bold');
+            pdf.setFontSize(9.5);
+            const nameWidth = pdf.getTextWidth(senderName);
+            drawText(pdf, senderName, margin, yPosition + 4, {
+              rtl: false, size: 9.5, weight: 'bold', color: senderColor, align: 'left',
+            });
+            drawText(pdf, timeText, margin + nameWidth + 4, yPosition + 4, {
+              rtl: false, size: 8.5, color: pdfColors.textMuted, align: 'left',
+            });
+          }
+          // Gap between the sender/time line and the message body.
+          yPosition += 9;
+
+          const body = msg.body || '';
+          const bodyRtl = rtl && isArabicLine(body);
+          ensureSpace(10);
+          yPosition = drawParagraph(
+            pdf,
+            body,
+            bodyRtl ? pageWidth - margin - 4 : margin + 4,
+            yPosition,
+            contentWidth - 8,
+            {
+              rtl: bodyRtl,
+              size: 10,
+              color: pdfColors.secondary,
+              lineHeight: 5.2,
+            },
+          ) + 8;
+        });
+      });
+
       yPosition += 6;
 
       if (index < responses.length - 1) {
@@ -2001,6 +2282,58 @@ const downloadAsWord = async (responses: any[]) => {
               padding: 10px;
               border-radius: 4px;
             }
+            .followup-section {
+              margin-top: 20px;
+              padding: 14px;
+              background: #fdfaf3;
+              border: 1px solid #e8dcc0;
+              border-radius: 6px;
+            }
+            .followup-title {
+              color: #A17D23;
+              font-size: 13pt;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .followup-info {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 12px;
+            }
+            .followup-info td {
+              padding: 6px 8px;
+              border: 1px solid #e8dcc0;
+              font-size: 10pt;
+            }
+            .followup-info td:first-child {
+              background: #f7f0e0;
+              font-weight: bold;
+              width: 30%;
+            }
+            .followup-msg {
+              margin: 8px 0;
+              padding: 8px 12px;
+              background: white;
+              border-right: 3px solid #B78A41;
+              border-radius: 4px;
+            }
+            .followup-msg.responder {
+              border-right-color: #10b981;
+            }
+            .followup-msg-head {
+              font-size: 9.5pt;
+              font-weight: bold;
+              color: #4D4D4F;
+              margin-bottom: 4px;
+            }
+            .followup-msg-time {
+              color: #808285;
+              font-weight: normal;
+            }
+            .followup-msg-body {
+              font-size: 10.5pt;
+              color: #231F20;
+            }
           </style>
         </head>
         <body>
@@ -2042,16 +2375,13 @@ const generateWordContent = (responses: any[]) => {
 
   responses.forEach((response, index) => {
     const isComplete = response.is_complete ? "مكتملة" : "غير مكتملة";
-    const respondentName = response.respondent?.email || "مستجيب مجهول";
-    const respondentType =
-      response.respondent?.type === "authenticated"
-        ? "مستخدم مسجل"
-        : "مستخدم مجهول";
+    const respondentName = escapeHtml(getRespondentName(response));
+    const respondentType = escapeHtml(getRespondentTypeLabel(response));
 
     content += `
           <div class="response-section">
             <div class="response-title">الاستجابة رقم ${index + 1} - ${formatDateForCSV(response.submitted_at)}</div>
-            
+
             <table class="info-table">
               <tr>
                 <td>المستجيب</td>
@@ -2070,7 +2400,7 @@ const generateWordContent = (responses: any[]) => {
                 <td>${getCompletionPercentage(response)}%</td>
               </tr>
             </table>
-            
+
             <h4>الإجابات:</h4>
         `;
 
@@ -2089,6 +2419,59 @@ const generateWordContent = (responses: any[]) => {
               </div>
             </div>
           `;
+    });
+
+    // ── Follow-up section (only when a thread exists) ──
+    const followUps = Array.isArray(response.follow_ups) ? response.follow_ups : [];
+    followUps.forEach((thread: any) => {
+      const statusLabel = escapeHtml(followUpStatusMeta(thread.status).label);
+      const openedBy = escapeHtml(thread.opened_by_name || thread.opened_by_email || "—");
+      const openedOn = escapeHtml(formatFollowUpDateTime(thread.created_at));
+
+      content += `
+            <div class="followup-section">
+              <div class="followup-title">المتابعة</div>
+              <table class="followup-info">
+                <tr>
+                  <td>بواسطة</td>
+                  <td>${openedBy}</td>
+                </tr>
+                <tr>
+                  <td>بتاريخ</td>
+                  <td><span dir="ltr">${openedOn}</span></td>
+                </tr>
+                <tr>
+                  <td>الحالة</td>
+                  <td>${statusLabel}</td>
+                </tr>
+              </table>
+        `;
+
+      const messages = Array.isArray(thread.messages) ? thread.messages : [];
+      messages.forEach((msg: any) => {
+        const roleClass = msg.sender_role === "admin" ? "" : " responder";
+        const sender = escapeHtml(followUpSenderLabel(msg));
+        const time = escapeHtml(formatFollowUpDateTime(msg.created_at));
+        const body = escapeHtml(msg.body).replace(/\n/g, "<br>");
+        content += `
+              <div class="followup-msg${roleClass}">
+                <div class="followup-msg-head">
+                  ${sender} <span class="followup-msg-time">· <span dir="ltr">${time}</span></span>
+                </div>
+                <div class="followup-msg-body">${body}</div>
+              </div>
+          `;
+      });
+
+      if (thread.decision_reason) {
+        content += `
+              <div class="followup-msg" style="border-right-color:#9ca3af;">
+                <div class="followup-msg-body"><em>${escapeHtml(thread.decision_reason)}</em></div>
+              </div>
+          `;
+      }
+
+      content += `</div>`;
     });
 
     content += `</div>`;
@@ -2151,8 +2534,8 @@ const generateArabicCSV = (responses: any[]) => {
 
     const row = [
       index + 1,
-      response.respondent?.email || "مجهول",
-      response.respondent?.type === "authenticated" ? "مسجل" : "مجهول",
+      getRespondentName(response),
+      getRespondentTypeLabel(response),
       formatDateForCSV(response.submitted_at),
       `${getCompletionPercentage(response)}%`,
     ];
@@ -2320,6 +2703,81 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
+
+// ── Respondent display (reads respondent_info returned by the API) ──
+// group_member identities are intentionally masked (no email) for privacy.
+const getRespondentName = (response: any): string => {
+  const info = response?.respondent_info;
+  const rtl = isRTL.value;
+  if (!info) return rtl ? "مستخدم مجهول" : "Anonymous user";
+  if (info.type === "authenticated") {
+    return info.full_name || info.email || (rtl ? "مستخدم مسجل" : "Registered user");
+  }
+  if (info.type === "group_member") {
+    return rtl ? "مستخدم مسجل" : "Registered user";
+  }
+  const contact = info.email && info.email !== "Anonymous" ? info.email : "";
+  return contact || (rtl ? "مستخدم مجهول" : "Anonymous user");
+};
+
+const getRespondentTypeLabel = (response: any): string => {
+  const type = response?.respondent_info?.type;
+  const rtl = isRTL.value;
+  if (type === "authenticated") return rtl ? "مستخدم مسجل" : "Registered user";
+  if (type === "group_member") return rtl ? "عضو مجموعة" : "Group member";
+  return rtl ? "مستخدم مجهول" : "Anonymous user";
+};
+
+// ── Follow-up display helpers (dates & numbers always in English) ──
+const followUpStatusMeta = (status: string) => {
+  const rtl = isRTL.value;
+  const map: Record<string, { color: string; icon: string; ar: string; en: string }> = {
+    pending_reply: { color: "#f59e0b", icon: "fas fa-clock", ar: "بانتظار الرد", en: "Awaiting reply" },
+    replied: { color: "#3b82f6", icon: "fas fa-reply", ar: "تم الرد", en: "Replied" },
+    accepted: { color: "#10b981", icon: "fas fa-check-circle", ar: "مقبول", en: "Accepted" },
+    rejected: { color: "#ef4444", icon: "fas fa-times-circle", ar: "مرفوض", en: "Rejected" },
+    closed: { color: "#9ca3af", icon: "fas fa-lock", ar: "مغلق", en: "Closed" },
+  };
+  const m = map[status] ?? { color: "#9ca3af", icon: "fas fa-circle", ar: status, en: status };
+  return { color: m.color, icon: m.icon, label: rtl ? m.ar : m.en };
+};
+
+// English digits + English date/time format, regardless of UI language.
+const formatFollowUpDateTime = (iso: string): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const followUpSenderLabel = (msg: any): string => {
+  const rtl = isRTL.value;
+  if (msg?.sender_name || msg?.sender_email) return msg.sender_name || msg.sender_email;
+  return msg?.sender_role === "admin"
+    ? (rtl ? "المشرف" : "Admin")
+    : (rtl ? "المستجيب" : "Respondent");
+};
+
+const followUpSenderInitial = (msg: any): string => {
+  const label = followUpSenderLabel(msg);
+  return label ? label.charAt(0).toUpperCase() : "?";
+};
+
+// Escape user-supplied text before injecting into exported HTML (Word).
+const escapeHtml = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
 function getAttachmentIcon(mime: string): string {
   if (mime === 'application/pdf') return 'fas fa-file-pdf'

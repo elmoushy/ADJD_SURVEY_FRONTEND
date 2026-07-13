@@ -1017,7 +1017,7 @@ const schedulingSettings = ref({
 })
 const surveySettings = ref({
   is_active: true,
-  allow_attachments: 'none'
+  allow_attachments: 'optional'
 })
 
 // Computed
@@ -1266,7 +1266,7 @@ const initializeSurvey = () => {
       // Load survey settings if available
       surveySettings.value = {
         is_active: (props.template as any).is_active !== undefined ? (props.template as any).is_active : true,
-        allow_attachments: (props.template as any).allow_attachments !== undefined ? (props.template as any).allow_attachments : 'none'
+        allow_attachments: (props.template as any).allow_attachments !== undefined ? (props.template as any).allow_attachments : 'optional'
       }
       console.log('⚙️ Survey settings:', surveySettings.value)
     }
