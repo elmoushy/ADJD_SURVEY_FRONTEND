@@ -24,9 +24,31 @@
             </span>
           </div>
         </div>
-        <button :class="$style.closeButton" :title="isRTL ? 'إغلاق' : 'Close'" @click="$emit('close')">
-          <i class="fas fa-times"></i>
-        </button>
+        <div :class="$style.headerActions">
+          <button
+            v-if="questions.length"
+            :class="$style.toolButton"
+            :title="isRTL ? 'طباعة' : 'Print'"
+            :disabled="isExporting"
+            @click="printQuestions"
+          >
+            <i class="fas fa-print"></i>
+            <span :class="$style.toolButtonText">{{ isRTL ? 'طباعة' : 'Print' }}</span>
+          </button>
+          <!-- <button
+            v-if="questions.length"
+            :class="$style.toolButton"
+            :title="isRTL ? 'تحميل PDF' : 'Download PDF'"
+            :disabled="isExporting"
+            @click="downloadQuestionsPdf"
+          >
+            <i :class="isExporting ? 'fas fa-spinner fa-spin' : 'fas fa-download'"></i>
+            <span :class="$style.toolButtonText">{{ isRTL ? 'تحميل' : 'Download' }}</span>
+          </button> -->
+          <button :class="$style.closeButton" :title="isRTL ? 'إغلاق' : 'Close'" @click="$emit('close')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Body -->
@@ -130,6 +152,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '../../stores/useAppStore'
 import { surveyService } from '../../services/surveyService'
+import jsPDF from 'jspdf'
+import { addAmiriFont } from '../../lib/fonts/Amiri-normal'
+import { reshape } from 'arabic-persian-reshaper'
 import type { Survey, SurveyQuestion } from '../../types/survey.types'
 
 interface Props {
@@ -146,6 +171,7 @@ const isRTL = computed(() => currentLanguage.value === 'ar')
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
 const fetchedQuestions = ref<SurveyQuestion[] | null>(null)
+const isExporting = ref(false)
 
 // Prefer the questions already loaded on the survey (no extra request needed);
 // only hit the detail endpoint when they're genuinely missing.
@@ -196,6 +222,340 @@ const getRatingLabel = (type: 'min' | 'max', options?: string): string => {
     if (nums.length === 0) return fallback
     return String(type === 'min' ? nums[0] : nums[nums.length - 1])
   } catch { return fallback }
+}
+
+// ── Print / Download helpers ──────────────────────────────────────
+const escapeHtml = (value: unknown): string =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+const questionTypeLabel = (type: string): string => {
+  const labels: Record<string, { ar: string; en: string }> = {
+    text: { ar: 'نص قصير', en: 'Short text' },
+    textarea: { ar: 'نص طويل', en: 'Long text' },
+    single_choice: { ar: 'اختيار واحد', en: 'Single choice' },
+    multiple_choice: { ar: 'اختيار متعدد', en: 'Multiple choice' },
+    yes_no: { ar: 'نعم / لا', en: 'Yes / No' },
+    rating: { ar: 'تقييم', en: 'Rating' },
+  }
+  const m = labels[type]
+  return m ? (isRTL.value ? m.ar : m.en) : type
+}
+
+// English digits/date format, regardless of UI language.
+const formatSurveyDate = (iso?: string | null): string => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleString('en-GB', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  })
+}
+
+const createdByName = (): string => {
+  const s = props.survey as any
+  return s.creator_name || s.created_by_name || s.creator_email || (isRTL.value ? 'غير معروف' : 'Unknown')
+}
+
+// ── jsPDF direct-text rendering (same approach as the responses report) ──
+// No DOM screenshot involved, so there's nothing that can render "blank".
+function cleanDirectionMarkers(text: string): string {
+  if (!text) return text
+  return text.replace(/[‎‏‪‫‬‭‮⁦⁧⁨⁩]/g, '').trim()
+}
+
+function isArabicLine(s: string): boolean {
+  return /[؀-ۿ]/.test(String(s || ''))
+}
+
+function shapeArabicText(text: string, rtl: boolean): string {
+  if (!rtl || !text) return text
+  try {
+    const cleaned = cleanDirectionMarkers(text)
+    const shaped = reshape(cleaned)
+    return shaped.split('').reverse().join('')
+  } catch {
+    return text
+  }
+}
+
+interface DrawTextOptions {
+  rtl: boolean
+  size?: number
+  weight?: 'normal' | 'bold'
+  color?: string
+  align?: 'left' | 'right' | 'center'
+}
+
+const drawText = (pdf: jsPDF, text: string, x: number, y: number, options: DrawTextOptions) => {
+  const { rtl, size = 11, weight = 'normal', color = '#231F20' } = options
+  const align = options.align ?? (rtl ? 'right' : 'left')
+  const base = text ?? ''
+  const cleaned = cleanDirectionMarkers(base)
+  const shaped = shapeArabicText(cleaned, rtl && isArabicLine(base))
+  pdf.setFont('Amiri', weight === 'bold' ? 'bold' : 'normal')
+  pdf.setFontSize(size)
+  pdf.setTextColor(color)
+  pdf.text(shaped, x, y, { align, isInputRtl: false })
+}
+
+const drawParagraph = (
+  pdf: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  options: DrawTextOptions & { lineHeight?: number },
+): number => {
+  const { lineHeight = 5.5 } = options
+  pdf.setFont('Amiri', options.weight === 'bold' ? 'bold' : 'normal')
+  pdf.setFontSize(options.size ?? 11)
+  const lines = pdf.splitTextToSize(text ?? '', width) as string[]
+  let cursorY = y
+  lines.forEach((line) => {
+    drawText(pdf, line, x, cursorY, { ...options, rtl: options.rtl && isArabicLine(line) })
+    cursorY += lineHeight
+  })
+  return cursorY
+}
+
+// Build a self-contained HTML fragment (details header + questions) used for
+// both printing and PDF download. Native browser rendering handles Arabic/RTL.
+const buildPrintableHtml = (): string => {
+  const rtl = isRTL.value
+  const dir = rtl ? 'rtl' : 'ltr'
+  const L = (ar: string, en: string) => (rtl ? ar : en)
+
+  const detailRows: string[] = []
+  detailRows.push(`<tr><td class="lbl">${L('أنشئ بواسطة', 'Created by')}</td><td>${escapeHtml(createdByName())}</td></tr>`)
+  detailRows.push(`<tr><td class="lbl">${L('الحالة', 'Status')}</td><td>${props.survey.is_active ? L('نشط', 'Active') : L('غير نشط', 'Inactive')}</td></tr>`)
+  const start = formatSurveyDate((props.survey as any).start_date)
+  if (start) detailRows.push(`<tr><td class="lbl">${L('تاريخ البدء', 'Start date')}</td><td dir="ltr">${escapeHtml(start)}</td></tr>`)
+  const end = formatSurveyDate((props.survey as any).end_date)
+  if (end) detailRows.push(`<tr><td class="lbl">${L('تاريخ الانتهاء', 'End date')}</td><td dir="ltr">${escapeHtml(end)}</td></tr>`)
+  detailRows.push(`<tr><td class="lbl">${L('عدد الأسئلة', 'Questions')}</td><td>${questions.value.length}</td></tr>`)
+
+  const questionsHtml = questions.value.map((q, index) => {
+    let answerHtml = ''
+    if (q.question_type === 'text' || q.question_type === 'textarea') {
+      answerHtml = `<div class="ans-line">${L('', 'Text answer field')}</div>`
+    } else if (q.question_type === 'single_choice' || q.question_type === 'multiple_choice') {
+      const mark = q.question_type === 'single_choice' ? '◯' : '☐'
+      answerHtml = '<ul class="opts">' + getOptions(q.options).map(o => `<li><span class="mark">${mark}</span> ${escapeHtml(o)}</li>`).join('') + '</ul>'
+    } else if (q.question_type === 'yes_no') {
+      answerHtml = `<div class="opts-inline"><span>◯ ${L('نعم', 'Yes')}</span><span>◯ ${L('لا', 'No')}</span></div>`
+    } else if (q.question_type === 'rating') {
+      answerHtml = '<div class="opts-inline">' + getRatingOptions(q.options).map(r => `<span class="rate">${escapeHtml(r)}</span>`).join('') + '</div>'
+    }
+    const required = q.is_required ? ` <span class="req">*</span>` : ''
+    const typeLabel = escapeHtml(questionTypeLabel(q.question_type))
+    return `
+      <div class="q">
+        <div class="q-head"><span class="q-num">${index + 1}</span><span class="q-text">${escapeHtml(q.text)}${required}</span></div>
+        <div class="q-type">${L('نوع السؤال', 'Type')}: ${typeLabel}</div>
+        ${answerHtml}
+      </div>`
+  }).join('')
+
+  return `
+    <div class="survey-print" dir="${dir}" style="text-align:${rtl ? 'right' : 'left'}">
+      <style>
+        .survey-print { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #231F20; padding: 8px 4px; }
+        .survey-print .title { font-size: 22px; font-weight: 700; color: #A17D23; margin: 0 0 12px; }
+        .survey-print .details { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+        .survey-print .details td { border: 1px solid #e8dcc0; padding: 7px 10px; font-size: 13px; }
+        .survey-print .details td.lbl { background: #f7f0e0; font-weight: 700; width: 32%; }
+        .survey-print .q { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; page-break-inside: avoid; }
+        .survey-print .q-head { display: flex; align-items: flex-start; gap: 8px; }
+        .survey-print .q-num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #A17D23; color: #fff; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+        .survey-print .q-text { font-size: 14px; font-weight: 600; line-height: 1.5; }
+        .survey-print .req { color: #dc3545; }
+        .survey-print .q-type { font-size: 11px; color: #808285; margin: 6px 0 8px; }
+        .survey-print .opts { list-style: none; padding: 0; margin: 0; }
+        .survey-print .opts li { padding: 4px 0; font-size: 13px; }
+        .survey-print .mark { color: #A17D23; }
+        .survey-print .opts-inline { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+        .survey-print .rate { border: 1px solid #e5e7eb; border-radius: 6px; padding: 3px 10px; }
+        .survey-print .ans-line { border-bottom: 1px dashed #c7ccd1; height: 20px; }
+      </style>
+      <h1 class="title">${escapeHtml(props.survey.title)}</h1>
+      <table class="details"><tbody>${detailRows.join('')}</tbody></table>
+      ${questionsHtml}
+    </div>`
+}
+
+const printQuestions = () => {
+  const html = buildPrintableHtml()
+  const w = window.open('', '_blank', 'width=900,height=700')
+  if (!w) return
+  const dir = isRTL.value ? 'rtl' : 'ltr'
+  w.document.write(`<!doctype html><html dir="${dir}"><head><meta charset="utf-8"><title>${escapeHtml(props.survey.title)}</title></head><body>${html}</body></html>`)
+  w.document.close()
+  w.focus()
+  // Give the new window a tick to render before printing.
+  setTimeout(() => { w.print(); }, 300)
+}
+
+const downloadQuestionsPdf = () => {
+  if (isExporting.value) return
+  isExporting.value = true
+  try {
+    const rtl = isRTL.value
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' })
+    addAmiriFont(pdf)
+    pdf.setFont('Amiri', 'normal')
+
+    const colors = {
+      primary: '#A17D23',
+      secondary: '#231F20',
+      subtitle: '#4D4D4F',
+      border: '#E5E8E1',
+    }
+
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    const margin = 18
+    const contentWidth = pageWidth - margin * 2
+    let yPosition = margin
+
+    const ensureSpace = (height: number) => {
+      if (yPosition + height > pageHeight - margin) {
+        pdf.addPage()
+        pdf.setFont('Amiri', 'normal')
+        yPosition = margin
+      }
+    }
+
+    // "label : value" row — separator sits between label and value; in RTL
+    // the label is anchored right and the value drawn to its left so English
+    // values (names, dates) keep their natural left-to-right order.
+    const SEP = ':'
+    const drawInfoRow = (label: string, value: string) => {
+      const size = 11
+      const rawValue = String(value ?? '')
+      ensureSpace(9)
+      if (rtl && isArabicLine(label)) {
+        const rightX = pageWidth - margin
+        pdf.setFont('Amiri', 'normal')
+        pdf.setFontSize(size)
+        const labelWidth = pdf.getTextWidth(shapeArabicText(cleanDirectionMarkers(label), true))
+        drawText(pdf, label, rightX, yPosition + 4, { rtl: true, size, color: colors.secondary, align: 'right' })
+        const sepWidth = pdf.getTextWidth(SEP)
+        const sepX = rightX - labelWidth - 2
+        drawText(pdf, SEP, sepX, yPosition + 4, { rtl: false, size, color: colors.secondary, align: 'right' })
+        drawText(pdf, rawValue, sepX - sepWidth - 2, yPosition + 4, {
+          rtl: isArabicLine(rawValue), size, color: colors.subtitle, align: 'right',
+        })
+      } else {
+        drawText(pdf, `${label} ${SEP} ${rawValue}`, margin, yPosition + 4, {
+          rtl: false, size, color: colors.subtitle, align: 'left',
+        })
+      }
+      yPosition += 8
+    }
+
+    // Header banner
+    pdf.setFillColor(colors.primary)
+    pdf.roundedRect(margin, yPosition, contentWidth, 22, 4, 4, 'F')
+    drawText(pdf, props.survey.title, pageWidth / 2, yPosition + 14, {
+      rtl: rtl && isArabicLine(props.survey.title), size: 16, weight: 'bold', color: '#FFFFFF', align: 'center',
+    })
+    yPosition += 32
+
+    // Details
+    drawInfoRow(rtl ? 'أنشئ بواسطة' : 'Created by', createdByName())
+    drawInfoRow(
+      rtl ? 'الحالة' : 'Status',
+      props.survey.is_active ? (rtl ? 'نشط' : 'Active') : (rtl ? 'غير نشط' : 'Inactive'),
+    )
+    const start = formatSurveyDate((props.survey as any).start_date)
+    if (start) drawInfoRow(rtl ? 'تاريخ البدء' : 'Start date', start)
+    const end = formatSurveyDate((props.survey as any).end_date)
+    if (end) drawInfoRow(rtl ? 'تاريخ الانتهاء' : 'End date', end)
+    drawInfoRow(rtl ? 'عدد الأسئلة' : 'Questions', String(questions.value.length))
+    yPosition += 4
+
+    pdf.setDrawColor(colors.border)
+    pdf.setLineWidth(0.3)
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition)
+    yPosition += 8
+
+    // Questions
+    questions.value.forEach((q, index) => {
+      ensureSpace(22)
+
+      const circleX = rtl ? pageWidth - margin - 3 : margin + 3
+      pdf.setFillColor(colors.primary)
+      pdf.circle(circleX, yPosition + 2, 3, 'F')
+      drawText(pdf, String(index + 1), circleX, yPosition + 3, {
+        rtl: false, size: 8, weight: 'bold', color: '#FFFFFF', align: 'center',
+      })
+
+      const textX = rtl ? circleX - 6 : circleX + 6
+      const required = q.is_required ? ' *' : ''
+      const questionLine = `${q.text}${required}`
+      yPosition = drawParagraph(pdf, questionLine, textX, yPosition + 3, contentWidth - 10, {
+        rtl: rtl && isArabicLine(q.text), size: 11, weight: 'bold', color: colors.secondary,
+        lineHeight: 5.5, align: rtl ? 'right' : 'left',
+      })
+
+      const typeLine = `${rtl ? 'نوع السؤال' : 'Type'}: ${questionTypeLabel(q.question_type)}`
+      yPosition = drawParagraph(pdf, typeLine, textX, yPosition + 1, contentWidth - 10, {
+        rtl: rtl && isArabicLine(typeLine), size: 9, color: colors.subtitle, lineHeight: 5, align: rtl ? 'right' : 'left',
+      }) + 3
+
+      if (q.question_type === 'text' || q.question_type === 'textarea') {
+        ensureSpace(8)
+        pdf.setDrawColor(colors.border)
+        pdf.setLineWidth(0.2)
+        const lineEndX = rtl ? margin : pageWidth - margin
+        pdf.line(textX, yPosition, lineEndX, yPosition)
+        yPosition += 8
+      } else if (q.question_type === 'single_choice' || q.question_type === 'multiple_choice') {
+        const mark = q.question_type === 'single_choice' ? 'o' : '[ ]'
+        getOptions(q.options).forEach((opt) => {
+          ensureSpace(7)
+          const line = `${mark} ${opt}`
+          yPosition = drawParagraph(pdf, line, textX, yPosition + 4, contentWidth - 10, {
+            rtl: rtl && isArabicLine(opt), size: 10, color: colors.secondary, lineHeight: 5, align: rtl ? 'right' : 'left',
+          })
+        })
+        yPosition += 2
+      } else if (q.question_type === 'yes_no') {
+        ensureSpace(8)
+        const line = rtl ? 'o نعم      o لا' : 'o Yes      o No'
+        yPosition = drawParagraph(pdf, line, textX, yPosition + 4, contentWidth - 10, {
+          rtl, size: 10, color: colors.secondary, lineHeight: 5, align: rtl ? 'right' : 'left',
+        }) + 2
+      } else if (q.question_type === 'rating') {
+        ensureSpace(8)
+        const opts = getRatingOptions(q.options).join('   ')
+        const line = `${getRatingLabel('min', q.options)}   ${opts}   ${getRatingLabel('max', q.options)}`
+        yPosition = drawParagraph(pdf, line, textX, yPosition + 4, contentWidth - 10, {
+          rtl: rtl && isArabicLine(line), size: 10, color: colors.secondary, lineHeight: 5, align: rtl ? 'right' : 'left',
+        }) + 2
+      }
+
+      ensureSpace(6)
+      yPosition += 4
+      pdf.setDrawColor(colors.border)
+      pdf.setLineWidth(0.15)
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition)
+      yPosition += 8
+    })
+
+    const safeTitle = (props.survey.title || 'survey').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60)
+    pdf.save(`${safeTitle}.pdf`)
+  } catch (err) {
+    console.error('Failed to generate survey PDF:', err)
+  } finally {
+    isExporting.value = false
+  }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -311,6 +671,46 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
   background: rgba(161, 125, 35, 0.08);
   border: 1px solid rgba(161, 125, 35, 0.2);
   color: #A17D23;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toolButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(161, 125, 35, 0.1);
+  border: 1px solid rgba(161, 125, 35, 0.25);
+  color: #A17D23;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.toolButton:hover:not(:disabled) {
+  background: rgba(161, 125, 35, 0.18);
+}
+
+.toolButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toolButtonText {
+  line-height: 1;
+}
+
+@media (max-width: 560px) {
+  .toolButtonText { display: none; }
 }
 
 .closeButton {
@@ -571,5 +971,15 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 .modalContainer[data-theme="night"] .closeButton:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.modalContainer[data-theme="night"] .toolButton {
+  background: rgba(206, 165, 91, 0.14);
+  border-color: rgba(206, 165, 91, 0.3);
+  color: #CEA55B;
+}
+
+.modalContainer[data-theme="night"] .toolButton:hover:not(:disabled) {
+  background: rgba(206, 165, 91, 0.24);
 }
 </style>

@@ -221,6 +221,7 @@ export interface Survey {
   shared_with: any[] // Array of user IDs or groups
   creator: number
   creator_email: string
+  creator_name?: string // Creator display name (first+last, else email)
   is_locked: boolean
   is_active: boolean
   start_date?: string | null
