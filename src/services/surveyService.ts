@@ -110,8 +110,11 @@ class SurveyService {
       })
     }
 
-    const endpoint = `surveys${params.toString() ? `?${params.toString()}` : ''}`
-    
+    // Keep the trailing slash BEFORE the query string so Django does not issue a
+    // 301 redirect (APPEND_SLASH). A 301 adds a round-trip and can drop the
+    // Authorization header on some setups.
+    const endpoint = `surveys/${params.toString() ? `?${params.toString()}` : ''}`
+
     try {
       // Use apiClient directly since Django returns paginated response
       const response = await apiClient.get(`${this.baseURL}${endpoint}`)
@@ -909,7 +912,7 @@ class SurveyService {
       })
     }
 
-    const endpoint = `surveys/${surveyId}/responses${
+    const endpoint = `surveys/${surveyId}/responses/${
       params.toString() ? `?${params.toString()}` : ''
     }`
     return this.apiCall<ApiResponse<SurveyResponse[]>>(endpoint)
@@ -1161,8 +1164,8 @@ class SurveyService {
       })
     }
 
-    const endpoint = `my-shared${params.toString() ? `?${params.toString()}` : ''}`
-    
+    const endpoint = `my-shared/${params.toString() ? `?${params.toString()}` : ''}`
+
     const response = await apiClient.get(`${this.baseURL}${endpoint}`)
     // Debug log
     

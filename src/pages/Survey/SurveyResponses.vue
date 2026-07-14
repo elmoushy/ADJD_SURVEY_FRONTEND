@@ -1756,6 +1756,7 @@ const downloadAsPDF = async (responses: any[]) => {
       reportTitle: rtl ? 'تقرير استجابات الاستبيان' : 'Survey Responses Report',
       answersTitle: rtl ? 'الإجابات' : 'Answers',
       respondent: rtl ? 'المستجيب' : 'Respondent',
+      name: rtl ? 'الاسم' : 'Name',
       respondentType: rtl ? 'نوع المستجيب' : 'Respondent type',
       status: rtl ? 'الحالة' : 'Status',
       completionRate: rtl ? 'نسبة الإكمال' : 'Completion rate',
@@ -1810,9 +1811,11 @@ const downloadAsPDF = async (responses: any[]) => {
       }
     };
 
-    // Draw a "label: value" row. In RTL the Arabic label is anchored to the
-    // right edge and the value is drawn to its left, so English values
-    // (names, dates) keep their natural left-to-right order.
+    // Draw a "label : value" row. In RTL the Arabic label is anchored to the
+    // right edge, then a separator, then the value to its left — so the colon
+    // sits BETWEEN the label and the value, and English values (names, dates)
+    // keep their natural left-to-right order.
+    const SEP = ':';
     const drawInfoRow = (
       label: string,
       value: string,
@@ -1828,18 +1831,30 @@ const downloadAsPDF = async (responses: any[]) => {
       ensureSpace(lineGap + 2);
 
       if (rtl && labelHasArabic) {
-        const labelText = `${label}:`;
+        const rightX = pageWidth - margin;
+        // 1) Label (no colon) anchored to the right edge.
         pdf.setFont('Amiri', 'normal');
         pdf.setFontSize(size);
-        const shapedLabel = shapeArabicText(cleanDirectionMarkers(labelText), true);
-        const labelWidth = pdf.getTextWidth(shapedLabel);
-        drawText(pdf, labelText, pageWidth - margin, yPosition + 4, {
+        const labelWidth = pdf.getTextWidth(shapeArabicText(cleanDirectionMarkers(label), true));
+        drawText(pdf, label, rightX, yPosition + 4, {
           rtl: true,
           size,
           color: labelColor,
           align: 'right',
         });
-        drawText(pdf, rawValue, pageWidth - margin - labelWidth - 3, yPosition + 4, {
+        // 2) Separator between label and value.
+        pdf.setFont('Amiri', 'normal');
+        pdf.setFontSize(size);
+        const sepWidth = pdf.getTextWidth(SEP);
+        const sepX = rightX - labelWidth - 2;
+        drawText(pdf, SEP, sepX, yPosition + 4, {
+          rtl: false,
+          size,
+          color: labelColor,
+          align: 'right',
+        });
+        // 3) Value to the left of the separator.
+        drawText(pdf, rawValue, sepX - sepWidth - 2, yPosition + 4, {
           rtl: valueHasArabic,
           size,
           color: valueColor,
@@ -1847,7 +1862,7 @@ const downloadAsPDF = async (responses: any[]) => {
         });
         yPosition += lineGap;
       } else {
-        const fullLine = `${label}: ${rawValue}`;
+        const fullLine = `${label} ${SEP} ${rawValue}`;
         yPosition = drawParagraph(pdf, fullLine, margin, yPosition, contentWidth, {
           rtl: false,
           size,
@@ -1857,29 +1872,35 @@ const downloadAsPDF = async (responses: any[]) => {
       }
     };
 
-    // Draw a gold-filled highlight band with a white "label: value" line.
-    // Used to make the follow-up status stand out.
+    // Draw a gold-filled highlight band with a white "label : value" line
+    // (separator between label and value). Used to make the follow-up status stand out.
     const drawGoldBand = (label: string, value: string, opts: { size?: number } = {}) => {
       const size = opts.size ?? 10;
       const bandHeight = 9;
       ensureSpace(bandHeight + 4);
       pdf.setFillColor(pdfColors.primary);
       pdf.roundedRect(margin, yPosition, contentWidth, bandHeight, 2, 2, 'F');
-      const labelText = `${label}:`;
       const rawValue = String(value ?? '');
       if (rtl && isArabicLine(label)) {
+        const rightX = pageWidth - margin - 4;
         pdf.setFont('Amiri', 'normal');
         pdf.setFontSize(size);
-        const shaped = shapeArabicText(cleanDirectionMarkers(labelText), true);
-        const w = pdf.getTextWidth(shaped);
-        drawText(pdf, labelText, pageWidth - margin - 4, yPosition + 6, {
+        const labelWidth = pdf.getTextWidth(shapeArabicText(cleanDirectionMarkers(label), true));
+        drawText(pdf, label, rightX, yPosition + 6, {
           rtl: true, size, weight: 'bold', color: '#FFFFFF', align: 'right',
         });
-        drawText(pdf, rawValue, pageWidth - margin - 4 - w - 3, yPosition + 6, {
+        pdf.setFont('Amiri', 'normal');
+        pdf.setFontSize(size);
+        const sepWidth = pdf.getTextWidth(SEP);
+        const sepX = rightX - labelWidth - 2;
+        drawText(pdf, SEP, sepX, yPosition + 6, {
+          rtl: false, size, weight: 'bold', color: '#FFFFFF', align: 'right',
+        });
+        drawText(pdf, rawValue, sepX - sepWidth - 2, yPosition + 6, {
           rtl: isArabicLine(rawValue), size, weight: 'bold', color: '#FFFFFF', align: 'right',
         });
       } else {
-        drawText(pdf, `${labelText} ${rawValue}`, margin + 4, yPosition + 6, {
+        drawText(pdf, `${label} ${SEP} ${rawValue}`, margin + 4, yPosition + 6, {
           rtl: false, size, weight: 'bold', color: '#FFFFFF', align: 'left',
         });
       }
@@ -1929,11 +1950,16 @@ const downloadAsPDF = async (responses: any[]) => {
       });
       yPosition += 18;
 
+      const respondentDisplayName = getRespondentDisplayName(response);
       const infoRows = [
         {
           label: strings.respondent,
-          value: getRespondentName(response),
+          value: getRespondentEmail(response),
         },
+        // Name row only when a distinct full name is available.
+        ...(respondentDisplayName
+          ? [{ label: strings.name, value: respondentDisplayName }]
+          : []),
         {
           label: strings.respondentType,
           value: getRespondentTypeLabel(response),
@@ -2375,7 +2401,8 @@ const generateWordContent = (responses: any[]) => {
 
   responses.forEach((response, index) => {
     const isComplete = response.is_complete ? "مكتملة" : "غير مكتملة";
-    const respondentName = escapeHtml(getRespondentName(response));
+    const respondentEmail = escapeHtml(getRespondentEmail(response));
+    const respondentDisplayName = escapeHtml(getRespondentDisplayName(response));
     const respondentType = escapeHtml(getRespondentTypeLabel(response));
 
     content += `
@@ -2385,8 +2412,12 @@ const generateWordContent = (responses: any[]) => {
             <table class="info-table">
               <tr>
                 <td>المستجيب</td>
-                <td>${respondentName}</td>
+                <td>${respondentEmail}</td>
               </tr>
+              ${respondentDisplayName ? `<tr>
+                <td>الاسم</td>
+                <td>${respondentDisplayName}</td>
+              </tr>` : ""}
               <tr>
                 <td>نوع المستجيب</td>
                 <td>${respondentType}</td>
@@ -2726,6 +2757,31 @@ const getRespondentTypeLabel = (response: any): string => {
   if (type === "authenticated") return rtl ? "مستخدم مسجل" : "Registered user";
   if (type === "group_member") return rtl ? "عضو مجموعة" : "Group member";
   return rtl ? "مستخدم مجهول" : "Anonymous user";
+};
+
+// Email/contact of the respondent (group members are masked for privacy).
+const getRespondentEmail = (response: any): string => {
+  const info = response?.respondent_info;
+  const rtl = isRTL.value;
+  if (!info) return rtl ? "غير معروف" : "Unknown";
+  if (info.type === "authenticated") {
+    return info.email || (rtl ? "غير معروف" : "Unknown");
+  }
+  if (info.type === "group_member") {
+    return rtl ? "مستخدم مسجل" : "Registered user";
+  }
+  const contact = info.email && info.email !== "Anonymous" ? info.email : "";
+  return contact || (rtl ? "مستخدم مجهول" : "Anonymous user");
+};
+
+// Full name of an authenticated respondent (empty when unknown or same as email).
+const getRespondentDisplayName = (response: any): string => {
+  const info = response?.respondent_info;
+  if (info?.type === "authenticated") {
+    const name = info.full_name;
+    if (name && name !== info.email) return name;
+  }
+  return "";
 };
 
 // ── Follow-up display helpers (dates & numbers always in English) ──

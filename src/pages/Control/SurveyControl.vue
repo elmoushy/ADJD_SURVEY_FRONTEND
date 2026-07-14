@@ -157,9 +157,6 @@
             <option value="all">{{ t('survey.filters.all') }}</option>
             <option value="active">{{ t('survey.filters.active') }}</option>
             <option value="inactive">{{ t('survey.filters.inactive') }}</option>
-            <option value="private">{{ t('survey.filters.private') }}</option>
-            <option value="auth_required">{{ t('survey.filters.auth') }}</option>
-            <option value="public">{{ t('survey.filters.public') }}</option>
           </select>
 
           <select :class="$style.filterSelect" v-model="selectedSort" @change="applySorting">

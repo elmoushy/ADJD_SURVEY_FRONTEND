@@ -373,9 +373,28 @@ apiClient.interceptors.request.use(
     if (currentPath.startsWith('/survey/')) {
       return config
     }
-    
-    // If we don't have an access token but have a refresh token, try to get one
-    if (!accessToken && refreshToken && !isRefreshing) {
+
+    // CRITICAL: never run the refresh flow for auth endpoints themselves.
+    // The refresh POST goes through this same interceptor; if it also awaited
+    // silentRefreshAccessToken() it would await its own in-flight promise and
+    // DEADLOCK — the refresh request is never dispatched, every request hangs,
+    // and the page stays blank with zero network activity. Login/refresh
+    // requests carry their own credentials in the body, so no bearer is needed.
+    if (
+      config.url?.includes('auth/token/refresh/') ||
+      config.url?.includes('auth/login/') ||
+      config.url?.includes('auth/azure-login/')
+    ) {
+      return config
+    }
+
+    // If we don't have an access token but have a refresh token, get one first.
+    // NOTE: do NOT guard on `!isRefreshing` here. On a page reload several
+    // authenticated requests fire at once; silentRefreshAccessToken() already
+    // de-dupes concurrent calls (returns the same in-flight promise), so every
+    // request must await it. Guarding on `!isRefreshing` let all but the first
+    // request through with no Authorization header → the 401s seen on reload.
+    if (!accessToken && refreshToken) {
       try {
         const newToken = await silentRefreshAccessToken()
         if (newToken) {
