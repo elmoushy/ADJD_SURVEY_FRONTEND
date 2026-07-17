@@ -855,6 +855,7 @@ const loadSurveys = async (resetPage = false) => {
     hasPrevious.value = false
   } finally {
     isLoading.value = false
+    syncUrlQuery()
   }
 }
 
@@ -916,6 +917,50 @@ const goToPage = (page: number) => {
 const changePage = (page: number) => {
   if (page === currentPage.value) return
   goToPage(page)
+}
+
+// ── Keep list state (page/filters/search/sort) in the URL ──────────────
+// So that navigating into a survey's responses page and then clicking
+// "Back" (router.go(-1)) returns to the exact page/filter the admin was on,
+// instead of resetting to page 1. Query params we manage here; any other
+// param already in the URL (e.g. the openAccess/surveyId post-publish flow)
+// is left untouched.
+const LIST_QUERY_KEYS = ['page', 'per_page', 'search', 'survey_status', 'sort_by', 'group', 'lifecycle_status']
+
+const buildListQuery = (): Record<string, string> => {
+  const q: Record<string, string> = {}
+  if (currentPage.value > 1) q.page = String(currentPage.value)
+  if (itemsPerPage.value && itemsPerPage.value !== 10) q.per_page = String(itemsPerPage.value)
+  if (debouncedSearch.value.trim()) q.search = debouncedSearch.value.trim()
+  if (selectedFilter.value && selectedFilter.value !== 'all') q.survey_status = selectedFilter.value
+  if (selectedSort.value && selectedSort.value !== 'newest') q.sort_by = selectedSort.value
+  if (selectedGroup.value) q.group = selectedGroup.value
+  if (selectedLifecycleStatus.value) q.lifecycle_status = selectedLifecycleStatus.value
+  return q
+}
+
+const syncUrlQuery = () => {
+  const preserved: Record<string, any> = {}
+  for (const [key, value] of Object.entries(route.query)) {
+    if (!LIST_QUERY_KEYS.includes(key)) preserved[key] = value
+  }
+  router.replace({ query: { ...preserved, ...buildListQuery() } }).catch(() => {})
+}
+
+const restoreListStateFromQuery = () => {
+  const q = route.query
+  const page = Number(q.page)
+  if (!Number.isNaN(page) && page > 0) currentPage.value = page
+  const perPage = Number(q.per_page)
+  if (!Number.isNaN(perPage) && perPage > 0) itemsPerPage.value = perPage
+  if (typeof q.search === 'string') {
+    searchQuery.value = q.search
+    debouncedSearch.value = q.search
+  }
+  if (typeof q.survey_status === 'string') selectedFilter.value = q.survey_status
+  if (typeof q.sort_by === 'string') selectedSort.value = q.sort_by
+  if (typeof q.group === 'string') selectedGroup.value = q.group
+  if (typeof q.lifecycle_status === 'string') selectedLifecycleStatus.value = q.lifecycle_status
 }
 
 
@@ -1304,6 +1349,7 @@ const handleClickOutside = (e: Event) => {
 
 // Lifecycle
 onMounted(async () => {
+  restoreListStateFromQuery()
   refreshData()
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('click', handleDropdownClickOutside)

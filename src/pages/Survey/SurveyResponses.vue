@@ -1753,7 +1753,7 @@ const downloadAsPDF = async (responses: any[]) => {
     };
 
     const strings = {
-      reportTitle: rtl ? 'تقرير استجابات الاستبيان' : 'Survey Responses Report',
+      reportTitle: survey.value?.title || (rtl ? 'تقرير استجابات الاستبيان' : 'Survey Responses Report'),
       answersTitle: rtl ? 'الإجابات' : 'Answers',
       respondent: rtl ? 'المستجيب' : 'Respondent',
       name: rtl ? 'الاسم' : 'Name',
@@ -2246,7 +2246,7 @@ const downloadAsWord = async (responses: any[]) => {
               xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
           <meta charset='utf-8'>
-          <title>تقرير استجابات الاستبيان</title>
+          <title>${escapeHtml(survey.value?.title || 'تقرير استجابات الاستبيان')}</title>
           <style>
             body {
               font-family: 'Arial', sans-serif;
@@ -2394,7 +2394,7 @@ const generateWordContent = (responses: any[]) => {
 
   let content = `
         <div class="header">
-          <h1>تقرير استجابات الاستبيان</h1>
+          <h1>${escapeHtml(survey.value?.title || 'تقرير استجابات الاستبيان')}</h1>
           <p>عدد الاستجابات: ${responses.length} | تاريخ التصدير: ${timestamp}</p>
         </div>
       `;

@@ -24,6 +24,20 @@ const router = useRouter()
 const route = useRoute()
 const store = useAppStore()
 
+// Return to the survey list. Prefer browser "back" so we land on the exact
+// page/filter the admin was on (SurveyControl syncs its page/filter state
+// into its own URL), instead of always resetting to page 1. Falls back to a
+// plain push only when there's no in-app history to go back to (e.g. this
+// editor was opened directly via a deep link).
+const goBackToSurveyList = () => {
+  const historyState = window.history.state as { back?: string | null } | null
+  if (historyState?.back) {
+    router.back()
+  } else {
+    router.push({ name: 'SurveyControl' })
+  }
+}
+
 // Ref to the SurveyEditor component — used by the navigation guard
 const editorRef = ref<InstanceType<typeof SurveyEditor> | null>(null)
 
@@ -87,7 +101,7 @@ onMounted(async () => {
         text: error.message || (isArabic ? 'فشل في تحميل الاستطلاع' : 'Failed to load survey'),
         confirmButtonText: isArabic ? 'موافق' : 'OK'
       }).then(() => {
-        router.push({ name: 'SurveyControl' })
+        goBackToSurveyList()
       })
       return
     }
@@ -228,7 +242,7 @@ onBeforeRouteLeave(async () => {
 const handleBack = () => {
   // SurveyEditor already shows its own "تأكيد الخروج" dialog — skip our guard
   skipLeaveGuard.value = true
-  router.push({ name: 'SurveyControl' })
+  goBackToSurveyList()
 }
 
 const handleSaveDraft = async (data: any) => {
@@ -257,7 +271,7 @@ const handleSaveDraft = async (data: any) => {
     })
 
     skipLeaveGuard.value = true
-    router.push({ name: 'SurveyControl' })
+    goBackToSurveyList()
   } catch (error: any) {
     const isArabic = store.currentLanguage === 'ar'
     Swal.fire({
