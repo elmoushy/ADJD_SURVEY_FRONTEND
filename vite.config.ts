@@ -51,7 +51,10 @@ export default defineConfig(({ command, mode }) => {
         port: 5173,
         // Security headers for development (relaxed for Azure AD SSO)
         headers: {
-          'Content-Security-Policy': `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' ws://localhost:* ws://127.0.0.1:* wss://localhost:* wss://127.0.0.1:* http://localhost:* http://127.0.0.1:* https://localhost:* https://127.0.0.1:* https://lightidea.org:* https://3.74.228.219 https://3.74.228.219/* https://cdn.jsdelivr.net https://login.microsoftonline.com https://*.microsoftonline.com https://graph.microsoft.com; frame-src https://login.microsoftonline.com; frame-ancestors 'none';`,
+          // img-src mirrors connect-src for the API origins: survey attachment
+          // images are served by the backend (e.g. http://127.0.0.1:8000 in dev),
+          // so restricting images to 'self'/https: would block every preview.
+          'Content-Security-Policy': `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*; connect-src 'self' ws://localhost:* ws://127.0.0.1:* wss://localhost:* wss://127.0.0.1:* http://localhost:* http://127.0.0.1:* https://localhost:* https://127.0.0.1:* https://lightidea.org:* https://3.74.228.219 https://3.74.228.219/* https://cdn.jsdelivr.net https://login.microsoftonline.com https://*.microsoftonline.com https://graph.microsoft.com; frame-src https://login.microsoftonline.com; frame-ancestors 'none';`,
           'Cross-Origin-Opener-Policy': 'unsafe-none',
           'Cross-Origin-Embedder-Policy': 'unsafe-none',
           'X-Frame-Options': 'SAMEORIGIN',

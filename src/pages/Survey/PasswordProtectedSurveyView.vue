@@ -180,6 +180,9 @@
         </div>
       </div>
 
+      <!-- Reference attachments to review before starting -->
+      <SurveyAttachmentsViewer :attachments="survey.attachments" />
+
       <!-- Action Buttons -->
       <div :class="$style.actionButtons">
         <button :class="$style.startButton" @click="startSurvey">
@@ -223,6 +226,9 @@
           <span :class="$style.progressText">{{ currentQuestionIndex + 1 }} من {{ survey.questions?.length || 0 }}</span>
         </div>
       </div>
+
+      <!-- Reference attachments stay reachable in both view modes -->
+      <SurveyAttachmentsViewer :attachments="survey.attachments" compact />
 
       <!-- All Questions View (Google Forms Style) -->
       <div v-if="showAllQuestions" :class="$style.allQuestionsContainer">
@@ -823,6 +829,7 @@ import { surveyService } from '../../services/surveyService'
 import { ThankYouModal } from '../../components/ThankYouModal'
 import { useInputValidation } from '../../composables/useInputValidation'
 import AttachmentUpload from '../../components/Survey/AttachmentUpload.vue'
+import SurveyAttachmentsViewer from '../../components/Survey/SurveyAttachmentsViewer.vue'
 import type { Survey, PasswordProtectedResponseSubmission } from '../../types/survey.types'
 import type { CountryCode } from '../../types/country.types'
 import countryCodesData from '../../data/countryCodes.json'

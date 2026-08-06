@@ -102,6 +102,14 @@
             :placeholder="isRTL ? 'وصف الإيضاحات (اختياري)' : 'Survey Description (optional)'"
             rows="3"
           ></textarea>
+
+          <!-- Reference files respondents read while answering -->
+          <SurveyAttachmentsManager
+            v-if="!props.isCreatingPredefinedTemplate"
+            ref="attachmentsManagerRef"
+            :initial-attachments="existingAttachments"
+            @change="handleAttachmentsChanged"
+          />
         </div>
       </div>
 
@@ -727,6 +735,14 @@
             <h1>{{ surveyData.title || (isRTL ? 'عنوان الإيضاحات' : 'Survey Title') }}</h1>
             <p v-if="surveyData.description">{{ surveyData.description }}</p>
           </div>
+
+          <!-- Attachments exactly as respondents will see them -->
+          <SurveyAttachmentsViewer
+            :attachments="previewStoredAttachments"
+            :pending-files="previewPendingFiles"
+            compact
+          />
+
           <div :class="$style.previewQuestions">
             <div v-for="(question, index) in surveyData.questions" :key="index" :class="$style.previewQuestion">
               <div :class="$style.previewQuestionText">
@@ -908,10 +924,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useAppStore } from '../../stores/useAppStore'
-import type { PredefinedTemplate, SurveyTemplate, RecentSurvey, Survey, QuestionType } from '../../types/survey.types'
+import type { PredefinedTemplate, SurveyTemplate, RecentSurvey, Survey, QuestionType, SurveyAttachment } from '../../types/survey.types'
 import FlatPickr from 'vue-flatpickr-component'
 import 'flatpickr/dist/flatpickr.css'
 import Swal from 'sweetalert2'
+import SurveyAttachmentsManager from '../Survey/SurveyAttachmentsManager.vue'
+import SurveyAttachmentsViewer from '../Survey/SurveyAttachmentsViewer.vue'
 
 // Props
 interface Props {
@@ -1019,6 +1037,39 @@ const surveySettings = ref({
   is_active: true,
   allow_attachments: 'optional'
 })
+
+// ── Survey reference attachments (creator-supplied files) ──────────────────
+const attachmentsManagerRef = ref<InstanceType<typeof SurveyAttachmentsManager> | null>(null)
+const existingAttachments = ref<SurveyAttachment[]>([])
+
+// Mirror the manager's state into the preview modal so the creator sees exactly
+// what respondents will get — including files not uploaded yet.
+const previewStoredAttachments = computed<SurveyAttachment[]>(
+  () => (attachmentsManagerRef.value?.storedAttachments as SurveyAttachment[] | undefined) || []
+)
+const previewPendingFiles = computed<File[]>(
+  () => (attachmentsManagerRef.value?.queuedFiles as File[] | undefined) || []
+)
+
+// True while the creator has files queued for upload or marked for removal
+const hasPendingAttachments = computed(
+  () => attachmentsManagerRef.value?.hasPendingChanges === true
+)
+
+const handleAttachmentsChanged = () => {
+  if (_trackDirty.value) isDirty.value = true
+}
+
+/**
+ * Apply queued attachment uploads/removals once the survey exists.
+ * Called by the editor page after the survey is created or updated.
+ */
+const flushAttachments = async (surveyId: string) => {
+  if (!attachmentsManagerRef.value || !surveyId) {
+    return { uploaded: 0, removed: 0, errors: [] as string[] }
+  }
+  return attachmentsManagerRef.value.flush(surveyId)
+}
 
 // Computed
 const canPublish = computed(() => {
@@ -1269,6 +1320,13 @@ const initializeSurvey = () => {
         allow_attachments: (props.template as any).allow_attachments !== undefined ? (props.template as any).allow_attachments : 'optional'
       }
       console.log('⚙️ Survey settings:', surveySettings.value)
+
+      // Load existing reference attachments. Only a real survey being edited
+      // carries them — a template/clone starts with an empty list, and cloning
+      // is handled server-side by the clone endpoint.
+      existingAttachments.value = props.mode === 'edit' && props.surveyId
+        ? ((props.template as any).attachments || [])
+        : []
     }
   } else {
     console.log('➕ No template provided, adding default question')
@@ -1905,6 +1963,8 @@ watch(surveyData, () => {
 defineExpose({
   getFormData: () => prepareSurveyData(),
   isDirty,
+  flushAttachments,
+  hasPendingAttachments,
 })
 
 const prepareSurveyData = () => {

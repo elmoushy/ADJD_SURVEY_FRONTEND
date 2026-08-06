@@ -39,6 +39,9 @@
         </div>
       </div>
 
+      <!-- Reference attachments that came with the survey -->
+      <SurveyAttachmentsViewer :attachments="survey.attachments" compact />
+
       <!-- Questions (read-only) -->
       <div :class="$style.allQuestionsContainer">
         <div
@@ -194,6 +197,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from '@/hooks/useI18n'
 import { surveyService } from '@/services/surveyService'
+import SurveyAttachmentsViewer from '@/components/Survey/SurveyAttachmentsViewer.vue'
 
 const route = useRoute()
 const router = useRouter()

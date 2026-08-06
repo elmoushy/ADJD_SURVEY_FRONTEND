@@ -86,6 +86,9 @@
         </div>
       </div>
 
+      <!-- Reference attachments to review before starting -->
+      <SurveyAttachmentsViewer :attachments="survey.attachments" />
+
 
       <!-- Action Buttons -->
       <div :class="$style.actionButtons">
@@ -144,6 +147,9 @@
           </div>
         </div>
       </div>
+
+      <!-- Reference attachments stay reachable in both view modes -->
+      <SurveyAttachmentsViewer :attachments="survey.attachments" compact />
 
       <!-- All Questions View (Google Forms Style) -->
             <div v-if="showAllQuestions" :class="$style.allQuestionsContainer">
@@ -555,6 +561,7 @@ import { surveyService } from '@/services/surveyService'
 import { ThankYouModal } from '@/components/ThankYouModal'
 import { useInputValidation } from '@/composables/useInputValidation'
 import AttachmentUpload from '@/components/Survey/AttachmentUpload.vue'
+import SurveyAttachmentsViewer from '@/components/Survey/SurveyAttachmentsViewer.vue'
 import Swal from 'sweetalert2'
 import type { 
   AuthSurvey, 

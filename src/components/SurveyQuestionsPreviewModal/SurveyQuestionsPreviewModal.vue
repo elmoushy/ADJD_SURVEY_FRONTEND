@@ -72,7 +72,11 @@
         </div>
 
         <!-- Questions -->
-        <div v-else :class="$style.questionsList">
+        <template v-else>
+          <!-- Reference attachments respondents see -->
+          <SurveyAttachmentsViewer :attachments="attachments" compact />
+
+          <div :class="$style.questionsList">
           <div
             v-for="(question, index) in questions"
             :key="question.id"
@@ -141,7 +145,8 @@
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -155,7 +160,8 @@ import { surveyService } from '../../services/surveyService'
 import jsPDF from 'jspdf'
 import { addAmiriFont } from '../../lib/fonts/Amiri-normal'
 import { reshape } from 'arabic-persian-reshaper'
-import type { Survey, SurveyQuestion } from '../../types/survey.types'
+import SurveyAttachmentsViewer from '../Survey/SurveyAttachmentsViewer.vue'
+import type { Survey, SurveyAttachment, SurveyQuestion } from '../../types/survey.types'
 
 interface Props {
   survey: Survey
@@ -171,6 +177,7 @@ const isRTL = computed(() => currentLanguage.value === 'ar')
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
 const fetchedQuestions = ref<SurveyQuestion[] | null>(null)
+const fetchedAttachments = ref<SurveyAttachment[] | null>(null)
 const isExporting = ref(false)
 
 // Prefer the questions already loaded on the survey (no extra request needed);
@@ -180,6 +187,12 @@ const questions = computed<SurveyQuestion[]>(() => {
   return props.survey.questions || []
 })
 
+// Same for the creator's reference attachments
+const attachments = computed<SurveyAttachment[]>(() => {
+  if (fetchedAttachments.value) return fetchedAttachments.value
+  return props.survey.attachments || []
+})
+
 const loadQuestionsIfMissing = async () => {
   if (props.survey.questions) return
   try {
@@ -187,6 +200,7 @@ const loadQuestionsIfMissing = async () => {
     loadError.value = null
     const response = await surveyService.getSurvey(props.survey.id)
     fetchedQuestions.value = response?.data?.questions || []
+    fetchedAttachments.value = response?.data?.attachments || []
   } catch (err: any) {
     loadError.value = err?.response?.data?.message || err?.message ||
       (isRTL.value ? 'فشل في تحميل الأسئلة' : 'Failed to load questions')

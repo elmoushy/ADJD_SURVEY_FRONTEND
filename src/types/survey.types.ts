@@ -209,6 +209,27 @@ export interface SurveyResponse {
   answer_count?: number
 }
 
+// Reference file the survey CREATOR pins to a survey for respondents to read
+// while answering (distinct from files a respondent uploads with a response).
+export interface SurveyAttachment {
+  id: string
+  survey?: string
+  original_filename: string
+  file_size: number
+  mime_type: string
+  format_name: string
+  is_image: boolean
+  is_inline_viewable: boolean
+  description: string
+  display_order: number
+  uploaded_by: number | null
+  uploaded_by_name: string | null
+  uploaded_by_email: string | null
+  uploaded_at: string
+  download_url: string
+  can_delete: boolean
+}
+
 // Main Survey interface
 export interface Survey {
   id: string
@@ -217,7 +238,9 @@ export interface Survey {
   visibility: SurveyVisibility
   public_contact_method?: PublicContactMethod // Only applies to PUBLIC surveys
   per_device_access?: boolean // For device-based access control
-  allow_attachments?: 'none' | 'optional' | 'required' // Attachment upload setting
+  allow_attachments?: 'none' | 'optional' | 'required' // Respondent upload setting
+  attachments?: SurveyAttachment[] // Creator-supplied reference files
+  attachment_count?: number
   shared_with: any[] // Array of user IDs or groups
   creator: number
   creator_email: string
@@ -688,6 +711,7 @@ export interface AuthSurvey {
   questions_count: number
   questions: SurveyQuestion[]
   allow_attachments?: 'none' | 'optional' | 'required'
+  attachments?: SurveyAttachment[]
 }
 
 export interface AuthSurveyResponse {

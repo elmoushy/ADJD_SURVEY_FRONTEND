@@ -2,6 +2,8 @@
   <SurveyEditor
     ref="editorRef"
     :template="templateData"
+    :mode="editorMode"
+    :surveyId="editingSurveyId"
     :isCreatingPredefinedTemplate="isCreatingPredefinedTemplate"
     @back="handleBack"
     @publish="handlePublish"
@@ -11,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useAppStore } from '../../stores/useAppStore'
 import { surveyService } from '../../services/surveyService'
@@ -46,6 +48,11 @@ const skipLeaveGuard = ref(false)
 
 const templateData = ref<PredefinedTemplate | SurveyTemplate | RecentSurvey | Survey | null>(null)
 const isCreatingPredefinedTemplate = ref(false)
+
+// Editing an existing survey is signalled by the :id route param. Everything
+// else (blank editor, template, clone) is a creation flow.
+const editingSurveyId = computed(() => (route.params.id as string) || undefined)
+const editorMode = computed<'create' | 'edit'>(() => (editingSurveyId.value ? 'edit' : 'create'))
 
 // Watch for templateData changes
 watch(templateData, (newValue) => {
@@ -174,6 +181,58 @@ onMounted(async () => {
 // ── Navigation guard helpers ──────────────────────────────────────────────
 
 /**
+ * Push queued attachment uploads/removals now that the survey record exists.
+ *
+ * Attachment failures never invalidate the saved survey — the questions are
+ * already stored — so problems are reported separately and the flow continues.
+ */
+const syncAttachments = async (surveyId: string): Promise<string[]> => {
+  if (!surveyId || !editorRef.value?.flushAttachments) return []
+
+  // Attachments can be several MB, so the open loader should say what it is
+  // actually waiting on instead of still claiming to save the survey.
+  if (editorRef.value.hasPendingAttachments && Swal.isVisible()) {
+    const isArabic = store.currentLanguage === 'ar'
+    Swal.update({ title: isArabic ? 'جاري رفع المرفقات...' : 'Uploading attachments...' })
+    Swal.showLoading()
+  }
+
+  try {
+    const result = await editorRef.value.flushAttachments(surveyId)
+    return result?.errors || []
+  } catch (error: any) {
+    return [error?.message || 'فشل في مزامنة المرفقات']
+  }
+}
+
+const reportAttachmentErrors = async (errors: string[]): Promise<void> => {
+  if (errors.length === 0) return
+  const isArabic = store.currentLanguage === 'ar'
+  await Swal.fire({
+    icon: 'warning',
+    title: isArabic ? 'تم حفظ الإيضاحات مع تحذير' : 'Survey saved with a warning',
+    html: `
+      <p style="text-align:center;margin:0 0 8px">${
+        isArabic
+          ? 'تم حفظ الإيضاحات، لكن تعذر إتمام بعض عمليات المرفقات:'
+          : 'The survey was saved, but some attachment operations failed:'
+      }</p>
+      <ul style="text-align:${isArabic ? 'right' : 'left'};margin:0;padding-inline-start:20px;font-size:13px">
+        ${errors.map(message => `<li>${escapeHtml(message)}</li>`).join('')}
+      </ul>`,
+    confirmButtonText: isArabic ? 'موافق' : 'OK'
+  })
+}
+
+const escapeHtml = (value: unknown): string =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+/**
  * Save the current form data as a draft silently (no redirect).
  * Called by the navigation guard when the user chooses "حفظ كمسودة".
  */
@@ -185,12 +244,16 @@ const saveDraftQuiet = async (data: any): Promise<void> => {
     didOpen: () => Swal.showLoading()
   })
   try {
+    let savedId = surveyId
     if (surveyId) {
       await surveyService.updateSurvey(surveyId, data)
     } else {
-      await surveyService.createDraft(data)
+      const draft = await surveyService.createDraft(data)
+      savedId = draft.data.id
     }
+    const attachmentErrors = await syncAttachments(savedId)
     Swal.close()
+    await reportAttachmentErrors(attachmentErrors)
   } catch (error: any) {
     await Swal.fire({
       icon: 'error',
@@ -256,19 +319,28 @@ const handleSaveDraft = async (data: any) => {
       didOpen: () => Swal.showLoading()
     })
 
+    let savedId = surveyId
     if (surveyId) {
       await surveyService.updateSurvey(surveyId, data)
     } else {
-      await surveyService.createDraft(data)
+      const draft = await surveyService.createDraft(data)
+      savedId = draft.data.id
     }
+
+    // Attachments are pushed only once the survey record exists
+    const attachmentErrors = await syncAttachments(savedId)
 
     Swal.close()
 
-    await Swal.fire({
-      icon: 'success',
-      title: isArabic ? 'تم الحفظ بنجاح' : 'Saved Successfully',
-      confirmButtonText: isArabic ? 'موافق' : 'OK'
-    })
+    if (attachmentErrors.length > 0) {
+      await reportAttachmentErrors(attachmentErrors)
+    } else {
+      await Swal.fire({
+        icon: 'success',
+        title: isArabic ? 'تم الحفظ بنجاح' : 'Saved Successfully',
+        confirmButtonText: isArabic ? 'موافق' : 'OK'
+      })
+    }
 
     skipLeaveGuard.value = true
     goBackToSurveyList()
@@ -303,7 +375,12 @@ const handlePublish = async (data: any) => {
       created = draft.data
     }
 
+    // Attachments are pushed only once the survey record exists
+    const attachmentErrors = await syncAttachments(created.id)
+
     Swal.close()
+
+    await reportAttachmentErrors(attachmentErrors)
 
     skipLeaveGuard.value = true
     router.push({
