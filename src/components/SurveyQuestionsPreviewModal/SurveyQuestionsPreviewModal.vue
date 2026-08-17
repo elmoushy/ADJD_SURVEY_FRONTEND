@@ -53,6 +53,13 @@
 
       <!-- Body -->
       <div :class="$style.modalBody">
+        <!-- Who this survey is assigned to (users + groups + responded state) -->
+        <AssignedUsersPanel
+          v-if="showAssignedUsers"
+          ref="assignedUsersRef"
+          :survey-id="survey.id"
+        />
+
         <!-- Loading (only when we had to fetch questions ourselves) -->
         <div v-if="isLoading" :class="$style.loadingState">
           <div :class="$style.loadingSpinner"></div>
@@ -161,6 +168,7 @@ import jsPDF from 'jspdf'
 import { addAmiriFont } from '../../lib/fonts/Amiri-normal'
 import { reshape } from 'arabic-persian-reshaper'
 import SurveyAttachmentsViewer from '../Survey/SurveyAttachmentsViewer.vue'
+import AssignedUsersPanel from '../Survey/AssignedUsersPanel.vue'
 import type { Survey, SurveyAttachment, SurveyQuestion } from '../../types/survey.types'
 
 interface Props {
@@ -192,6 +200,11 @@ const attachments = computed<SurveyAttachment[]>(() => {
   if (fetchedAttachments.value) return fetchedAttachments.value
   return props.survey.attachments || []
 })
+
+// The audience panel is only meaningful for a saved survey; a draft that has not
+// been shared yet still shows it (it explains that nobody is assigned so far).
+const assignedUsersRef = ref<InstanceType<typeof AssignedUsersPanel> | null>(null)
+const showAssignedUsers = computed(() => Boolean(props.survey?.id))
 
 const loadQuestionsIfMissing = async () => {
   if (props.survey.questions) return
@@ -353,6 +366,21 @@ const buildPrintableHtml = (): string => {
   const end = formatSurveyDate((props.survey as any).end_date)
   if (end) detailRows.push(`<tr><td class="lbl">${L('تاريخ الانتهاء', 'End date')}</td><td dir="ltr">${escapeHtml(end)}</td></tr>`)
   detailRows.push(`<tr><td class="lbl">${L('عدد الأسئلة', 'Questions')}</td><td>${questions.value.length}</td></tr>`)
+
+  // Audience summary (counts + group names only, so a printed preview stays short)
+  const audience = assignedUsersRef.value?.printSummary
+  if (audience && audience.mode !== 'public') {
+    detailRows.push(
+      `<tr><td class="lbl">${L('المستخدمون المعينون', 'Assigned users')}</td><td>` +
+      `${audience.total_users} — ${L('أجابوا', 'responded')}: ${audience.responded_count} · ` +
+      `${L('في الانتظار', 'pending')}: ${audience.pending_count}</td></tr>`
+    )
+    if (audience.groups.length) {
+      detailRows.push(
+        `<tr><td class="lbl">${L('المجموعات', 'Groups')}</td><td>${escapeHtml(audience.groups.join(', '))}</td></tr>`
+      )
+    }
+  }
 
   const questionsHtml = questions.value.map((q, index) => {
     let answerHtml = ''

@@ -50,6 +50,26 @@
             <span>{{ isRTL ? 'الإعدادات' : 'Settings' }}</span>
           </button>
 
+          <!-- Button 3b: Topic ("موضوع") this survey is filed under -->
+          <button
+            v-if="!props.isCreatingPredefinedTemplate"
+            :class="[$style.headerButton, $style.iconButton]"
+            @click="showTopicPicker = true"
+            :title="t('survey.topics.actions.setTopic')"
+          >
+            <i class="fas fa-folder-tree"></i>
+            <span v-if="selectedTopicName">{{ selectedTopicName }}</span>
+            <span v-else>{{ t('survey.topics.actions.setTopic') }}</span>
+          </button>
+          <button
+            v-if="!props.isCreatingPredefinedTemplate && selectedTopicId"
+            :class="[$style.headerButton, $style.iconButton]"
+            :title="t('survey.topics.actions.clearTopic')"
+            @click="clearTopic"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+
           <!-- Button 4 & 5: Draft and Publish (conditional) -->
           <template v-if="props.isCreatingPredefinedTemplate">
             <button :class="[$style.headerButton, $style.publishButton]" @click="handleSaveTemplate" :disabled="!canPublish">
@@ -736,6 +756,10 @@
             <p v-if="surveyData.description">{{ surveyData.description }}</p>
           </div>
 
+          <!-- Who this survey is assigned to. Only for a survey that already
+               exists — a brand-new draft has no audience to resolve yet. -->
+          <AssignedUsersPanel v-if="props.surveyId" :survey-id="props.surveyId" />
+
           <!-- Attachments exactly as respondents will see them -->
           <SurveyAttachmentsViewer
             :attachments="previewStoredAttachments"
@@ -918,6 +942,14 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Topic picker ("موضوع") -->
+    <TopicPickerModal
+      v-if="showTopicPicker"
+      :current-topic-id="selectedTopicId"
+      @select="onTopicPicked"
+      @close="showTopicPicker = false"
+    />
   </div>
 </template>
 
@@ -930,6 +962,9 @@ import 'flatpickr/dist/flatpickr.css'
 import Swal from 'sweetalert2'
 import SurveyAttachmentsManager from '../Survey/SurveyAttachmentsManager.vue'
 import SurveyAttachmentsViewer from '../Survey/SurveyAttachmentsViewer.vue'
+import TopicPickerModal from '../Topics/TopicPickerModal.vue'
+import AssignedUsersPanel from '../Survey/AssignedUsersPanel.vue'
+import { useTopicsStore } from '../../stores/useTopicsStore'
 
 // Props
 interface Props {
@@ -937,13 +972,16 @@ interface Props {
   mode?: 'create' | 'edit'
   surveyId?: string
   isCreatingPredefinedTemplate?: boolean
+  /** Topic pre-selected by the caller (e.g. "create survey" from a topic page). */
+  initialTopicId?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   template: null,
   mode: 'create',
   surveyId: undefined,
-  isCreatingPredefinedTemplate: false
+  isCreatingPredefinedTemplate: false,
+  initialTopicId: null
 })
 
 // Emits
@@ -960,6 +998,7 @@ const store = useAppStore()
 // Computed
 const currentTheme = computed(() => store.currentTheme)
 const isRTL = computed(() => store.currentLanguage === 'ar')
+const t = store.t
 
 // Check if we're creating a template (no template prop provided)
 const isCreatingTemplate = computed(() => !props.template)
@@ -1037,6 +1076,43 @@ const surveySettings = ref({
   is_active: true,
   allow_attachments: 'optional'
 })
+
+// ── Topic ("موضوع") this survey belongs to ─────────────────────────────────
+// Seeded from the survey being edited, or from the caller when a survey is
+// created from inside a topic page (?topic=<id>).
+const topicsStore = useTopicsStore()
+const showTopicPicker = ref(false)
+const selectedTopicId = ref<string | null>(props.initialTopicId || null)
+const selectedTopicName = ref<string | null>(null)
+
+const resolveTopicName = async () => {
+  if (!selectedTopicId.value) {
+    selectedTopicName.value = null
+    return
+  }
+  const cached = topicsStore.topicName(selectedTopicId.value)
+  if (cached) {
+    selectedTopicName.value = cached
+    return
+  }
+  try {
+    await topicsStore.fetchTree()
+    selectedTopicName.value = topicsStore.topicName(selectedTopicId.value)
+  } catch {
+    selectedTopicName.value = null
+  }
+}
+
+const onTopicPicked = async (topicId: string | null) => {
+  showTopicPicker.value = false
+  selectedTopicId.value = topicId
+  await resolveTopicName()
+}
+
+const clearTopic = async () => {
+  selectedTopicId.value = null
+  await resolveTopicName()
+}
 
 // ── Survey reference attachments (creator-supplied files) ──────────────────
 const attachmentsManagerRef = ref<InstanceType<typeof SurveyAttachmentsManager> | null>(null)
@@ -1327,6 +1403,15 @@ const initializeSurvey = () => {
       existingAttachments.value = props.mode === 'edit' && props.surveyId
         ? ((props.template as any).attachments || [])
         : []
+
+      // Keep the survey's current topic selected when editing; a template/clone
+      // inherits the topic the caller asked for (if any), not the template's.
+      if (props.mode === 'edit') {
+        const templateTopic = (props.template as any).topic || null
+        selectedTopicId.value = templateTopic || props.initialTopicId || null
+        selectedTopicName.value = (props.template as any).topic_name || null
+      }
+      resolveTopicName()
     }
   } else {
     console.log('➕ No template provided, adding default question')
@@ -1972,6 +2057,8 @@ const prepareSurveyData = () => {
     title: surveyData.value.title,
     description: surveyData.value.description,
     visibility: 'AUTH',
+    // null clears the topic; the serializer coerces '' / null to NULL
+    topic: selectedTopicId.value || null,
     is_active: surveySettings.value.is_active,
     allow_attachments: surveySettings.value.allow_attachments,
     start_date: schedulingSettings.value.start_date,

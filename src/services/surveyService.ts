@@ -41,6 +41,7 @@ import type {
   AuthenticatedResponseSubmission,
   ResponseSubmissionResult
 } from '../types/survey.types'
+import type { AssignedUsersFilters, AssignedUsersResponse } from '../types/topic.types'
 import { apiClient } from './jwtAuthService'
 import { getDeviceMacAddress, getDeviceHeaders } from '../utils/deviceFingerprint'
 
@@ -692,6 +693,46 @@ class SurveyService {
 
   async getSharedUsers(surveyId: string): Promise<ApiResponse<ShareResponse>> {
     return this.apiCall<ApiResponse<ShareResponse>>(`surveys/${surveyId}/shared-users/`)
+  }
+
+  /**
+   * Users this survey is assigned to (shared_with ∪ group members), each flagged
+   * responded / pending. Powers the "المستخدمون المعينون" panel in the preview.
+   *
+   * Paginated + searchable server-side, so an AUTH survey in a large tenant
+   * transfers one page instead of every user.
+   */
+  async getAssignedUsers(
+    surveyId: string,
+    filters?: AssignedUsersFilters
+  ): Promise<AssignedUsersResponse> {
+    const params = new URLSearchParams()
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, String(value))
+        }
+      })
+    }
+    const query = params.toString()
+    // Trailing slash before the query string — avoids Django's APPEND_SLASH 301
+    const response = await apiClient.get(
+      `${this.baseURL}surveys/${surveyId}/assigned-users/${query ? `?${query}` : ''}`
+    )
+    const data = response.data?.data ?? response.data
+    return {
+      visibility: data?.visibility ?? '',
+      mode: data?.mode ?? 'explicit',
+      total_users: data?.total_users ?? 0,
+      responded_count: data?.responded_count ?? 0,
+      pending_count: data?.pending_count ?? 0,
+      groups: data?.groups ?? [],
+      results: data?.results ?? [],
+      count: data?.count ?? 0,
+      total_pages: data?.total_pages ?? 0,
+      current_page: data?.current_page ?? 1,
+      per_page: data?.per_page ?? 10,
+    }
   }
 
   async removeSharedUser(

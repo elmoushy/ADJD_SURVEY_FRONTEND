@@ -963,3 +963,458 @@ color: #A17D23;
   .cardActions{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .actionButton{ padding:10px; font-size:.8rem; min-height:44px; }
 }
+
+/* ==========================================================================
+   TOPICS ("مواضيع") — the survey grouping surface.
+   Shared by SurveyControl.vue (tabs shell), TopicSurveys.vue (topic page) and the
+   components under components/Topics + components/Survey. Every rule reuses the
+   tokens defined at the top of this file, and night mode keeps hanging off
+   .surveyPanel[data-theme="night"], so any component that imports this stylesheet
+   is themed identically wherever it is mounted.
+   ========================================================================== */
+
+/* ---------- Tabs ---------- */
+.tabsBar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:24px;
+  padding:8px;
+  border-radius:20px;
+  background:var(--section-background);
+  border:1px solid var(--section-border);
+  box-shadow:0 10px 24px rgba(2,6,23,.05);
+}
+.tabButton{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 22px;
+  border-radius:14px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--control-muted-text);
+  font-family:inherit;
+  font-size:1rem;
+  font-weight:700;
+  cursor:pointer;
+  transition: background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+}
+.tabButton:hover{
+  color:var(--brand-strong);
+  background:color-mix(in srgb, var(--brand) 8%, transparent);
+}
+.tabButton:focus-visible{
+  outline:none;
+  box-shadow:var(--focus-outline);
+}
+.tabButtonActive{
+  background:linear-gradient(135deg,#b78a41,#a17d23);
+  color:#fff;
+  box-shadow:0 12px 26px rgba(183,138,65,.28);
+}
+.tabButtonActive:hover{
+  color:#fff;
+  background:linear-gradient(135deg,#b78a41,#a17d23);
+}
+.tabBadge{
+  display:inline-grid;
+  place-items:center;
+  min-inline-size:26px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:color-mix(in srgb, var(--brand) 14%, transparent);
+  color:var(--brand-strong);
+  font-size:.8rem;
+  font-weight:800;
+}
+.tabButtonActive .tabBadge{
+  background:rgba(255,255,255,.22);
+  color:#fff;
+}
+.surveyPanel[data-theme="night"] .tabButton{ color:rgba(248,250,252,.72); }
+.surveyPanel[data-theme="night"] .tabBadge{ background:rgba(255,255,255,.12); color:#facc15; }
+
+/* ---------- View toggle (grid / tree / map) ---------- */
+.viewToggle{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px;
+  border-radius:14px;
+  border:1px solid var(--control-border);
+  background:var(--control-background);
+}
+.viewToggleButton{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 16px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  color:var(--control-muted-text);
+  font-family:inherit;
+  font-size:.9rem;
+  font-weight:700;
+  cursor:pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.viewToggleButton:hover{ color:var(--brand-strong); }
+.viewToggleButton:focus-visible{ outline:none; box-shadow:var(--focus-outline); }
+.viewToggleActive{
+  background:color-mix(in srgb, var(--brand) 14%, transparent);
+  color:var(--brand-strong);
+}
+
+/* ---------- Topic cards ---------- */
+.topicsGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap:24px;
+}
+.topicCard{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:26px;
+  border-radius:26px;
+  border:1px solid var(--card-border);
+  background:#fff;
+  cursor:pointer;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  min-height:270px;
+}
+.surveyPanel[data-theme="night"] .topicCard{ background:rgba(255,255,255,.06); }
+.topicCard:hover{
+  transform:translateY(-6px);
+  border-color:var(--card-border-hover);
+  box-shadow:var(--card-shadow-hover);
+}
+.topicCardSelected{
+  border-color: rgba(161,125,35,.55);
+  box-shadow:0 20px 40px rgba(161,125,35,.2);
+}
+.topicCardArchived{ opacity:.72; }
+.topicAccent{
+  position:absolute;
+  inset-block-start:0;
+  inset-inline-start:26px;
+  inset-inline-end:26px;
+  block-size:4px;
+  border-radius:0 0 6px 6px;
+  background:var(--topic-accent, var(--brand));
+}
+.topicCardHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.topicIconTile{
+  inline-size:48px;
+  block-size:48px;
+  border-radius:16px;
+  display:grid;
+  place-items:center;
+  font-size:1.15rem;
+  color:var(--topic-accent, var(--brand));
+  background:color-mix(in srgb, var(--topic-accent, var(--brand)) 12%, transparent);
+  flex-shrink:0;
+}
+.topicHeaderButtons{ display:flex; align-items:center; gap:6px; }
+.topicIconButton{
+  inline-size:36px;
+  block-size:36px;
+  border-radius:12px;
+  border:1px solid var(--control-border);
+  background:var(--control-background);
+  color:var(--control-muted-text);
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.topicIconButton:hover{
+  color:var(--brand-strong);
+  border-color:var(--card-border-hover);
+  transform:translateY(-1px);
+}
+.topicIconButton:focus-visible{ outline:none; box-shadow:var(--focus-outline); }
+.topicIconButtonActive{
+  color:#fff;
+  background:linear-gradient(135deg,#b78a41,#a17d23);
+  border-color:transparent;
+}
+.topicMenuWrap{ position:relative; }
+.topicMenu{
+  position:absolute;
+  inset-block-start:calc(100% + 6px);
+  inset-inline-end:0;
+  min-inline-size:230px;
+  padding:8px;
+  border-radius:14px;
+  border:1px solid var(--control-border);
+  background:var(--section-background);
+  box-shadow:0 18px 36px rgba(2,6,23,.16);
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.topicMenuItem{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  color:var(--control-text);
+  font-family:inherit;
+  font-size:.9rem;
+  font-weight:600;
+  text-align:start;
+  cursor:pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.topicMenuItem:hover{ background:color-mix(in srgb, var(--brand) 10%, transparent); color:var(--brand-strong); }
+.topicMenuItemDanger{ color:#d43f44; }
+.topicMenuItemDanger:hover{ background:rgba(220,53,69,.12); color:#b91c1c; }
+.topicName{
+  font-size:1.15rem;
+  font-weight:800;
+  color:var(--card-title-color);
+  line-height:1.35;
+  margin:0;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+  word-break:break-word;
+}
+.topicDescription{
+  margin:0;
+  font-size:.95rem;
+  color:var(--card-text);
+  line-height:1.6;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+}
+.topicMetaChips{ display:flex; flex-wrap:wrap; gap:8px; }
+.topicCardFooter{
+  margin-top:auto;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.subtopicStrip{ display:flex; flex-wrap:wrap; gap:8px; }
+.subtopicChip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px dashed var(--control-border);
+  background:transparent;
+  color:var(--control-muted-text);
+  font-family:inherit;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+  transition: color .2s ease, border-color .2s ease;
+}
+.subtopicChip:hover{ color:var(--brand-strong); border-color:var(--card-border-hover); }
+.topicChip{
+  border:none;
+  cursor:pointer;
+  font-family:inherit;
+  color:var(--brand-strong);
+  background:color-mix(in srgb, var(--brand) 12%, transparent);
+  align-self:flex-start;
+  max-inline-size:100%;
+}
+.topicChipText{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-inline-size:180px; }
+.archivedBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 12px;
+  border-radius:999px;
+  background:rgba(148,163,184,.18);
+  color:#64748b;
+  font-size:.75rem;
+  font-weight:800;
+}
+
+/* ---------- Drag & drop ---------- */
+.dropTarget{ outline:2px dashed transparent; outline-offset:4px; }
+.dropActive{
+  outline-color:var(--brand);
+  background:color-mix(in srgb, var(--brand) 8%, transparent);
+}
+
+/* ---------- Tree view ---------- */
+.treeWrap{ display:flex; flex-direction:column; gap:4px; }
+.treeRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--control-text);
+  font-family:inherit;
+  font-size:.98rem;
+  font-weight:700;
+  cursor:pointer;
+  inline-size:100%;
+  text-align:start;
+  transition: background .2s ease, border-color .2s ease;
+}
+.treeRow:hover{ background:color-mix(in srgb, var(--brand) 8%, transparent); }
+.treeRow:focus-visible{ outline:none; box-shadow:var(--focus-outline); }
+.treeToggle{
+  inline-size:26px;
+  block-size:26px;
+  border-radius:8px;
+  border:1px solid var(--control-border);
+  background:var(--control-background);
+  color:var(--control-muted-text);
+  display:grid;
+  place-items:center;
+  font-size:.72rem;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.treeTogglePlaceholder{ inline-size:26px; flex-shrink:0; }
+.treeIcon{ color:var(--topic-accent, var(--brand)); }
+.treeLabel{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.treeCount{
+  margin-inline-start:auto;
+  padding:2px 10px;
+  border-radius:999px;
+  background:var(--chip-background);
+  color:var(--chip-text);
+  font-size:.78rem;
+  font-weight:800;
+}
+.treeSurveyRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 14px;
+  border-radius:12px;
+  color:var(--card-text);
+  font-size:.9rem;
+  font-weight:600;
+  background:transparent;
+  border:none;
+  inline-size:100%;
+  text-align:start;
+  cursor:pointer;
+  font-family:inherit;
+}
+.treeSurveyRow:hover{ background:color-mix(in srgb, var(--brand) 6%, transparent); color:var(--brand-strong); }
+
+/* ---------- Breadcrumb + topic page header ---------- */
+.breadcrumb{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+  font-size:.92rem;
+  font-weight:700;
+  color:var(--control-muted-text);
+}
+.breadcrumbLink{
+  border:none;
+  background:transparent;
+  color:var(--control-muted-text);
+  font:inherit;
+  cursor:pointer;
+  padding:4px 2px;
+  border-radius:6px;
+}
+.breadcrumbLink:hover{ color:var(--brand-strong); text-decoration:underline; }
+.breadcrumbCurrent{ color:var(--card-title-color); }
+.topicPageHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+  padding:26px 28px;
+  margin-bottom:24px;
+  border-radius:26px;
+  background:var(--section-background);
+  border:1px solid var(--section-border);
+  box-shadow:var(--section-shadow);
+}
+.topicPageIdentity{ display:flex; align-items:flex-start; gap:16px; min-inline-size:260px; flex:1; }
+.topicPageTitle{ margin:0; font-size:1.6rem; font-weight:800; color:var(--card-title-color); }
+.topicPageDescription{ margin:6px 0 0; color:var(--card-text); font-size:.98rem; line-height:1.6; }
+.topicPageMeta{ margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
+.topicPageActions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.sectionTitle{
+  margin:0 0 14px;
+  font-size:1.1rem;
+  font-weight:800;
+  color:var(--card-title-color);
+}
+
+/* ---------- Skeletons ---------- */
+.skeletonGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap:24px;
+}
+.skeletonCard{
+  block-size:270px;
+  border-radius:26px;
+  border:1px solid var(--card-border);
+  background:linear-gradient(100deg,
+    color-mix(in srgb, var(--card-border) 25%, transparent) 20%,
+    color-mix(in srgb, var(--card-border) 12%, transparent) 40%,
+    color-mix(in srgb, var(--card-border) 25%, transparent) 60%);
+  background-size:200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeletonShimmer{
+  from{ background-position: 200% 0; }
+  to{ background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .skeletonCard{ animation:none; }
+}
+
+/* ---------- Inline error ---------- */
+.inlineError{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 18px;
+  border-radius:14px;
+  background:rgba(220,53,69,.08);
+  border:1px solid rgba(220,53,69,.24);
+  color:#b91c1c;
+  font-weight:700;
+  margin-bottom:18px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px){
+  .topicsGrid{ grid-template-columns:1fr; }
+  .skeletonGrid{ grid-template-columns:1fr; }
+  .tabsBar{ overflow-x:auto; flex-wrap:nowrap; }
+  .tabButton{ white-space:nowrap; }
+  .topicPageHeader{ padding:20px; }
+}

@@ -39,71 +39,10 @@
   },
   "notifications": {
     "title": "Notifications",
-    "markAllRead": "Mark All as Read",
-    "noNotifications": "No notifications",
-    "noNotificationsDesc": "You're all caught up! No new notifications.",
-    "viewAll": "View All Notifications",
-    "refresh": "Refresh",
-    "filter": "Filter",
-    "search": "Search notifications...",
-    "filterBy": "Filter by",
-    "sortBy": "Sort by",
-    "priority": "Priority",
-    "type": "Type",
-    "status": "Status",
-    "dateRange": "Date Range",
-    "showRead": "Show Read",
-    "showUnread": "Show Unread",
-    "showAll": "Show All",
-    "deleteSelected": "Delete Selected",
+    "newNotification": "New Notification",
     "markAsRead": "Mark as Read",
-    "markAsUnread": "Mark as Unread",
-    "delete": "Delete",
-    "preferences": "Notification Preferences",
-    "settings": "Settings",
-    "emailNotifications": "Email Notifications",
-    "websocketNotifications": "Real-time Notifications",
-    "quietHours": "Quiet Hours",
-    "language": "Notification Language",
-    "timezone": "Timezone",
-    "types": {
-      "survey_assigned": "Survey Assigned",
-      "survey_completed": "Survey Completed",
-      "survey_shared": "Survey Shared",
-      "survey_updated": "Survey Updated",
-      "survey_deleted": "Survey Deleted",
-      "admin_message": "Admin Message",
-      "system_alert": "System Alert",
-      "user_mention": "User Mention",
-      "group_invitation": "Group Invitation",
-      "response_received": "Response Received"
-    },
-    "priorities": {
-      "low": "Low",
-      "normal": "Normal",
-      "high": "High",
-      "urgent": "Urgent"
-    },
-    "time": {
-      "justNow": "Just now",
-      "minutesAgo": "minutes ago",
-      "hourAgo": "hour ago",
-      "hoursAgo": "hours ago",
-      "dayAgo": "day ago",
-      "daysAgo": "days ago"
-    },
-    "actions": {
-      "markAllRead": "Mark all notifications as read",
-      "bulkDelete": "Delete selected notifications",
-      "refresh": "Refresh notifications",
-      "goToSurvey": "Go to Survey",
-      "viewDetails": "View Details"
-    },
-    "stats": {
-      "total": "Total Notifications",
-      "unread": "Unread",
-      "recent": "Recent (7 days)"
-    }
+    "clearAll": "Clear All",
+    "noNotifications": "No notifications"
   },
   "welcome": {
     "heroTitle": "WPC | ADJD",
@@ -112,7 +51,7 @@
     "staticText": "WPC ADJD",
     "animatedTexts": {
       "innovation": "Innovation",
-      "security": "Security", 
+      "security": "Security",
       "cloudPower": "Cloud Power",
       "excellence": "Excellence"
     },
@@ -128,7 +67,7 @@
         "description": "Leverage optimized transfer protocols and parallel streams for lightning fast uploads, even on high latency or low bandwidth networks."
       },
       "easyShare": {
-        "title": "Easy Share Big Files", 
+        "title": "Easy Share Big Files",
         "description": "Seamlessly share files of any size within your organization—no third party limits—with granular permissions and real time notifications."
       },
       "dataManagement": {
@@ -211,7 +150,7 @@
     "loading": "Loading news...",
     "loadMore": "Load More News",
     "error": {
-      "title": "Error Loading News",  
+      "title": "Error Loading News",
       "retry": "Try Again"
     }
   },
@@ -283,7 +222,7 @@
     },
     "tabs": {
       "slider": "Slider News",
-      "cards": "Cards News", 
+      "cards": "Cards News",
       "achievements": "Achievements"
     },
     "slider": {
@@ -293,14 +232,14 @@
       "empty": "No slider news found. Create your first one!"
     },
     "cards": {
-      "title": "Cards News Management", 
+      "title": "Cards News Management",
       "description": "Manage main news articles and cards",
       "create": "Add Cards News",
       "empty": "No cards news found. Create your first one!"
     },
     "achievements": {
       "title": "Achievements Management",
-      "description": "Manage achievements and accomplishments", 
+      "description": "Manage achievements and accomplishments",
       "create": "Add Achievement",
       "empty": "No achievements found. Create your first one!"
     },
@@ -340,7 +279,7 @@
       "general": "General",
       "news": "News",
       "military": "Military",
-      "technology": "Technology", 
+      "technology": "Technology",
       "training": "Training",
       "announcement": "Announcement",
       "pressRelease": "Press Release",
@@ -353,7 +292,7 @@
       "sliderUpdated": "Slider news updated successfully",
       "sliderDeleted": "Slider news deleted successfully",
       "cardsCreated": "Cards news created successfully",
-      "cardsUpdated": "Cards news updated successfully", 
+      "cardsUpdated": "Cards news updated successfully",
       "cardsDeleted": "Cards news deleted successfully",
       "achievementsCreated": "Achievement created successfully",
       "achievementsUpdated": "Achievement updated successfully",
@@ -527,7 +466,10 @@
       "activate": "Activate",
       "deactivate": "Deactivate",
       "lock": "Lock",
-      "unlock": "Unlock"
+      "unlock": "Unlock",
+      "reminder": "Reminder",
+      "editor": "Editor",
+      "submit": "Submit"
     },
     "form": {
       "basicInfo": "Basic Information",
@@ -542,7 +484,7 @@
       "schedulingDescription": "Control when your survey is active",
       "startDate": "Start Date",
       "startDateHelp": "Survey will start at this date/time. Leave empty to start immediately.",
-      "endDate": "End Date", 
+      "endDate": "End Date",
       "endDateHelp": "Survey will stop accepting responses after this date/time. Leave empty to run indefinitely.",
       "settings": "Settings",
       "isActive": "Active",
@@ -681,7 +623,7 @@
       "lengthDistribution": "Length Distribution",
       "lengths": {
         "short": "Short",
-        "medium": "Medium",  
+        "medium": "Medium",
         "long": "Long",
         "shortDesc": "Brief responses (1-10 words)",
         "mediumDesc": "Standard responses (11-50 words)",
@@ -690,7 +632,7 @@
       "verbosityTypes": {
         "brief": "Brief",
         "moderate": "Moderate",
-        "detailed": "Detailed", 
+        "detailed": "Detailed",
         "extensive": "Extensive"
       },
       "engagementLevels": {
@@ -977,6 +919,127 @@
       "emailFormat": "Please enter a valid email address",
       "dateRange": "End date must be after start date",
       "positiveNumber": "Must be a positive number"
+    },
+    "topics": {
+      "title": "Topics",
+      "searchPlaceholder": "Search topics...",
+      "breadcrumbLabel": "Breadcrumb",
+      "tabs": {
+        "label": "Survey management sections",
+        "topics": "Topics",
+        "ungrouped": "Ungrouped",
+        "all": "All"
+      },
+      "views": {
+        "label": "View mode",
+        "grid": "Grid",
+        "tree": "Tree"
+      },
+      "sorting": {
+        "nameAsc": "Name A-Z",
+        "nameDesc": "Name Z-A",
+        "mostSurveys": "Most surveys"
+      },
+      "filters": {
+        "activeTopics": "Active topics",
+        "archivedTopics": "Archived topics",
+        "allTopics": "All topics",
+        "allGroups": "All groups",
+        "allStatuses": "All statuses",
+        "published": "Published",
+        "expired": "Expired"
+      },
+      "card": {
+        "surveys": "surveys",
+        "active": "active",
+        "subtopics": "sub-topics",
+        "totalWithSub": "with sub-topics",
+        "archived": "Archived",
+        "openTopic": "Open topic"
+      },
+      "actions": {
+        "open": "Open",
+        "create": "New topic",
+        "createHint": "Group related surveys under one topic",
+        "edit": "Edit topic",
+        "delete": "Delete topic",
+        "archive": "Archive",
+        "unarchive": "Restore",
+        "pin": "Pin",
+        "unpin": "Unpin",
+        "addSubtopic": "Add sub-topic",
+        "createSurveyInside": "Create survey in this topic",
+        "newSurvey": "New survey",
+        "addToTopic": "Add to topic",
+        "removeFromTopic": "Remove from topic",
+        "assignHint": "File this survey under a topic",
+        "removeHint": "Remove this survey from the topic (it is not deleted)",
+        "setTopic": "Set topic",
+        "clearTopic": "Clear topic",
+        "includeSubtopics": "Include sub-topics",
+        "backToTopics": "Back to topics",
+        "clearFilters": "Reset search",
+        "expand": "Expand",
+        "collapse": "Collapse",
+        "previewQuestions": "Preview questions",
+        "reminderHint": "Send a reminder to non-responders"
+      },
+      "empty": {
+        "topics": "No topics yet",
+        "noMatches": "No matching results",
+        "ungrouped": "No ungrouped surveys",
+        "surveysInTopic": "No surveys in this topic yet"
+      },
+      "modal": {
+        "createTitle": "New topic",
+        "editTitle": "Edit topic",
+        "subtitle": "A main topic groups related surveys and can be split into sub-topics",
+        "name": "Topic name",
+        "namePlaceholder": "e.g. Customer Experience",
+        "description": "Description",
+        "descriptionPlaceholder": "A short description of what belongs here (optional)",
+        "parent": "Parent topic",
+        "noParent": "Main topic (no parent)",
+        "parentHint": "Sub-topics are allowed one level only (main topic → sub-topic)",
+        "depthLimit": "already a sub-topic",
+        "duplicateName": "A topic with this name already exists",
+        "color": "Colour",
+        "icon": "Icon",
+        "pin": "Pin this topic to the top",
+        "pinHint": "Pinned topics are listed first in every view"
+      },
+      "picker": {
+        "title": "Choose a topic",
+        "subtitle": "Pick the topic these surveys belong to",
+        "searchPlaceholder": "Search for a topic...",
+        "noTopic": "No topic",
+        "noTopicHint": "The surveys move to the \"Ungrouped\" tab",
+        "createNew": "Create a new topic"
+      },
+      "assignedUsers": {
+        "title": "Assigned users",
+        "users": "users",
+        "groups": "groups",
+        "groupsLabel": "Groups:",
+        "responded": "responded",
+        "pending": "pending",
+        "filterAll": "All",
+        "searchPlaceholder": "Search users...",
+        "viaGroup": "via group",
+        "publicShort": "Public survey",
+        "publicNotice": "This survey is shared through a public link, so it has no assigned users.",
+        "allAuthNotice": "Visible to every authenticated user —",
+        "emptyNotice": "Nobody is assigned to this survey yet. Use \"Manage access\" to pick the audience.",
+        "noMatches": "No matching users",
+        "loadFailed": "Failed to load the assigned users"
+      },
+      "errors": {
+        "loadFailed": "Failed to load topics",
+        "saveFailed": "Failed to save the topic",
+        "createFailed": "Failed to create the topic",
+        "deleteFailed": "Failed to delete the topic",
+        "notFound": "This topic does not exist or was deleted"
+      }
     }
   },
   "common": {
@@ -1003,7 +1066,7 @@
     "created": "Created",
     "updated": "Updated",
     "documents": "Documents",
-    "images": "Images", 
+    "images": "Images",
     "videos": "Videos",
     "others": "Others",
     "blocked": "Blocked Attempts",
@@ -1031,18 +1094,11 @@
   "themes": {
     "toggleTheme": "Toggle Theme",
     "nightMode": "Night Mode",
-    "lightMode": "Light Mode", 
+    "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
     "language": "Language",
     "english": "English",
     "arabic": "العربية"
-  },
-  "notifications": {
-    "title": "Notifications",
-    "newNotification": "New Notification",
-    "markAsRead": "Mark as Read",
-    "clearAll": "Clear All",
-    "noNotifications": "No notifications"
   },
   "dashboard": {
     "title": "Command Dashboard",
@@ -1152,7 +1208,6 @@
     "shareSelected": "Share Selected",
     "moveSelected": "Move Selected",
     "copySelected": "Copy Selected",
-    
     "versioning": {
       "title": "Version History",
       "currentVersion": "Current Version",
@@ -1161,7 +1216,6 @@
       "compareVersions": "Compare Versions",
       "versionNotes": "Version Notes"
     },
-    
     "collaboration": {
       "title": "Collaborative Editing",
       "activeUsers": "Active Users",
@@ -1171,7 +1225,6 @@
       "replyComment": "Reply",
       "realTimeEdit": "Real-time Editing"
     },
-    
     "ai": {
       "title": "AI Analysis",
       "analyze": "Analyze File",
@@ -1184,7 +1237,6 @@
       "predictiveText": "Predictive Search",
       "autoTags": "Auto-Generated Tags"
     },
-    
     "duplicates": {
       "title": "Duplicate Detector",
       "scanDuplicates": "Scan for Duplicates",
@@ -1194,7 +1246,6 @@
       "keepOriginal": "Keep Original",
       "deleteAll": "Delete All Duplicates"
     },
-    
     "security": {
       "title": "Advanced Security",
       "encrypt": "Encrypt File",
@@ -1206,7 +1257,6 @@
       "twoFactorAuth": "Two-Factor Authentication",
       "digitalSignature": "Digital Signature"
     },
-    
     "previewFeature": {
       "title": "File Preview",
       "generating": "Generating Preview...",
@@ -1214,7 +1264,6 @@
       "thumbnailView": "Thumbnail View",
       "fullscreen": "Fullscreen"
     },
-    
     "advancedActions": {
       "star": "Star File",
       "unstar": "Unstar File",
@@ -1313,18 +1362,18 @@
   "userManagement": {
     "title": "User Management",
     "subtitle": "Manage users and groups in your organization",
-  "users": {
-    "title": "Users",
-    "addUser": "Add User",
-    "headerTitle": "Users",
-    "headerSubtitle": "Review every user, add new members, and edit their permissions with ease."
-  },
-  "groups": {
-    "title": "Groups",
-    "addGroup": "Add Group",
-    "headerTitle": "Groups",
-    "headerSubtitle": "Organise teams, assign members, and track group activity in one place."
-  },
+    "users": {
+      "title": "Users",
+      "addUser": "Add User",
+      "headerTitle": "Users",
+      "headerSubtitle": "Review every user, add new members, and edit their permissions with ease."
+    },
+    "groups": {
+      "title": "Groups",
+      "addGroup": "Add Group",
+      "headerTitle": "Groups",
+      "headerSubtitle": "Organise teams, assign members, and track group activity in one place."
+    },
     "buttons": {
       "refresh": "Refresh",
       "save": "Save",

@@ -5,6 +5,7 @@
     :mode="editorMode"
     :surveyId="editingSurveyId"
     :isCreatingPredefinedTemplate="isCreatingPredefinedTemplate"
+    :initialTopicId="initialTopicId"
     @back="handleBack"
     @publish="handlePublish"
     @saveDraft="handleSaveDraft"
@@ -53,6 +54,10 @@ const isCreatingPredefinedTemplate = ref(false)
 // else (blank editor, template, clone) is a creation flow.
 const editingSurveyId = computed(() => (route.params.id as string) || undefined)
 const editorMode = computed<'create' | 'edit'>(() => (editingSurveyId.value ? 'edit' : 'create'))
+
+// Creating a survey from inside a topic page carries ?topic=<id>, so the new
+// survey is filed under that topic without the admin having to pick it again.
+const initialTopicId = computed(() => (route.query.topic as string) || null)
 
 // Watch for templateData changes
 watch(templateData, (newValue) => {

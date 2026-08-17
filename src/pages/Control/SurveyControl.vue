@@ -1,687 +1,289 @@
 <template>
   <div :class="$style.surveyPanel" :data-theme="currentTheme" :dir="isRTL ? 'rtl' : 'ltr'">
-    <!-- Main Survey Control View -->
     <!-- Hero -->
     <section :class="$style.heroSection">
-        <div :class="$style.heroContent">
-          <div :class="$style.heroText">
-            <div :class="$style.sectionHerto">
-              <h1>{{ t('survey.title') }}</h1>
-            </div>
-        </div>
-
-          <div :class="$style.heroActions">
-            <!-- Create Survey -->
-            <div :class="$style.createButtonContainer" ref="createButtonRef">
-              <button :class="$style.primaryButton" @click="toggleCreateDropdown">
-                <i class="fas fa-plus"></i>
-                {{ t('survey.list.createSurvey') }}
-                <i :class="['fas', showCreateDropdown ? 'fa-chevron-up' : 'fa-chevron-down', $style.dropdownIcon]"></i>
-              </button>
-            </div>
-
-            <!-- Dropdown (teleported) -->
-            <Teleport to="body">
-              <div
-                v-if="showCreateDropdown"
-                :class="$style.createDropdown"
-                :style="dropdownPosition"
-                data-dropdown="create-survey"
-                @mousedown.prevent
-              >
-                <button :class="$style.dropdownItem" @click="createDefaultSurvey">
-                  <i class="fas fa-file-alt"></i>
-                  <div :class="$style.dropdownItemContent">
-                    <span :class="$style.dropdownItemTitle">{{ isRTL ? 'إيضاحات افتراضي' : 'Default Survey' }}</span>
-                    <span :class="$style.dropdownItemDescription">
-                      {{ isRTL ? 'إنشاء إيضاحات فارغ من البداية' : 'Create a blank survey from scratch' }}
-                    </span>
-                  </div>
-                </button>
-
-                <button :class="$style.dropdownItem" @click="openTemplateGallery">
-                  <i class="fas fa-layer-group"></i>
-                  <div :class="$style.dropdownItemContent">
-                    <span :class="$style.dropdownItemTitle">{{ isRTL ? 'من قالب' : 'From Template' }}</span>
-                    <span :class="$style.dropdownItemDescription">
-                      {{ isRTL ? 'اختر من القوالب الجاهزة أو إيضاحاتاتك السابقة' : 'Choose from ready templates or your previous surveys' }}
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </Teleport>
-          </div>
-        </div>
-      </section>
-
-<!-- Stats -->
-<section :class="$style.statsSection" v-if="analytics">
-  <div :class="$style.kpiGrid">
-    <div
-      v-for="card in kpiCards"
-      :key="card.key"
-      :class="$style.kpiCard"
-      role="status"
-      aria-live="polite"
-    >
-
-<!-- Top row: [ Head (title+badge) | Arrow ] -->
-<div :class="$style.kpiTop">
-  <!-- RIGHT side: title + icon -->
-  <div :class="$style.kpiHead">
-      <div :class="[$style.kpiBadge, card.dot ? '' : '']" aria-hidden="true">
-      <component :is="card.icon" />
-    </div>
-    <div :class="$style.kpiTitle">{{ card.title }}</div>
-  
-  </div>
-
-  <!-- LEFT side: arrow -->
-  <div :class="$style.kpiArrowWrap" v-if="card.trend !== undefined && card.trend !== null">
-    <!-- Up arrow for positive trend -->
-    <svg v-if="card.trend >= 0" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M9.01562 5V6.96875H15.625L4 18.5938L5.40625 20L17.0312 8.375V14.9844H19V5H9.01562Z" fill="#00A350"/>
-    </svg>
-    <!-- Down arrow for negative trend -->
-    <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M9.01562 19V17.0312H15.625L4 5.40625L5.40625 4L17.0312 15.625V9.01562H19V19H9.01562Z" fill="#DC3545"/>
-    </svg>
-  </div>
-</div>
-
-
-
-
-      <!-- Number row: unit + number (in RTL: number left, unit to its right) -->
-      <div :class="$style.kpiMain">
-        <span :class="$style.kpiNumber">{{ card.value }}</span>
-        <span :class="$style.kpiUnit">{{ isRTL ? 'إيضاحات' : 'surveys' }}</span>
-      </div>
-
-      <!-- Bottom row -->
-      <!-- <div :class="$style.kpiBottom">
-      
-        <span :class="$style.kpiFoot">{{ isRTL ? 'في هذا الشهر' : 'this month' }}</span>
-       <span 
-          v-if="card.trend !== undefined && card.trend !== null"
-          :class="[$style.kpiTrend, card.trend >= 0 ? $style.positive : $style.negative]"
-        >
-          {{ (card.trend >= 0 ? '+' : '') + Math.round(card.trend) + '%' }}
-        </span>
-      </div> -->
-    </div>
-  </div>
-</section>
-
-
-
-      <!-- Controls / Filters -->
-     
-
-      <!-- Bulk actions -->
-      <div v-if="selectedSurveys?.length > 0" :class="$style.bulkActionsBar">
-        <div :class="$style.bulkInfo">
-          <span :class="$style.selectedCount">{{ selectedSurveys?.length || 0 }}</span>
-          <span>{{ t('survey.list.selectedItems') }}</span>
-        </div>
-
-        <div :class="$style.bulkActions">
-          <button :class="$style.bulkButton" @click="bulkActivate" :disabled="bulkOperationLoading">
-            <i class="fas fa-play"></i>
-            {{ t('survey.bulk.operations.activate') }}
-          </button>
-          <button :class="$style.bulkButton" @click="bulkDeactivate" :disabled="bulkOperationLoading">
-            <i class="fas fa-pause"></i>
-            {{ t('survey.bulk.operations.deactivate') }}
-          </button>
-          <button v-if="isSuperAdmin" :class="[$style.bulkButton, $style.danger]" @click="bulkDelete" :disabled="bulkOperationLoading">
-            <i class="fas fa-trash"></i>
-            {{ t('survey.bulk.operations.delete') }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Grid view -->
-      <section  :class="$style.surveysSection">
-         <section :class="$style.controlsSection">
-        <div :class="$style.filtersGroup">
-          <input
-            type="text"
-            :class="$style.searchInput"
-            :placeholder="t('survey.list.searchPlaceholder')"
-            v-model="searchQuery"
-            @input="handleSearch"
-          />
-
-          <select :class="$style.filterSelect" v-model="selectedFilter" @change="applyFilters">
-            <option value="all">{{ t('survey.filters.all') }}</option>
-            <option value="active">{{ t('survey.filters.active') }}</option>
-            <option value="inactive">{{ t('survey.filters.inactive') }}</option>
-          </select>
-
-          <select :class="$style.filterSelect" v-model="selectedSort" @change="applySorting">
-            <option value="newest">{{ t('survey.sorting.newest') }}</option>
-            <option value="oldest">{{ t('survey.sorting.oldest') }}</option>
-            <option value="title_asc">{{ t('survey.sorting.titleAZ') }}</option>
-            <option value="title_desc">{{ t('survey.sorting.titleZA') }}</option>
-            <option value="most_responses">{{ t('survey.sorting.mostResponses') }}</option>
-          </select>
-
-          <!-- Admin-only: Group filter -->
-          <select
-            v-if="isSuperOrAdmin"
-            :class="$style.filterSelect"
-            v-model="selectedGroup"
-            @change="applyFilters"
-          >
-            <option value="">{{ isRTL ? 'جميع المجموعات' : 'All Groups' }}</option>
-            <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
-
-          <!-- Admin-only: Lifecycle status filter -->
-          <select
-            v-if="isSuperOrAdmin"
-            :class="$style.filterSelect"
-            v-model="selectedLifecycleStatus"
-            @change="applyFilters"
-          >
-            <option value="">{{ isRTL ? 'جميع الحالات' : 'All Statuses' }}</option>
-            <option value="draft">{{ isRTL ? 'مسودة' : 'Draft' }}</option>
-            <option value="submitted">{{ isRTL ? 'منشور' : 'Published' }}</option>
-            <option value="expired">{{ isRTL ? 'منتهي' : 'Expired' }}</option>
-          </select>
-        </div>
-
-        <div :class="$style.viewControls">
-          <button :class="$style.secondaryButton" @click="refreshData">
-            <i class="fas fa-sync-alt"></i>
-            {{ t('survey.list.refreshData') }}
-          </button>
-        </div>
-      </section>
-      <div v-if="!isLoading && surveys?.length > 0">
-
-        <div :class="$style.surveysGrid" v-if="viewMode === 'grid'">
-          <div
-            v-for="survey in paginatedSurveys"
-            :key="survey.id"
-            :class="[$style.surveyCard, { [$style.selected]: selectedSurveys?.includes(survey.id) }]"
-            @click="toggleSurveySelection(survey.id)"
-            :aria-pressed="selectedSurveys?.includes(survey.id)"
-          >
-            <div :class="$style.cardHeader">
-              <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="44" height="44" rx="22" fill="#F5F7FA"/>
-<path d="M13 20C13 16.2288 13 14.3431 14.1716 13.1716C15.3431 12 17.2288 12 21 12H23C26.7712 12 28.6569 12 29.8284 13.1716C31 14.3431 31 16.2288 31 20V24C31 27.7712 31 29.6569 29.8284 30.8284C28.6569 32 26.7712 32 23 32H21C17.2288 32 15.3431 32 14.1716 30.8284C13 29.6569 13 27.7712 13 24V20Z" stroke="#A17D23" stroke-width="1.5"/>
-<path d="M18 20H26" stroke="#A17D23" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M18 24H23" stroke="#A17D23" stroke-width="1.5" stroke-linecap="round"/>
-</svg>
-
-              <div :class="$style.cardStatus">
-                <span :class="[$style.statusBadge, $style[survey.is_active ? 'active' : 'inactive']]">
-                  {{ survey.is_active ? t('survey.status.active') : t('survey.status.inactive') }}
-                </span>
-                <span v-if="survey.status === 'draft'" :class="[$style.statusBadge, $style.draft]">
-                  {{ isRTL ? 'مسودة' : 'Draft' }}
-                </span>
-                <!-- <span v-if="survey.visibility" :class="[$style.statusBadge, $style[survey.visibility.toLowerCase()]]">
-                  {{ t(`survey.status.${survey.visibility.toLowerCase()}`) }}
-                </span> -->
-                <span v-else :class="[$style.statusBadge, $style.private]">
-                  {{ t('survey.status.private') }}
-                </span>
-              </div>
-             
-            </div>
-<div :class="$style.cardContent">
-            <h3 :class="$style.cardTitle" :title="survey.title">{{ survey.title }}</h3>
-            <p :class="$style.cardDescription" :title="survey.description">{{ survey.description }}</p>
-</div>
-
-            <div :class="$style.cardDivider"></div>
-
-            <div :class="$style.cardChips">
-              <div :class="$style.chip">
-                <i class="fas fa-users" :class="$style.chipIcon"></i>
-                <span>{{ survey.response_count }} {{ t('survey.card.responses') }}</span>
-              </div>
-              <div :class="$style.chip">
-                <i class="fas fa-question-circle" :class="$style.chipIcon"></i>
-                <span>{{ survey.questions?.length || 0 }} {{ t('survey.questions.title').toLowerCase() }}</span>
-              </div>
-              <div :class="$style.chip">
-                <i class="fas fa-calendar-alt" :class="$style.chipIcon"></i>
-                <span>{{ formatDate(survey.updated_at, survey.created_at) }}</span>
-              </div>
-              <div :class="$style.chip">
-                <i class="fas fa-user" :class="$style.chipIcon"></i>
-                <span>{{ t('survey.card.createdBy') }}: {{ getCreatorDisplayName(survey.creator_email) }}</span>
-              </div>
-            </div>
-
-            <div :class="$style.cardActions">
-              <button
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="previewSurveyQuestions(survey)"
-                :title="isRTL ? 'معاينة الأسئلة' : 'Preview Questions'"
-              >
-                <i class="fas fa-eye"></i>
-                <span :class="$style.actionButtonText">{{ isRTL ? 'معاينة' : 'Preview' }}</span>
-              </button>
-
-              <button
-                v-if="canSendReminder(survey)"
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="sendReminder(survey)"
-                :title="isRTL ? 'إرسال تذكير لغير المستجيبين' : 'Send reminder to non-responders'"
-              >
-                <i class="fas fa-bell"></i>
-                <span :class="$style.actionButtonText">{{ isRTL ? 'تذكير' : 'Reminder' }}</span>
-              </button>
-
-              <button
-                v-if="survey.status === 'draft'"
-                :class="[$style.actionButton, $style.primaryAction]"
-                @click.stop="submitDraftSurvey(survey.id)"
-                :title="isRTL ? 'إرسال الإيضاحات' : 'Submit Survey'"
-              >
-                <i class="fas fa-paper-plane"></i>
-                <span :class="$style.actionButtonText">{{ isRTL ? 'إرسال' : 'Submit' }}</span>
-              </button>
-
-              <button
-                v-if="survey.status !== 'draft'"
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="viewResponses(survey.id)"
-                :title="t('survey.card.viewResponses')"
-              >
-                <i class="fas fa-eye"></i>
-                <span :class="$style.actionButtonText">{{ t('survey.card.viewResponses') }}</span>
-              </button>
-
-              <button
-                v-if="survey.status === 'draft'"
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="editSurveyWithEditor(survey)"
-                :title="isRTL ? 'تحرير باستخدام المحرر' : 'Edit with Editor'"
-              >
-                <i class="fas fa-pen"></i>
-                <span :class="$style.actionButtonText">{{ isRTL ? 'محرر' : 'Editor' }}</span>
-              </button>
-
-              <button
-                v-if="survey.status === 'submitted' && survey.response_count === 0"
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="manageSurveyAccess(survey)"
-                :title="isRTL ? 'إدارة الوصول' : 'Manage Access'"
-              >
-                <i class="fas fa-share-alt"></i>
-                <span :class="$style.actionButtonText">{{ isRTL ? 'إدارة الوصول' : 'Manage Access' }}</span>
-              </button>
-
-              <button
-                v-if="survey.status !== 'submitted' && survey.status !== 'draft'"
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="manageSurveyAccess(survey)"
-                :title="t('survey.card.manageAccess')"
-              >
-                <i class="fas fa-share-alt"></i>
-                <span :class="$style.actionButtonText">{{ t('survey.card.share') }}</span>
-              </button>
-
-              <button
-                v-if="survey.visibility === 'PUBLIC' && survey.status !== 'draft'"
-                :class="[$style.actionButton, $style.outlinedAction]"
-                @click.stop="openLinkSharingModal(survey)"
-                :title="t('survey.card.shareLink')"
-              >
-                <i class="fas fa-link"></i>
-                <span :class="$style.actionButtonText">{{ t('survey.card.shareLink') }}</span>
-              </button>
-
-              <button
-                v-if="isSuperAdmin"
-                :class="[$style.actionButton, $style.dangerAction]"
-                @click.stop="deleteSurvey(survey.id)"
-                :title="t('survey.card.delete')"
-              >
-                <i class="fas fa-trash"></i>
-                <span :class="$style.actionButtonText">{{ t('survey.card.delete') }}</span>
-              </button>
-            </div>
+      <div :class="$style.heroContent">
+        <div :class="$style.heroText">
+          <div :class="$style.sectionHerto">
+            <h1>{{ t('survey.title') }}</h1>
           </div>
         </div>
 
-        <!-- (Optional) List view preserved for later -->
-        <div :class="$style.surveysList" v-else-if="viewMode === 'list'">
-          <div :class="$style.listHeader">
-            <div :class="$style.listHeaderCheckbox">
-              <input
-                type="checkbox"
-                :class="$style.headerCheckbox"
-                :checked="selectedSurveys?.length === paginatedSurveys?.length && paginatedSurveys?.length > 0"
-                @change="toggleSelectAll"
-              />
-            </div>
-            <div :class="$style.listHeaderTitle">{{ t('survey.list.title') }}</div>
-            <div :class="$style.listHeaderStats">{{ t('survey.list.stats') }}</div>
-            <div :class="$style.listHeaderStatus">{{ t('survey.list.status') }}</div>
-            <div :class="$style.listHeaderDate">{{ t('survey.list.lastUpdated') }}</div>
-            <div :class="$style.listHeaderActions">{{ t('survey.list.actions') }}</div>
+        <div :class="$style.heroActions">
+          <div :class="$style.createButtonContainer" ref="createButtonRef">
+            <button :class="$style.primaryButton" @click="toggleCreateDropdown">
+              <i class="fas fa-plus"></i>
+              {{ t('survey.list.createSurvey') }}
+              <i :class="['fas', showCreateDropdown ? 'fa-chevron-up' : 'fa-chevron-down', $style.dropdownIcon]"></i>
+            </button>
           </div>
 
-          <div
-            v-for="survey in paginatedSurveys"
-            :key="survey.id"
-            :class="[$style.listItem, { [$style.selected]: selectedSurveys?.includes(survey.id) }]"
-            @click="toggleSurveySelection(survey.id)"
-          >
-            <div :class="$style.listItemCheckbox">
-              <input
-                type="checkbox"
-                :class="$style.itemCheckbox"
-                :checked="selectedSurveys?.includes(survey.id)"
-                @click.stop="toggleSurveySelection(survey.id)"
-              />
-            </div>
-
-            <div :class="$style.listItemContent">
-              <h4 :class="$style.listItemTitle">{{ survey.title }}</h4>
-              <p :class="$style.listItemDescription">{{ survey.description }}</p>
-              <div :class="$style.listItemMeta">
-                <span>{{ t('survey.card.createdBy') }}: {{ getCreatorDisplayName(survey.creator_email) }}</span>
-              </div>
-            </div>
-
-            <div :class="$style.listItemStats">
-              <div :class="$style.listStatItem">
-                <i class="fas fa-users" :class="$style.listStatIcon"></i>
-                <span>{{ survey.response_count }}</span>
-              </div>
-              <div :class="$style.listStatItem">
-                <i class="fas fa-question-circle" :class="$style.listStatIcon"></i>
-                <span>{{ survey.questions?.length || 0 }}</span>
-              </div>
-            </div>
-
-            <div :class="$style.listItemStatus">
-              <span :class="[$style.statusBadge, $style[survey.is_active ? 'active' : 'inactive']]">
-                {{ survey.is_active ? t('survey.status.active') : t('survey.status.inactive') }}
-              </span>
-              <span v-if="survey.status === 'draft'" :class="[$style.statusBadge, $style.draft]">
-                {{ isRTL ? 'مسودة' : 'Draft' }}
-              </span>
-              <span v-if="survey.visibility" :class="[$style.statusBadge, $style[survey.visibility.toLowerCase()]]">
-                {{ t(`survey.status.${survey.visibility.toLowerCase()}`) }}
-              </span>
-              <span v-else :class="[$style.statusBadge, $style.private]">
-                {{ t('survey.status.private') }}
-              </span>
-            </div>
-
-            <div :class="$style.listItemDate">
-              {{ formatDate(survey.updated_at, survey.created_at) }}
-            </div>
-
-            <div :class="$style.listItemActions">
-              <div :class="[$style.actionsDropdown, 'actionsDropdown']">
-                <button :class="$style.actionsToggle" @click.stop="toggleActionMenu(survey.id)">
-                  <i class="fas fa-ellipsis-v"></i>
-                </button>
-                <div :class="[$style.actionsMenu, { [$style.active]: activeActionMenu === survey.id }]">
-                  <button :class="$style.actionMenuItem" @click.stop="previewSurveyQuestions(survey)">
-                    <i class="fas fa-eye"></i>
-                    {{ isRTL ? 'معاينة الأسئلة' : 'Preview Questions' }}
-                  </button>
-                  <button v-if="canSendReminder(survey)" :class="$style.actionMenuItem" @click.stop="sendReminder(survey)">
-                    <i class="fas fa-bell"></i>
-                    {{ isRTL ? 'إرسال تذكير' : 'Send Reminder' }}
-                  </button>
-                  <button v-if="survey.status === 'draft'" :class="$style.actionMenuItem" @click.stop="editSurvey(survey)">
-                    <i class="fas fa-edit"></i>
-                    {{ t('survey.card.edit') }}
-                  </button>
-                  <button
-                    v-if="survey.status === 'draft'"
-                    :class="[$style.actionMenuItem, $style.editorAction]"
-                    @click.stop="editSurveyWithEditor(survey)"
-                  >
-                    <i class="fas fa-pen-fancy"></i>
-                    {{ isRTL ? 'محرر' : 'Editor' }}
-                  </button>
-                  <button
-                    v-if="survey.status === 'draft'"
-                    :class="[$style.actionMenuItem, $style.submitAction]"
-                    @click.stop="submitDraftSurvey(survey.id)"
-                  >
-                    <i class="fas fa-paper-plane"></i>
-                    {{ isRTL ? 'إرسال' : 'Submit' }}
-                  </button>
-                  <button
-                    v-if="survey.status === 'submitted' && survey.response_count === 0"
-                    :class="$style.actionMenuItem"
-                    @click.stop="manageSurveyAccess(survey)"
-                  >
-                    <i class="fas fa-share-alt"></i>
-                    {{ isRTL ? 'إدارة الوصول' : 'Manage Access' }}
-                  </button>
-                  <button
-                    v-if="survey.status !== 'submitted' && survey.status !== 'draft'"
-                    :class="$style.actionMenuItem"
-                    @click.stop="manageSurveyAccess(survey)"
-                  >
-                    <i class="fas fa-share-alt"></i>
-                    {{ t('survey.card.share') }}
-                  </button>
-                  <button :class="$style.actionMenuItem" @click.stop="viewResponses(survey.id)">
-                    <i class="fas fa-chart-bar"></i>
-                    {{ t('survey.card.viewResponses') }}
-                  </button>
-                  <button :class="$style.actionMenuItem" @click.stop="cloneSurvey(survey.id)">
-                    <i class="fas fa-copy"></i>
-                    {{ t('survey.card.clone') }}
-                  </button>
-                  <button v-if="isSuperAdmin" :class="[$style.actionMenuItem, $style.danger]" @click.stop="deleteSurvey(survey.id)">
-                    <i class="fas fa-trash"></i>
-                    {{ t('survey.card.delete') }}
-                  </button>
+          <Teleport to="body">
+            <div
+              v-if="showCreateDropdown"
+              :class="$style.createDropdown"
+              :style="dropdownPosition"
+              data-dropdown="create-survey"
+              @mousedown.prevent
+            >
+              <button :class="$style.dropdownItem" @click="createDefaultSurvey">
+                <i class="fas fa-file-alt"></i>
+                <div :class="$style.dropdownItemContent">
+                  <span :class="$style.dropdownItemTitle">{{ isRTL ? 'إيضاحات افتراضي' : 'Default Survey' }}</span>
+                  <span :class="$style.dropdownItemDescription">
+                    {{ isRTL ? 'إنشاء إيضاحات فارغ من البداية' : 'Create a blank survey from scratch' }}
+                  </span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pagination -->
-      <div :class="$style.paginationSection">
-        <div :class="$style.paginationInfo">
-          {{ t('common.pagination.showing') }}
-          {{ paginationRange.start }} - {{ paginationRange.end }}
-          {{ t('common.pagination.of') }} {{ pagination.total }}
-        </div>
-
-        <div :class="$style.paginationControls">
-          <button
-            :class="$style.pageButton"
-            @click="changePage(pagination.currentPage - 1)"
-            :disabled="pagination.currentPage === 1"
-          >
-            <i class="fas fa-chevron-right" v-if="isRTL"></i>
-            <i class="fas fa-chevron-left" v-else></i>
-            {{ t('common.pagination.previous') }}
-          </button>
-
-          <span :class="$style.pageNumbers">
-            <template v-for="page in visiblePages" :key="`page-${page}`">
-              <span v-if="page === -1" :class="$style.ellipsis">…</span>
-              <button
-                v-else
-                :class="[$style.pageNumber, { [$style.pageNumberActive]: page === pagination.currentPage }]"
-                @click="changePage(page)"
-              >
-                {{ page }}
               </button>
-            </template>
-          </span>
 
-          <button
-            :class="$style.pageButton"
-            @click="changePage(pagination.currentPage + 1)"
-            :disabled="!pagination.hasNext && pagination.currentPage >= pagination.totalPages"
-          >
-            {{ t('common.pagination.next') }}
-            <i class="fas fa-chevron-left" v-if="isRTL"></i>
-            <i class="fas fa-chevron-right" v-else></i>
-          </button>
+              <button :class="$style.dropdownItem" @click="openTemplateGallery">
+                <i class="fas fa-layer-group"></i>
+                <div :class="$style.dropdownItemContent">
+                  <span :class="$style.dropdownItemTitle">{{ isRTL ? 'من قالب' : 'From Template' }}</span>
+                  <span :class="$style.dropdownItemDescription">
+                    {{ isRTL ? 'اختر من القوالب الجاهزة أو إيضاحاتاتك السابقة' : 'Choose from ready templates or your previous surveys' }}
+                  </span>
+                </div>
+              </button>
+
+              <button v-if="isSuperOrAdmin" :class="$style.dropdownItem" @click="createTopicFromHero">
+                <i class="fas fa-folder-plus"></i>
+                <div :class="$style.dropdownItemContent">
+                  <span :class="$style.dropdownItemTitle">{{ t('survey.topics.actions.create') }}</span>
+                  <span :class="$style.dropdownItemDescription">{{ t('survey.topics.actions.createHint') }}</span>
+                </div>
+              </button>
+            </div>
+          </Teleport>
         </div>
       </div>
-              </div>
+    </section>
 
-      </section>
+    <!-- KPIs (global, unchanged) -->
+    <SurveyKpiRow v-if="analytics" :analytics="analytics" />
 
-      <!-- Empty -->
-      <div v-if="!isLoading && surveys?.length === 0" :class="$style.emptyState">
-        <div :class="$style.emptyIcon"><i class="fas fa-poll-h"></i></div>
-        <h3 :class="$style.emptyTitle">{{ t('survey.list.noSurveys') }}</h3>
-        <button :class="$style.primaryButton" @click="showCreateModal = true">
-          <i class="fas fa-plus"></i>
-          {{ t('survey.list.createSurvey') }}
-        </button>
-      </div>
+    <!-- Tabs: Topics | Ungrouped | All -->
+    <nav :class="$style.tabsBar" role="tablist" :aria-label="t('survey.topics.tabs.label')">
+      <button
+        v-for="(tab, index) in tabs"
+        :key="tab.key"
+        :ref="el => setTabRef(el, index)"
+        type="button"
+        role="tab"
+        :id="`survey-tab-${tab.key}`"
+        :aria-selected="activeTab === tab.key"
+        :aria-controls="`survey-tabpanel-${tab.key}`"
+        :tabindex="activeTab === tab.key ? 0 : -1"
+        :class="[$style.tabButton, { [$style.tabButtonActive]: activeTab === tab.key }]"
+        @click="setTab(tab.key)"
+        @keydown="onTabKeydown($event, index)"
+      >
+        <i :class="['fas', tab.icon]"></i>
+        <span>{{ tab.label }}</span>
+        <span v-if="tab.count !== null" :class="$style.tabBadge">{{ tab.count }}</span>
+      </button>
+    </nav>
 
-      <!-- Loading -->
-      <div v-if="isLoading" :class="$style.loadingContainer">
-        <div :class="$style.loadingSpinner"></div>
-      </div>
+    <!-- Panels (kept alive so switching tabs preserves filters and scroll) -->
+    <div
+      role="tabpanel"
+      :id="`survey-tabpanel-${activeTab}`"
+      :aria-labelledby="`survey-tab-${activeTab}`"
+    >
+      <KeepAlive>
+        <TopicsBrowser
+          v-if="activeTab === 'topics'"
+          ref="topicsBrowserRef"
+          @open-topic="openTopicPage"
+          @open-survey="viewResponses"
+          @create-survey-in-topic="createSurveyInTopic"
+          @count-change="topicsCount = $event"
+          @changed="refreshAnalytics"
+        />
 
-      <!-- Modals -->
-      <SurveyModal v-if="showCreateModal" :survey="selectedSurveyForEdit" @save="handleSurveySave" @cancel="closeModal" />
+        <SurveyListPanel
+          v-else-if="activeTab === 'ungrouped'"
+          ref="ungroupedPanelRef"
+          topic-id="none"
+          :show-topic-chip="false"
+          :empty-title-override="t('survey.topics.empty.ungrouped')"
+          @analytics="ungroupedAnalytics = $event"
+          @changed="refreshAll"
+          @open-topic="openTopicPage"
+          @create-survey="createDefaultSurvey"
+        />
 
-      <AnalyticsModal v-if="showAnalytics" :analytics="analytics" @close="showAnalytics = false" />
+        <SurveyListPanel
+          v-else
+          ref="allPanelRef"
+          sync-url
+          @analytics="onAllAnalytics"
+          @changed="refreshAll"
+          @open-topic="openTopicPage"
+          @create-survey="createDefaultSurvey"
+        />
+      </KeepAlive>
+    </div>
 
-      <SurveyQuestionsPreviewModal
-        v-if="showQuestionsPreview && selectedSurveyForPreview"
-        :survey="selectedSurveyForPreview"
-        @close="closeQuestionsPreview"
-      />
+    <!-- Modals owned by the shell -->
+    <TemplateGalleryModal
+      v-if="showTemplateGallery"
+      @close="closeTemplateGallery"
+      @template-selected="handleTemplateSelected"
+      @recent-survey-selected="handleRecentSurveySelected"
+      @create-new-template="handleCreateNewTemplate"
+    />
 
-      <SurveyAccessModal
-        v-if="showAccessModal && selectedSurveyForAccess"
-        :survey="selectedSurveyForAccess"
-        :is-submission-flow="isSubmissionFlow"
-        @save="handleAccessSave"
-        @cancel="closeAccessModal"
-      />
-
-      <LinkSharingModal
-        v-if="showLinkSharingModal && selectedSurveyForLinkSharing"
-        :is-visible="showLinkSharingModal"
-        :survey="selectedSurveyForLinkSharing"
-        :public-link="publicLinkForSharing"
-        @close="closeLinkSharingModal"
-        @link-generated="handleLinkGenerated"
-        @status-update="handleStatusUpdate"
-      />
-
-      <TemplateGalleryModal
-        v-if="showTemplateGallery"
-        @close="closeTemplateGallery"
-        @template-selected="handleTemplateSelected"
-        @recent-survey-selected="handleRecentSurveySelected"
-        @create-new-template="handleCreateNewTemplate"
-      />
+    <TopicModal
+      v-if="showTopicModal"
+      @saved="onTopicCreated"
+      @close="showTopicModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, defineComponent, h } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+/**
+ * Survey management shell.
+ *
+ * Layout: hero + the (global) KPI row + three tabs —
+ *   المواضيع     topic cards / tree / relationship map
+ *   غير مجمّعة    surveys with no topic, full survey filters
+ *   الكل          every survey, full survey filters (the original view)
+ *
+ * The survey list itself lives in SurveyListPanel so the Ungrouped tab, the All tab
+ * and the topic page share one implementation of filtering, search, sorting,
+ * pagination, bulk actions and the survey modals.
+ */
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { useAppStore } from '../../stores/useAppStore'
-import { useSimpleAuth } from '../../composables/useSimpleAuth'
-import { surveyService } from '../../services/surveyService'
-import { apiClient } from '../../services/jwtAuthService'
-import type {
-  Survey,
-  SurveyAnalytics,
-  SurveyVisibility,
-  QuestionType,
-  PublicContactMethod,
-  PredefinedTemplate,
-  SurveyTemplate,
-  RecentSurvey
-} from '../../types/survey.types'
-import SurveyModal from '../../components/SurveyModal/SurveyModal.vue'
-import AnalyticsModal from '../../components/AnalyticsModal/AnalyticsModal.vue'
-import SurveyAccessModal from '../../components/SurveyAccessModal/SurveyAccessModal.vue'
-import SurveyQuestionsPreviewModal from '../../components/SurveyQuestionsPreviewModal/SurveyQuestionsPreviewModal.vue'
-import LinkSharingModal from '../../components/LinkSharingModal/LinkSharingModal.vue'
-import TemplateGalleryModal from '../../components/TemplateGalleryModal/TemplateGalleryModal.vue'
 import Swal from 'sweetalert2'
+import { useAppStore } from '@/stores/useAppStore'
+import { useSimpleAuth } from '@/composables/useSimpleAuth'
+import { surveyService } from '@/services/surveyService'
+import type { SurveyAnalytics, PredefinedTemplate, SurveyTemplate, RecentSurvey } from '@/types/survey.types'
+import type { SurveyTopic } from '@/types/topic.types'
+import SurveyKpiRow from '@/components/Survey/SurveyKpiRow.vue'
+import SurveyListPanel from '@/components/Survey/SurveyListPanel.vue'
+import TopicsBrowser from '@/components/Topics/TopicsBrowser.vue'
+import TopicModal from '@/components/Topics/TopicModal.vue'
+import TemplateGalleryModal from '@/components/TemplateGalleryModal/TemplateGalleryModal.vue'
 
-// Router & Store
+type TabKey = 'topics' | 'ungrouped' | 'all'
+
 const router = useRouter()
 const route = useRoute()
 const store = useAppStore()
 const { currentTheme, currentLanguage } = storeToRefs(store)
 const { user: authUser } = useSimpleAuth()
-
-// Theme & i18n
-const isRTL = computed(() => currentLanguage.value === 'ar')
 const t = store.t
+const isRTL = computed(() => currentLanguage.value === 'ar')
 
-// Role check
-const isSuperAdmin = computed(() => authUser.value?.role === 'super_admin')
 const isSuperOrAdmin = computed(() => ['super_admin', 'admin'].includes(authUser.value?.role || ''))
 
-// State
-const surveys = ref<Survey[]>([])
+// Global KPI block (unchanged behaviour: its own endpoint, not tab-scoped)
 const analytics = ref<SurveyAnalytics | null>(null)
-const isLoading = ref(false)
 
-const searchQuery = ref('')
-const selectedFilter = ref('all')
-const selectedSort = ref('newest')
-const viewMode = ref<'grid' | 'list'>('grid')
+const activeTab = ref<TabKey>('topics')
+const topicsCount = ref<number | null>(null)
+const ungroupedAnalytics = ref<{ total_surveys?: number } | null>(null)
+const allCount = ref<number | null>(null)
 
-const selectedSurveys = ref<string[]>([])
-const bulkOperationLoading = ref(false)
-const activeActionMenu = ref<string | null>(null)
+const topicsBrowserRef = ref<InstanceType<typeof TopicsBrowser> | null>(null)
+const ungroupedPanelRef = ref<InstanceType<typeof SurveyListPanel> | null>(null)
+const allPanelRef = ref<InstanceType<typeof SurveyListPanel> | null>(null)
 
-// Admin-only filters
-const groups = ref<{id: number; name: string}[]>([])
-const selectedGroup = ref('')
-const selectedLifecycleStatus = ref('')
+const tabRefs = ref<HTMLElement[]>([])
+const setTabRef = (el: any, index: number) => {
+  if (el) tabRefs.value[index] = el as HTMLElement
+}
 
+const tabs = computed(() => [
+  {
+    key: 'topics' as TabKey,
+    label: t('survey.topics.tabs.topics'),
+    icon: 'fa-folder-tree',
+    count: topicsCount.value,
+  },
+  {
+    key: 'ungrouped' as TabKey,
+    label: t('survey.topics.tabs.ungrouped'),
+    icon: 'fa-inbox',
+    count: ungroupedAnalytics.value?.total_surveys ?? null,
+  },
+  {
+    key: 'all' as TabKey,
+    label: t('survey.topics.tabs.all'),
+    icon: 'fa-clipboard-list',
+    count: allCount.value ?? analytics.value?.total_surveys ?? null,
+  },
+])
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+const setTab = (key: TabKey) => {
+  if (activeTab.value === key) return
+  activeTab.value = key
+  const query = { ...route.query, tab: key }
+  if (key === 'topics') delete (query as any).tab
+  router.replace({ query }).catch(() => {})
+}
+
+const onTabKeydown = (event: KeyboardEvent, index: number) => {
+  const forward = isRTL.value ? 'ArrowLeft' : 'ArrowRight'
+  const backward = isRTL.value ? 'ArrowRight' : 'ArrowLeft'
+  let next = -1
+  if (event.key === forward) next = (index + 1) % tabs.value.length
+  else if (event.key === backward) next = (index - 1 + tabs.value.length) % tabs.value.length
+  else if (event.key === 'Home') next = 0
+  else if (event.key === 'End') next = tabs.value.length - 1
+  if (next < 0) return
+  event.preventDefault()
+  setTab(tabs.value[next].key)
+  nextTick(() => tabRefs.value[next]?.focus())
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────
+const loadAnalytics = async () => {
+  try {
+    const response = await surveyService.getAnalyticsDashboard()
+    analytics.value = response.data
+  } catch {
+    // Leave the KPI row hidden rather than showing invented numbers
+    analytics.value = null
+  }
+}
+
+const refreshAnalytics = () => loadAnalytics()
+
+const refreshAll = async () => {
+  await loadAnalytics()
+  topicsBrowserRef.value?.refresh?.()
+}
+
+const onAllAnalytics = (payload: { total_surveys?: number } | null) => {
+  allCount.value = payload?.total_surveys ?? null
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+const openTopicPage = (topicId: string) => {
+  router.push({ name: 'TopicSurveys', params: { topicId } })
+}
+
+const viewResponses = (surveyId: string) => {
+  router.push({ name: 'SurveyResponses', params: { surveyId } })
+}
+
+const createSurveyInTopic = (topicId: string) => {
+  router.push({ name: 'SurveyCreate', query: { topic: topicId } })
+}
+
+// ── Create dropdown ───────────────────────────────────────────────────────
 const createButtonRef = ref<HTMLElement | null>(null)
 const showCreateDropdown = ref(false)
-
-const showCreateModal = ref(false)
-const showAnalytics = ref(false)
-const showAccessModal = ref(false)
-const showLinkSharingModal = ref(false)
 const showTemplateGallery = ref(false)
-const showQuestionsPreview = ref(false)
+const showTopicModal = ref(false)
 
-const selectedSurveyForEdit = ref<Survey | null>(null)
-const selectedSurveyForAccess = ref<Survey | null>(null)
-const selectedSurveyForLinkSharing = ref<Survey | null>(null)
-const selectedSurveyForPreview = ref<Survey | null>(null)
-const publicLinkForSharing = ref<any | null>(null)
-const isSubmissionFlow = ref(false)
-
-// Pagination
-const currentPage = ref(1)
-const itemsPerPage = ref(10)
-const totalPages = ref(0)
-const totalItems = ref(0)
-const hasNext = ref(false)
-const hasPrevious = ref(false)
-
-// Debounced search
-const debouncedSearch = ref('')
-const searchDebounceTimer = ref<NodeJS.Timeout | null>(null)
-
-// Dropdown absolute position (teleport)
 const dropdownPosition = computed(() => {
   if (!createButtonRef.value) {
     return { position: 'fixed', top: '0px', left: '0px', zIndex: '9999', width: 'auto' } as const
@@ -691,594 +293,15 @@ const dropdownPosition = computed(() => {
     position: 'fixed',
     top: `${rect.bottom + 8}px`,
     zIndex: '9999',
-    width: `${rect.width}px`
+    minWidth: `${rect.width}px`,
   }
   if (isRTL.value) style.right = `${window.innerWidth - rect.right}px`
   else style.left = `${rect.left}px`
   return style
 })
 
-const pagination = computed(() => ({
-  currentPage: currentPage.value,
-  pageSize: itemsPerPage.value,
-  total: totalItems.value,
-  totalPages: totalPages.value,
-  hasNext: hasNext.value,
-  hasPrevious: hasPrevious.value
-}))
+const toggleCreateDropdown = () => { showCreateDropdown.value = !showCreateDropdown.value }
 
-const paginationRange = computed(() => {
-  if (totalItems.value === 0) {
-    return { start: 0, end: 0 }
-  }
-  const start = (currentPage.value - 1) * itemsPerPage.value + 1
-  const end = Math.min(currentPage.value * itemsPerPage.value, totalItems.value)
-  return { start, end }
-})
-
-// Visible page numbers (with ellipsis)
-const visiblePages = computed(() => {
-  const pages: number[] = []
-  if (totalPages.value <= 7) {
-    for (let i = 1; i <= totalPages.value; i++) pages.push(i)
-  } else {
-    pages.push(1)
-    let start = Math.max(2, currentPage.value - 2)
-    let end = Math.min(totalPages.value - 1, currentPage.value + 2)
-    if (start > 2) pages.push(-1)
-    for (let i = start; i <= end; i++) pages.push(i)
-    if (end < totalPages.value - 1) pages.push(-1)
-    if (totalPages.value > 1) pages.push(totalPages.value)
-  }
-  return pages
-})
-
-// API loads
-const loadSurveys = async (resetPage = false) => {
-  try {
-    isLoading.value = true
-    if (resetPage) currentPage.value = 1
-
-    const params: any = {
-      page: currentPage.value,
-      per_page: itemsPerPage.value
-    }
-    if (debouncedSearch.value.trim()) params.search = debouncedSearch.value.trim()
-    if (selectedFilter.value && selectedFilter.value !== 'all') params.survey_status = selectedFilter.value
-    if (selectedSort.value) params.sort_by = selectedSort.value
-    if (selectedGroup.value) params.shared_group = selectedGroup.value
-    if (selectedLifecycleStatus.value) params.lifecycle_status = selectedLifecycleStatus.value
-
-    const response = await surveyService.getAllSurveys(params)
-
-    if (response && 'results' in response) {
-      surveys.value = response.results.filter((s: Survey) => s && s.id).map((s: Survey) => ({ ...s, questions: s.questions || [] }))
-      totalPages.value = response.total_pages || 0
-      const totalCount = response.count ?? response.results?.length ?? 0
-      totalItems.value = typeof totalCount === 'number' ? totalCount : 0
-      itemsPerPage.value = response.per_page ?? itemsPerPage.value
-      currentPage.value = response.current_page ?? currentPage.value
-      if (totalPages.value === 0 && totalItems.value > 0 && itemsPerPage.value > 0) {
-        totalPages.value = Math.ceil(totalItems.value / itemsPerPage.value)
-      }
-      hasNext.value = !!response.next
-      hasPrevious.value = !!response.previous
-    } else {
-      surveys.value = []
-      totalPages.value = 0
-      totalItems.value = 0
-      hasNext.value = false
-      hasPrevious.value = false
-    }
-  } catch (error) {
-    // Fallback demo data for UI
-    surveys.value = [
-      {
-        id: '1',
-        title: 'Customer Satisfaction Survey 2024',
-        description: 'Help us improve our services by sharing your feedback and experience with our products.',
-        visibility: 'PUBLIC' as SurveyVisibility,
-        public_contact_method: 'email' as PublicContactMethod,
-        shared_with: [],
-        creator: 1,
-        creator_email: 'admin@ADJD.com',
-        is_locked: false,
-        is_active: true,
-        start_date: null,
-        end_date: null,
-        status: 'active',
-        is_currently_active: true,
-        created_at: '2024-08-01T10:00:00Z',
-        updated_at: '2024-08-02T15:30:00Z',
-        response_count: 147,
-        shared_with_emails: [],
-        can_submit: true,
-        has_submitted: false,
-        questions: [
-          { id: '1', text: 'How satisfied are you with our service?', question_type: 'rating' as QuestionType, is_required: true, order: 1, options: '', created_at: '', updated_at: '' },
-          { id: '2', text: 'What can we improve?', question_type: 'textarea' as QuestionType, is_required: false, order: 2, options: '', created_at: '', updated_at: '' }
-        ]
-      },
-      {
-        id: '2',
-        title: 'Product Feature Feedback',
-        description: 'Your input on our latest features helps us create better experiences for all users.',
-        visibility: 'AUTH' as SurveyVisibility,
-        shared_with: [1],
-        creator: 2,
-        creator_email: 'product@ADJD.com',
-        is_locked: false,
-        is_active: true,
-        start_date: null,
-        end_date: null,
-        status: 'active',
-        is_currently_active: true,
-        created_at: '2024-07-25T14:20:00Z',
-        updated_at: '2024-08-01T09:45:00Z',
-        response_count: 89,
-        shared_with_emails: ['team@ADJD.com'],
-        can_submit: true,
-        has_submitted: false,
-        questions: [
-          { id: '3', text: 'Which features do you use most?', question_type: 'multiple_choice' as QuestionType, is_required: true, order: 1, options: '["Analytics", "Reports", "Dashboards", "Surveys"]', created_at: '', updated_at: '' }
-        ]
-      },
-      {
-        id: '3',
-        title: 'Employee Engagement Survey',
-        description: 'Internal survey to measure team satisfaction and identify areas for workplace improvement.',
-        visibility: 'PRIVATE' as SurveyVisibility,
-        shared_with: [1, 3],
-        creator: 3,
-        creator_email: 'hr@ADJD.com',
-        is_locked: true,
-        is_active: false,
-        start_date: null,
-        end_date: null,
-        status: 'inactive',
-        is_currently_active: false,
-        created_at: '2024-07-20T08:15:00Z',
-        updated_at: '2024-07-22T16:00:00Z',
-        response_count: 23,
-        shared_with_emails: ['hr@ADJD.com', 'management@ADJD.com'],
-        can_submit: false,
-        has_submitted: false,
-        questions: [
-          { id: '4', text: 'How would you rate your work-life balance?', question_type: 'rating' as QuestionType, is_required: true, order: 1, options: '', created_at: '', updated_at: '' },
-          { id: '5', text: 'Do you feel valued at work?', question_type: 'yes_no' as QuestionType, is_required: true, order: 2, options: '', created_at: '', updated_at: '' }
-        ]
-      }
-    ]
-    totalPages.value = 1
-    totalItems.value = surveys.value.length
-    hasNext.value = false
-    hasPrevious.value = false
-  } finally {
-    isLoading.value = false
-    syncUrlQuery()
-  }
-}
-
-const loadAnalytics = async () => {
-  try {
-    const response = await surveyService.getAnalyticsDashboard()
-    analytics.value = response.data
-  } catch {
-    // Fallback demo analytics
-    analytics.value = {
-      total_surveys: 12,
-      active_surveys: 8,
-      total_responses: 1247,
-      avg_response_rate: 73.5,
-      recent_activity: {
-        new_surveys_this_week: 3,
-        new_responses_this_week: 89
-      },
-      top_surveys: []
-    }
-  }
-}
-
-const refreshData = async () => {
-  await Promise.all([loadSurveys(), loadAnalytics(), loadGroups()])
-}
-
-const loadGroups = async () => {
-  if (!isSuperOrAdmin.value) return
-  try {
-    const res = await apiClient.get('/auth/groups/dropdown/')
-    // API returns { groups: [{id, name}, ...] }
-    const data = res.data?.groups || res.data?.data?.groups || res.data?.data || res.data?.results || []
-    groups.value = Array.isArray(data) ? data : []
-  } catch {
-    groups.value = []
-  }
-}
-
-// Search/Filters/Sorting
-const handleSearch = () => {
-  if (searchDebounceTimer.value) clearTimeout(searchDebounceTimer.value)
-  searchDebounceTimer.value = setTimeout(() => {
-    debouncedSearch.value = searchQuery.value
-    loadSurveys(true)
-  }, 500)
-}
-const applyFilters = () => loadSurveys(true)
-const applySorting = () => loadSurveys(true)
-
-// Pagination actions
-const paginatedSurveys = computed(() => surveys.value || [])
-const goToPage = (page: number) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-    loadSurveys()
-  }
-}
-const changePage = (page: number) => {
-  if (page === currentPage.value) return
-  goToPage(page)
-}
-
-// ── Keep list state (page/filters/search/sort) in the URL ──────────────
-// So that navigating into a survey's responses page and then clicking
-// "Back" (router.go(-1)) returns to the exact page/filter the admin was on,
-// instead of resetting to page 1. Query params we manage here; any other
-// param already in the URL (e.g. the openAccess/surveyId post-publish flow)
-// is left untouched.
-const LIST_QUERY_KEYS = ['page', 'per_page', 'search', 'survey_status', 'sort_by', 'group', 'lifecycle_status']
-
-const buildListQuery = (): Record<string, string> => {
-  const q: Record<string, string> = {}
-  if (currentPage.value > 1) q.page = String(currentPage.value)
-  if (itemsPerPage.value && itemsPerPage.value !== 10) q.per_page = String(itemsPerPage.value)
-  if (debouncedSearch.value.trim()) q.search = debouncedSearch.value.trim()
-  if (selectedFilter.value && selectedFilter.value !== 'all') q.survey_status = selectedFilter.value
-  if (selectedSort.value && selectedSort.value !== 'newest') q.sort_by = selectedSort.value
-  if (selectedGroup.value) q.group = selectedGroup.value
-  if (selectedLifecycleStatus.value) q.lifecycle_status = selectedLifecycleStatus.value
-  return q
-}
-
-const syncUrlQuery = () => {
-  const preserved: Record<string, any> = {}
-  for (const [key, value] of Object.entries(route.query)) {
-    if (!LIST_QUERY_KEYS.includes(key)) preserved[key] = value
-  }
-  router.replace({ query: { ...preserved, ...buildListQuery() } }).catch(() => {})
-}
-
-const restoreListStateFromQuery = () => {
-  const q = route.query
-  const page = Number(q.page)
-  if (!Number.isNaN(page) && page > 0) currentPage.value = page
-  const perPage = Number(q.per_page)
-  if (!Number.isNaN(perPage) && perPage > 0) itemsPerPage.value = perPage
-  if (typeof q.search === 'string') {
-    searchQuery.value = q.search
-    debouncedSearch.value = q.search
-  }
-  if (typeof q.survey_status === 'string') selectedFilter.value = q.survey_status
-  if (typeof q.sort_by === 'string') selectedSort.value = q.sort_by
-  if (typeof q.group === 'string') selectedGroup.value = q.group
-  if (typeof q.lifecycle_status === 'string') selectedLifecycleStatus.value = q.lifecycle_status
-}
-
-
-// Selection & actions
-const toggleSurveySelection = (id: string) => {
-  const idx = selectedSurveys.value.indexOf(id)
-  if (idx > -1) selectedSurveys.value.splice(idx, 1)
-  else selectedSurveys.value.push(id)
-}
-const toggleSelectAll = () => {
-  const current = paginatedSurveys.value
-  if (selectedSurveys.value.length === current.length && current.length > 0) selectedSurveys.value = []
-  else selectedSurveys.value = current.map(s => s.id)
-}
-
-// CRUD helpers
-const editSurvey = (survey: Survey) => {
-  selectedSurveyForEdit.value = survey
-  showCreateModal.value = true
-}
-
-const editSurveyWithEditor = async (survey: Survey) => {
-  router.push({
-    name: 'SurveyEdit',
-    params: { id: survey.id }
-  })
-}
-
-const manageSurveyAccess = (survey: Survey) => {
-  selectedSurveyForAccess.value = survey
-  isSubmissionFlow.value = false
-  showAccessModal.value = true
-}
-
-const previewSurveyQuestions = (survey: Survey) => {
-  selectedSurveyForPreview.value = survey
-  showQuestionsPreview.value = true
-}
-
-const closeQuestionsPreview = () => {
-  showQuestionsPreview.value = false
-  selectedSurveyForPreview.value = null
-}
-
-const openLinkSharingModal = (survey: Survey) => {
-  selectedSurveyForLinkSharing.value = survey
-  publicLinkForSharing.value = null
-  showLinkSharingModal.value = true
-}
-
-const handleAccessSave = async (_data: any) => {
-  // If needed you can wire post-save behavior here
-  showAccessModal.value = false
-  selectedSurveyForAccess.value = null
-  isSubmissionFlow.value = false
-  
-  // ✅ Clear query parameters if they exist
-  if (route.query.openAccess || route.query.surveyId || route.query.isSubmission) {
-    router.replace({ name: 'SurveyControl', query: {} })
-  }
-  
-  await loadSurveys()
-}
-
-const closeAccessModal = () => {
-  showAccessModal.value = false
-  selectedSurveyForAccess.value = null
-  isSubmissionFlow.value = false
-  
-  // ✅ Clear query parameters if they exist
-  if (route.query.openAccess || route.query.surveyId || route.query.isSubmission) {
-    router.replace({ name: 'SurveyControl', query: {} })
-  }
-}
-const closeLinkSharingModal = () => {
-  showLinkSharingModal.value = false
-  selectedSurveyForLinkSharing.value = null
-  publicLinkForSharing.value = null
-}
-const handleLinkGenerated = (link: any) => { publicLinkForSharing.value = link }
-const handleStatusUpdate = (_msg: string, _type: string) => {}
-
-const viewResponses = (surveyId: string | undefined) => {
-  if (!surveyId) return
-  router.push({ name: 'SurveyResponses', params: { surveyId } })
-}
-
-const cloneSurvey = async (surveyId: string) => {
-  try {
-    await surveyService.cloneSurvey(surveyId)
-    await loadSurveys()
-  } catch {
-    Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشل في نسخ الإيضاحات', confirmButtonText: 'موافق' })
-  }
-}
-
-// Reminder is only meaningful for submitted surveys whose audience is an
-// identifiable set of users (AUTH / PRIVATE / GROUPS). PUBLIC is anonymous.
-// Visible only to the survey creator or a super admin (not other admins).
-const canSendReminder = (survey: Survey): boolean => {
-  const isCreator = !!authUser.value?.id && authUser.value.id === survey.creator
-  const isSuper = authUser.value?.role === 'super_admin'
-  return (
-    (isCreator || isSuper) &&
-    survey.status === 'submitted' &&
-    ['AUTH', 'PRIVATE', 'GROUPS'].includes(survey.visibility)
-  )
-}
-
-const sendReminder = async (survey: Survey) => {
-  if (!survey?.id) return
-  const isArabic = store.currentLanguage === 'ar'
-  try {
-    // 1) Preview: how many assigned users have not responded yet
-    const preview = await surveyService.getReminderPreview(survey.id)
-
-    if (!preview.applicable) {
-      Swal.fire({
-        icon: 'info',
-        title: isArabic ? 'غير متاح' : 'Not available',
-        text: isArabic
-          ? 'التذكير متاح فقط للإيضاحات المرسلة المشاركة مع مستخدمين أو مجموعات.'
-          : 'Reminders are only available for submitted surveys shared with users or groups.',
-        confirmButtonText: isArabic ? 'موافق' : 'OK'
-      })
-      return
-    }
-
-    if (preview.count === 0) {
-      Swal.fire({
-        icon: 'info',
-        title: isArabic ? 'لا يوجد مستخدمون' : 'No pending users',
-        text: isArabic
-          ? 'جميع المستخدمين المعنيين قد استجابوا بالفعل لهذا الإيضاح.'
-          : 'All assigned users have already responded to this survey.',
-        confirmButtonText: isArabic ? 'موافق' : 'OK'
-      })
-      return
-    }
-
-    // 2) Confirmation with the count only
-    const result = await Swal.fire({
-      icon: 'question',
-      title: isArabic ? 'تأكيد إرسال التذكير' : 'Confirm reminder',
-      text: isArabic
-        ? `هل أنت متأكد أنك تريد إرسال تذكير إلى ${preview.count} مستخدم لم يستجيبوا لهذا الإيضاح؟`
-        : `Are you sure you want to send a reminder to ${preview.count} user(s) who have not responded?`,
-      showCancelButton: true,
-      confirmButtonText: isArabic ? 'نعم، أرسل التذكير' : 'Yes, send reminder',
-      cancelButtonText: isArabic ? 'إلغاء' : 'Cancel',
-      confirmButtonColor: '#A17D23',
-      cancelButtonColor: '#6b7280'
-    })
-    if (!result.isConfirmed) return
-
-    // 3) Fire the send (emails go out in the background on the server)
-    const { count } = await surveyService.sendReminder(survey.id)
-    Swal.fire({
-      icon: 'success',
-      title: isArabic ? 'تم الإرسال' : 'Sent',
-      text: isArabic
-        ? `تم إرسال التذكير إلى ${count} مستخدم بنجاح.`
-        : `Reminder sent to ${count} user(s) successfully.`,
-      confirmButtonText: isArabic ? 'موافق' : 'OK'
-    })
-  } catch (error: any) {
-    Swal.fire({
-      icon: 'error',
-      title: isArabic ? 'خطأ' : 'Error',
-      text: error?.message || (isArabic ? 'فشل في إرسال التذكير' : 'Failed to send reminder'),
-      confirmButtonText: isArabic ? 'موافق' : 'OK'
-    })
-  }
-}
-
-const deleteSurvey = async (surveyId: string | undefined) => {
-  if (!surveyId) return
-  const result = await Swal.fire({
-    icon: 'warning',
-    title: 'تأكيد الحذف',
-    text: 'هل أنت متأكد من أنك تريد حذف هذا الإيضاحات؟',
-    showCancelButton: true,
-    confirmButtonText: 'نعم، احذف',
-    cancelButtonText: 'إلغاء',
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6'
-  })
-  if (result.isConfirmed) {
-    try {
-      await surveyService.deleteSurvey(surveyId)
-      await Promise.all([loadSurveys(), loadAnalytics()])
-      Swal.fire({ icon: 'success', title: 'تم الحذف', text: 'تم حذف الإيضاحات بنجاح', confirmButtonText: 'موافق' })
-    } catch (error: any) {
-      const msg = error?.message || 'فشل في حذف الإيضاحات'
-      Swal.fire({ icon: 'error', title: 'خطأ', text: msg, confirmButtonText: 'موافق' })
-    }
-  }
-}
-
-const submitDraftSurvey = async (surveyId: string) => {
-  try {
-    const isArabic = store.currentLanguage === 'ar'
-    const survey = surveys.value.find(s => s.id === surveyId)
-    if (!survey) throw new Error(isArabic ? 'لم يتم العثور على الإيضاحات' : 'Survey not found')
-
-    selectedSurveyForAccess.value = survey
-    isSubmissionFlow.value = true
-    showAccessModal.value = true
-    ;(survey as any)._isSubmissionFlow = true
-  } catch (error: any) {
-    const isArabic = store.currentLanguage === 'ar'
-    Swal.fire({ title: isArabic ? 'خطأ' : 'Error', text: error.message || (isArabic ? 'حدث خطأ' : 'An error occurred'), icon: 'error', confirmButtonText: isArabic ? 'موافق' : 'OK' })
-  }
-}
-
-const handleSurveySave = async (surveyData: any, existingSurvey?: any) => {
-  try {
-    if (existingSurvey) {
-      closeModal()
-      await Promise.all([loadSurveys(), loadAnalytics()])
-      return
-    }
-
-    if (selectedSurveyForEdit.value) {
-      await surveyService.updateSurvey(selectedSurveyForEdit.value.id, surveyData)
-    } else {
-      const surveyResponse = await surveyService.createSurvey({
-        title: surveyData.title,
-        description: surveyData.description,
-        visibility: surveyData.visibility || 'AUTH',
-        is_active: surveyData.is_active
-      })
-
-      if (surveyData.questions?.length) {
-        const surveyId = surveyResponse.data.id
-        for (const q of surveyData.questions) {
-          try {
-            await surveyService.addQuestion(surveyId, {
-              text: q.text,
-              question_type: q.question_type,
-              options: q.options,
-              is_required: q.is_required || false,
-              order: q.order
-            })
-          } catch { /* continue */ }
-        }
-      }
-    }
-
-    closeModal()
-    await Promise.all([loadSurveys(), loadAnalytics()])
-  } catch {
-    Swal.fire({
-      icon: 'error',
-      title: 'خطأ',
-      text: selectedSurveyForEdit.value ? 'فشل في تحديث الإيضاحات' : 'فشل في إنشاء الإيضاحات',
-      confirmButtonText: 'موافق'
-    })
-  }
-}
-
-const closeModal = () => {
-  showCreateModal.value = false
-  selectedSurveyForEdit.value = null
-}
-
-// Bulk ops
-const bulkActivate = async () => performBulkOperation('activate')
-const bulkDeactivate = async () => performBulkOperation('deactivate')
-const bulkDelete = async () => {
-  const count = selectedSurveys.value?.length || 0
-  const result = await Swal.fire({
-    icon: 'warning',
-    title: 'تأكيد الحذف الجماعي',
-    text: `هل أنت متأكد من أنك تريد حذف ${count} إيضاحات؟`,
-    showCancelButton: true,
-    confirmButtonText: 'نعم، احذف الكل',
-    cancelButtonText: 'إلغاء',
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6'
-  })
-  if (result.isConfirmed) await performBulkOperation('delete')
-}
-const performBulkOperation = async (operation: string) => {
-  try {
-    bulkOperationLoading.value = true
-    await surveyService.performBulkOperation({ operation: operation as any, survey_ids: selectedSurveys.value || [] })
-    selectedSurveys.value = []
-    await Promise.all([loadSurveys(), loadAnalytics()])
-
-    let msg = ''
-    if (operation === 'activate') msg = 'تم تفعيل إيضاحات بنجاح'
-    else if (operation === 'deactivate') msg = 'تم إلغاء تفعيل إيضاحات بنجاح'
-    else if (operation === 'delete') msg = 'تم حذف إيضاحات بنجاح'
-    else msg = 'تمت العملية بنجاح'
-    Swal.fire({ icon: 'success', title: 'نجحت العملية', text: msg, confirmButtonText: 'موافق' })
-  } catch {
-    Swal.fire({ icon: 'error', title: 'خطأ', text: 'فشلت العملية الجماعية', confirmButtonText: 'موافق' })
-  } finally {
-    bulkOperationLoading.value = false
-  }
-}
-
-// Utils
-const formatDate = (dateString: string | null | undefined, fallbackDate?: string | null) => {
-  const dateToUse = dateString || fallbackDate
-  if (!dateToUse) return isRTL.value ? 'تاريخ غير متاح' : 'Date not available'
-  const date = new Date(dateToUse)
-  if (isNaN(date.getTime())) return isRTL.value ? 'تاريخ غير صحيح' : 'Invalid date'
-  const locale = isRTL.value ? 'ar-SA' : 'en-US'
-  return date.toLocaleDateString(locale, { calendar: 'gregory' })
-}
-const getCreatorDisplayName = (email: string | null) => (email ? email : isRTL.value ? 'هذا الشخص لم يعد متاح' : 'This person is no longer available')
-
-// Create dropdown
-const toggleCreateDropdown = () => {
-  showCreateDropdown.value = !showCreateDropdown.value
-}
 const handleDropdownClickOutside = (e: MouseEvent) => {
   if (!showCreateDropdown.value) return
   const target = e.target as Element
@@ -1287,37 +310,53 @@ const handleDropdownClickOutside = (e: MouseEvent) => {
     if (dropdown && !dropdown.contains(target)) showCreateDropdown.value = false
   }
 }
+
 const createDefaultSurvey = () => {
   showCreateDropdown.value = false
   router.push({ name: 'SurveyCreate' })
 }
+
+const createTopicFromHero = () => {
+  showCreateDropdown.value = false
+  showTopicModal.value = true
+}
+
+const onTopicCreated = async (topic: SurveyTopic) => {
+  showTopicModal.value = false
+  setTab('topics')
+  await nextTick()
+  topicsBrowserRef.value?.refresh?.()
+  const isArabic = currentLanguage.value === 'ar'
+  Swal.fire({
+    icon: 'success',
+    title: isArabic ? 'تم إنشاء الموضوع' : 'Topic created',
+    text: isArabic ? `تم إنشاء الموضوع «${topic.name}».` : `Topic "${topic.name}" was created.`,
+    confirmButtonText: isArabic ? 'موافق' : 'OK',
+    confirmButtonColor: '#A17D23',
+  })
+}
+
 const openTemplateGallery = () => {
   showCreateDropdown.value = false
   showTemplateGallery.value = true
 }
 const closeTemplateGallery = () => { showTemplateGallery.value = false }
+
 const handleTemplateSelected = (template: PredefinedTemplate | SurveyTemplate) => {
-  closeTemplateGallery()
-  router.push({ 
-    name: 'SurveyCreate',
-    query: {
-      templateId: template.id,
-      type: 'name' in template ? 'predefined' : 'custom'
-    }
-  })
-}
-const handleRecentSurveySelected = async (survey: RecentSurvey) => {
   closeTemplateGallery()
   router.push({
     name: 'SurveyCreate',
-    query: {
-      templateId: survey.id,
-      type: 'recent'
-    }
+    query: { templateId: template.id, type: 'name' in template ? 'predefined' : 'custom' },
   })
 }
+
+const handleRecentSurveySelected = (survey: RecentSurvey) => {
+  closeTemplateGallery()
+  router.push({ name: 'SurveyCreate', query: { templateId: survey.id, type: 'recent' } })
+}
+
 const handleCreateNewTemplate = () => {
-  const isArabic = store.currentLanguage === 'ar'
+  const isArabic = currentLanguage.value === 'ar'
   Swal.fire({
     icon: 'info',
     title: isArabic ? 'إنشاء قالب محدد مسبقاً' : 'Create Predefined Template',
@@ -1326,190 +365,39 @@ const handleCreateNewTemplate = () => {
       : 'The survey editor will open where you can create a new template.<br><br>After creating the template, it will be saved as a predefined template available to all users.',
     confirmButtonText: isArabic ? 'متابعة' : 'Continue',
     showCancelButton: true,
-    cancelButtonText: isArabic ? 'إلغاء' : 'Cancel'
-  }).then((r) => {
-    if (r.isConfirmed) {
+    cancelButtonText: isArabic ? 'إلغاء' : 'Cancel',
+  }).then(result => {
+    if (result.isConfirmed) {
       closeTemplateGallery()
-      router.push({
-        name: 'SurveyCreate',
-        query: { createTemplate: 'true' }
-      })
+      router.push({ name: 'SurveyCreate', query: { createTemplate: 'true' } })
     }
   })
 }
 
-// List actions menu
-const toggleActionMenu = (id: string) => {
-  activeActionMenu.value = activeActionMenu.value === id ? null : id
-}
-const handleClickOutside = (e: Event) => {
-  const target = e.target as Element
-  if (!target.closest('.actionsDropdown')) activeActionMenu.value = null
-}
-
-// Lifecycle
+// ── Lifecycle ─────────────────────────────────────────────────────────────
 onMounted(async () => {
-  restoreListStateFromQuery()
-  refreshData()
-  document.addEventListener('click', handleClickOutside)
+  const tabParam = route.query.tab
+  if (typeof tabParam === 'string' && ['topics', 'ungrouped', 'all'].includes(tabParam)) {
+    activeTab.value = tabParam as TabKey
+  }
+
   document.addEventListener('click', handleDropdownClickOutside)
-  
-  // Check if we need to open access modal (from redirect after publish)
+  await loadAnalytics()
+
+  // Post-publish redirect: open the access modal on the "All" tab
   if (route.query.openAccess === 'true' && route.query.surveyId) {
+    activeTab.value = 'all'
+    await nextTick()
     const surveyId = route.query.surveyId as string
-    
-    // First, try to find the survey in the existing list
-    let survey = surveys.value.find(s => s.id === surveyId)
-    
-    // If not found (new draft), fetch it from the API
-    if (!survey) {
-      try {
-        const response = await surveyService.getSurvey(surveyId)
-        survey = response.data
-      } catch (error) {
-        console.error('Failed to load survey for access modal:', error)
-      }
-    }
-    
-    if (survey) {
-      selectedSurveyForAccess.value = survey
-      isSubmissionFlow.value = route.query.isSubmission === 'true'
-      showAccessModal.value = true
-      
-      // ✅ Clear query parameters to prevent modal from reopening on refresh
-      router.replace({ name: 'SurveyControl', query: {} })
-    }
+    const isSubmission = route.query.isSubmission === 'true'
+    await allPanelRef.value?.openAccessModalForSurvey?.(surveyId, isSubmission)
+    router.replace({ name: 'SurveyControl', query: {} }).catch(() => {})
   }
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('click', handleDropdownClickOutside)
-  if (searchDebounceTimer.value) clearTimeout(searchDebounceTimer.value)
 })
-
-const IconBadgeCheck = defineComponent({
-  name: 'IconBadgeCheck',
-  setup() {
-    return () =>
-      h(
-        'svg',
-        {
-          width: 24,
-          height: 24,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          xmlns: 'http://www.w3.org/2000/svg',
-          'aria-hidden': 'true',
-          focusable: 'false',
-        },
-        [
-          h('path', {
-            d: 'M3 10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H13C16.7712 2 18.6569 2 19.8284 3.17157C21 4.34315 21 6.22876 21 10V14C21 17.7712 21 19.6569 19.8284 20.8284C18.6569 22 16.7712 22 13 22H11C7.22876 22 5.34315 22 4.17157 20.8284C3 19.6569 3 17.7712 3 14V10Z',
-            stroke: '#181B25',
-            'stroke-width': '1.5',
-          }),
-          h('path', {
-            d: 'M8 10H16',
-            stroke: '#181B25',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-          }),
-          h('path', {
-            d: 'M8 14H13',
-            stroke: '#181B25',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-          }),
-        ]
-      )
-  },
-})
- const IconBadgeCheck2 = defineComponent({
-  name: 'IconBadgeCheck',
-  setup() {
-    return () =>
-      h(
-        'svg',
-        {
-          width: 24,
-          height: 24,
-          viewBox: '0 0 24 24',
-          fill: 'none',
-          xmlns: 'http://www.w3.org/2000/svg',
-          'aria-hidden': 'true',
-          focusable: 'false',
-        },
-        [
-          h('path', {
-            d: 'M3 10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H13C16.7712 2 18.6569 2 19.8284 3.17157C21 4.34315 21 6.22876 21 10V14C21 17.7712 21 19.6569 19.8284 20.8284C18.6569 22 16.7712 22 13 22H11C7.22876 22 5.34315 22 4.17157 20.8284C3 19.6569 3 17.7712 3 14V10Z',
-            stroke: '#181B25',
-            'stroke-width': '1.5',
-          }),
-          h('path', {
-            d: 'M8 10H16',
-            stroke: '#181B25',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-          }),
-          h('path', {
-            d: 'M8 14H13',
-            stroke: '#181B25',
-            'stroke-width': '1.5',
-            'stroke-linecap': 'round',
-          }),
-          h('rect', {
-            x: '17',
-            y: '0',
-            width: '5',
-            height: '5',
-            rx: '2.5',
-            fill: '#D44333',
-          }),
-        ]
-      )
-  },
-})
-
-/* --- computed cards --- */
-const kpiCards = computed(() => {
-  const a = analytics.value
-  const rtl = isRTL.value
-
-  // if backend doesn’t send trends, default to +10
-  const trends: Record<string, number | undefined> = (a as any)?.trends || {}
-
-  return [
-    {
-      key: 'total',
-      title: rtl ? 'إجمالي إيضاحات' : 'Total surveys',
-      value: a?.total_surveys ?? 0,
-      trend: trends.total ?? null,
-      icon: IconBadgeCheck,
-      dot: false
-    },
- 
-    {
-      key: 'active',
-      title: rtl ? 'إيضاحات النشطة' : 'Active surveys',
-      value: a?.active_surveys ?? 0,
-      trend: trends.active ?? null,
-      icon: IconBadgeCheck2,   // with notification dot
-      dot: true
-    },
-    {
-      key: 'responses',
-      title: rtl ? 'إجمالي الردود' : 'Total responses',
-      value: a?.total_responses ?? 0,
-      trend: trends.responses ?? null,
-      icon: IconBadgeCheck,
-      dot: false
-    }
-  ]
-})
-
 </script>
 
-<style module src="./SurveyControl.module.css">
-
-</style>
+<style module src="./SurveyControl.module.css"></style>

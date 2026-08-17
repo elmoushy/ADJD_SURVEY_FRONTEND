@@ -123,11 +123,11 @@
     "heroTitle": "WPC | ADJD",
     "heroDescription": "استمتع بالجيل القادم من الأنظمة السحابية الآمنة المصممة للتميز العسكري والعمليات الاستراتيجية. توفر منصتنا أماناً لا مثيل له، واستخبارات في الوقت الفعلي، وقدرات تعاون سلسة للمنظمات الدفاعية في جميع أنحاء العالم.",
     "greeting": "مرحباً بك في",
-    "staticText": "WPC ADJD", 
+    "staticText": "WPC ADJD",
     "animatedTexts": {
       "innovation": "الابتكار",
       "security": "الأمان",
-      "cloudPower": "القوة السحابية", 
+      "cloudPower": "القوة السحابية",
       "excellence": "التميز"
     },
     "servicesTitle": "خدماتنا",
@@ -715,7 +715,11 @@
       "delete": "حذف",
       "responses": "ردود",
       "createdBy": "أنشئ بواسطة",
-      "manageAccess": "إدارة الوصول"
+      "manageAccess": "إدارة الوصول",
+      "preview": "معاينة",
+      "reminder": "تذكير",
+      "editor": "محرر",
+      "submit": "إرسال"
     },
     "status": {
       "active": "نشط",
@@ -1026,6 +1030,127 @@
         "includeIncomplete": "تضمين الردود غير المكتملة",
         "confirm": "تصدير الردود"
       }
+    },
+    "topics": {
+      "title": "المواضيع",
+      "searchPlaceholder": "البحث في المواضيع...",
+      "breadcrumbLabel": "مسار التنقل",
+      "tabs": {
+        "label": "أقسام إدارة الإيضاحات",
+        "topics": "المواضيع",
+        "ungrouped": "غير مجمّعة",
+        "all": "الكل"
+      },
+      "views": {
+        "label": "طريقة العرض",
+        "grid": "شبكة",
+        "tree": "شجرة"
+      },
+      "sorting": {
+        "nameAsc": "الاسم أ-ي",
+        "nameDesc": "الاسم ي-أ",
+        "mostSurveys": "الأكثر إيضاحات"
+      },
+      "filters": {
+        "activeTopics": "المواضيع النشطة",
+        "archivedTopics": "المواضيع المؤرشفة",
+        "allTopics": "جميع المواضيع",
+        "allGroups": "جميع المجموعات",
+        "allStatuses": "جميع الحالات",
+        "published": "منشور",
+        "expired": "منتهي"
+      },
+      "card": {
+        "surveys": "إيضاحات",
+        "active": "نشط",
+        "subtopics": "موضوع فرعي",
+        "totalWithSub": "مع الفرعية",
+        "archived": "مؤرشف",
+        "openTopic": "فتح الموضوع"
+      },
+      "actions": {
+        "open": "فتح",
+        "create": "إنشاء موضوع",
+        "createHint": "أنشئ موضوعاً لتجميع الإيضاحات المرتبطة ببعضها",
+        "edit": "تعديل الموضوع",
+        "delete": "حذف الموضوع",
+        "archive": "أرشفة",
+        "unarchive": "إلغاء الأرشفة",
+        "pin": "تثبيت",
+        "unpin": "إلغاء التثبيت",
+        "addSubtopic": "إضافة موضوع فرعي",
+        "createSurveyInside": "إنشاء إيضاحات في هذا الموضوع",
+        "newSurvey": "إيضاحات جديد",
+        "addToTopic": "إضافة إلى موضوع",
+        "removeFromTopic": "إزالة من الموضوع",
+        "assignHint": "إضافة هذا الإيضاحات إلى موضوع",
+        "removeHint": "إزالة هذا الإيضاحات من الموضوع (لن يتم حذفه)",
+        "setTopic": "تحديد الموضوع",
+        "clearTopic": "إزالة الموضوع",
+        "includeSubtopics": "تضمين المواضيع الفرعية",
+        "backToTopics": "العودة إلى المواضيع",
+        "clearFilters": "إعادة تعيين البحث",
+        "expand": "توسيع",
+        "collapse": "تصغير",
+        "previewQuestions": "معاينة الأسئلة",
+        "reminderHint": "إرسال تذكير لغير المستجيبين"
+      },
+      "empty": {
+        "topics": "لا توجد مواضيع بعد",
+        "noMatches": "لا توجد نتائج مطابقة",
+        "ungrouped": "لا توجد إيضاحات غير مجمّعة",
+        "surveysInTopic": "لا توجد إيضاحات في هذا الموضوع بعد"
+      },
+      "modal": {
+        "createTitle": "موضوع جديد",
+        "editTitle": "تعديل الموضوع",
+        "subtitle": "الموضوع الرئيسي يجمع الإيضاحات المرتبطة، ويمكن تقسيمه إلى مواضيع فرعية",
+        "name": "اسم الموضوع",
+        "namePlaceholder": "مثال: تجربة العميل",
+        "description": "الوصف",
+        "descriptionPlaceholder": "وصف مختصر لمحتوى الموضوع (اختياري)",
+        "parent": "الموضوع الأب",
+        "noParent": "موضوع رئيسي (بدون أب)",
+        "parentHint": "المواضيع الفرعية مسموحة لمستوى واحد فقط (موضوع رئيسي ← موضوع فرعي)",
+        "depthLimit": "موضوع فرعي بالفعل",
+        "duplicateName": "يوجد موضوع بنفس هذا الاسم",
+        "color": "اللون",
+        "icon": "الأيقونة",
+        "pin": "تثبيت الموضوع في أعلى القائمة",
+        "pinHint": "المواضيع المثبتة تظهر أولاً في جميع طرق العرض"
+      },
+      "picker": {
+        "title": "اختيار الموضوع",
+        "subtitle": "اختر الموضوع الذي ستُجمع فيه الإيضاحات",
+        "searchPlaceholder": "ابحث عن موضوع...",
+        "noTopic": "بدون موضوع",
+        "noTopicHint": "ستظهر الإيضاحات في تبويب «غير مجمّعة»",
+        "createNew": "إنشاء موضوع جديد"
+      },
+      "assignedUsers": {
+        "title": "المستخدمون المعينون",
+        "users": "مستخدم",
+        "groups": "مجموعات",
+        "groupsLabel": "المجموعات:",
+        "responded": "أجاب",
+        "pending": "في الانتظار",
+        "filterAll": "الكل",
+        "searchPlaceholder": "ابحث عن مستخدم...",
+        "viaGroup": "عبر مجموعة",
+        "publicShort": "إيضاحات عام",
+        "publicNotice": "هذا الإيضاحات عام عبر رابط، ولا يوجد مستخدمون معينون له.",
+        "allAuthNotice": "هذا الإيضاحات متاح لجميع المستخدمين المصادقين —",
+        "emptyNotice": "لم يتم تعيين مستخدمين لهذا الإيضاحات بعد. استخدم «إدارة الوصول» لتحديدهم.",
+        "noMatches": "لا يوجد مستخدمون مطابقون",
+        "loadFailed": "فشل في تحميل المستخدمين المعينين"
+      },
+      "errors": {
+        "loadFailed": "فشل في تحميل المواضيع",
+        "saveFailed": "فشل في حفظ الموضوع",
+        "createFailed": "فشل في إنشاء الموضوع",
+        "deleteFailed": "فشل في حذف الموضوع",
+        "notFound": "الموضوع غير موجود أو تم حذفه"
+      }
     }
   },
   "surveys": {
@@ -1094,12 +1219,12 @@
       "regularUsers": "المستخدمون العاديون",
       "recentActivity": "النشاط الأخير"
     },
-  "users": {
-    "title": "المستخدمون",
-    "addUser": "إضافة مستخدم",
-    "headerTitle": "المستخدمون",
-    "headerSubtitle": "افحص كل المستخدمين وأضفهم وعدّل عليهم بسهولة من مكان واحد.",
-    "inviteUser": "دعوة مستخدم",
+    "users": {
+      "title": "المستخدمون",
+      "addUser": "إضافة مستخدم",
+      "headerTitle": "المستخدمون",
+      "headerSubtitle": "افحص كل المستخدمين وأضفهم وعدّل عليهم بسهولة من مكان واحد.",
+      "inviteUser": "دعوة مستخدم",
       "searchUsers": "البحث عن المستخدمين...",
       "noUsersFound": "لا توجد مستخدمون",
       "selectedUsers": "المستخدمون المحددون",
@@ -1136,12 +1261,12 @@
         "bulkDelete": "حذف جماعي"
       }
     },
-  "groups": {
-    "title": "المجموعات",
-    "addGroup": "إضافة مجموعة",
-    "headerTitle": "المجموعات",
-    "headerSubtitle": "رتب فرقك وخصص الأعضاء وتابع نشاط كل مجموعة بسهولة من مكان واحد.",
-    "searchGroups": "البحث عن المجموعات...",
+    "groups": {
+      "title": "المجموعات",
+      "addGroup": "إضافة مجموعة",
+      "headerTitle": "المجموعات",
+      "headerSubtitle": "رتب فرقك وخصص الأعضاء وتابع نشاط كل مجموعة بسهولة من مكان واحد.",
+      "searchGroups": "البحث عن المجموعات...",
       "noGroupsFound": "لا توجد مجموعات",
       "selectedGroups": "المجموعات المحددة",
       "columns": {

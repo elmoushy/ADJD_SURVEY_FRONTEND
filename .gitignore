@@ -30,3 +30,4 @@ coverage
 *.tsbuildinfo
 
 *.md
+HTTP_ONLY_SETUP.md

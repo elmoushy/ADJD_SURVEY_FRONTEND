@@ -55,6 +55,7 @@ const PasswordProtectedSurveyView = () =>
 const AuthSurveyView = () => import("../pages/Survey/AuthSurveyView.vue");
 const MySurveyResponse = () => import("../pages/Survey/MySurveyResponse.vue");
 const SurveyEditorPage = () => import("../pages/Control/SurveyEditorPage.vue");
+const TopicSurveys = () => import("../pages/Control/TopicSurveys.vue");
 
 // Notifications
 const Notifications = () => import("../pages/Notifications");
@@ -174,6 +175,19 @@ const routes: RouteRecordRaw[] = [
     component: SurveyControl,
     meta: {
       title: "Survey Management - WPC | ADJD App",
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    // Topic ("موضوع") drill-down page: KPIs + full filters scoped to one topic.
+    // Declared before /control/surveys/:surveyId-style routes so the static
+    // "topics" segment always wins.
+    path: "/control/surveys/topics/:topicId",
+    name: "TopicSurveys",
+    component: TopicSurveys,
+    meta: {
+      title: "Topic Surveys - WPC | ADJD App",
       requiresAuth: true,
       requiresAdmin: true,
     },

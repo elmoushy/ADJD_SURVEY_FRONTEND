@@ -258,6 +258,13 @@ export interface Survey {
   has_submitted?: boolean
   created_at: string
   updated_at: string
+  // Topic grouping ("موضوع"). `topic` is writable; the rest are read-only mirrors
+  // the API returns so a card can render without an extra request.
+  topic?: string | null
+  topic_name?: string | null
+  topic_color?: string | null
+  topic_icon?: string | null
+  topic_breadcrumb?: Array<{ id: string; name: string }>
 }
 
 // Survey creation/update request
@@ -270,6 +277,7 @@ export interface SurveyCreateRequest {
   start_date?: string | null
   end_date?: string | null
   questions?: QuestionCreateRequest[] // Optional questions array for frontend use
+  topic?: string | null // Topic ("موضوع") this survey is filed under
 }
 
 export interface SurveyUpdateRequest {
