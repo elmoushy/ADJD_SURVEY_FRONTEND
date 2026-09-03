@@ -114,6 +114,12 @@ body {
   text-align: right !important;
 }
 
+/* Centered title variant — aligned under the status icon rather than the RTL
+   default, used where the title is a single short word (e.g. "خطأ"). */
+.swal-title-center {
+  text-align: center !important;
+}
+
 .swal-rtl-content {
   text-align: right !important;
 }

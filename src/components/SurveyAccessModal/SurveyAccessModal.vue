@@ -410,10 +410,10 @@
         </div>
 
         <!-- Status Message -->
-        <!-- <div v-if="statusMessage" :class="[$style.statusMessage, statusMessage.type]">
+        <div v-if="statusMessage" :class="[$style.statusMessage, $style[statusMessage.type]]">
           <i :class="statusMessage.icon"></i>
           <span>{{ statusMessage.text }}</span>
-        </div> -->
+        </div>
       </div>
 
       <!-- Footer -->
@@ -456,6 +456,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import Swal from 'sweetalert2'
 import { useAppStore } from '../../stores/useAppStore'
 import { surveyService } from '../../services/surveyService'
 import LinkSharingModal from '../LinkSharingModal/LinkSharingModal.vue'
@@ -776,6 +777,28 @@ const clearStatusMessage = () => {
   statusMessage.value = null
 }
 
+// Known backend error strings translated for Arabic display. The API always
+// answers in English (surveys/views.py uniform_response) — this only maps
+// error text this modal is known to receive; anything unrecognized is shown
+// as-is rather than risk mistranslating a message we don't control.
+const translateAccessErrorToArabic = (message: string): string => {
+  if (message.startsWith('You can only modify surveys you created')) {
+    return message.includes('orphaned surveys can be managed by admin/manager/super admin')
+      ? 'يمكنك تعديل الاستطلاعات التي أنشأتها فقط (يمكن لمسؤول النظام إدارة الاستطلاعات غير المرتبطة بمنشئ)'
+      : 'يمكنك تعديل الاستطلاعات التي أنشأتها فقط'
+  }
+  if (message === 'Survey not found') {
+    return 'الاستطلاع غير موجود'
+  }
+  if (message === 'Cannot modify locked survey') {
+    return 'لا يمكن تعديل استطلاع مقفل'
+  }
+  if (message === 'Failed to save access settings') {
+    return 'فشل حفظ إعدادات الوصول'
+  }
+  return message
+}
+
 // LinkSharingModal Methods
 const closeLinkSharingModal = () => {
   isLinkSharingModalVisible.value = false
@@ -1086,7 +1109,7 @@ const handleSave = async () => {
     }
   } catch (error: any) {
     // Logging removed for production
-    
+
     // Enhanced error handling based on API response
     let errorMessage = 'Failed to save access settings'
     if (error.response?.data?.message) {
@@ -1098,8 +1121,28 @@ const handleSave = async () => {
     } else if (error.message) {
       errorMessage = error.message
     }
-    
-    setStatusMessage(errorMessage, 'error')
+
+    const isArabic = currentLanguage.value === 'ar'
+    if (isArabic) {
+      errorMessage = translateAccessErrorToArabic(errorMessage)
+    }
+
+    // Close the modal and surface the failure the same way the rest of the
+    // app reports errors (SweetAlert2, RTL-themed) — the inline status banner
+    // is never seen once the modal closes.
+    emit('cancel')
+    Swal.fire({
+      icon: 'error',
+      title: isArabic ? 'خطأ' : 'Error',
+      text: errorMessage,
+      confirmButtonText: isArabic ? 'موافق' : 'OK',
+      confirmButtonColor: '#dc3545',
+      customClass: {
+        popup: 'swal-rtl-popup',
+        title: 'swal-title-center',
+        htmlContainer: 'swal-rtl-content'
+      }
+    })
   } finally {
     isSaving.value = false
   }
