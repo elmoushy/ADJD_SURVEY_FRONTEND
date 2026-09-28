@@ -706,6 +706,31 @@ color: #A17D23;
   border-color:rgba(183,138,65,0.55);
 }
 
+/* Reminder button: number of reminders already sent */
+.reminderCountBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:22px;
+  height:22px;
+  padding:0 7px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#b78a41,#a17d23);
+  color:#ffffff;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.reminderCountBadgeEmpty{
+  background:rgba(148,163,184,0.18);
+  color:#64748b;
+}
+.surveyPanel[data-theme="night"] .reminderCountBadgeEmpty{
+  background:rgba(255,255,255,0.1);
+  color:rgba(248,250,252,0.7);
+}
+
 .outlinedAction{
   background:#ffffff;
 }

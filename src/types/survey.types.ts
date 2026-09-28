@@ -265,6 +265,9 @@ export interface Survey {
   topic_color?: string | null
   topic_icon?: string | null
   topic_breadcrumb?: Array<{ id: string; name: string }>
+  // Manual reminders ("إرسال تذكير") — read-only, maintained by the backend
+  reminder_count?: number
+  last_reminder_at?: string | null
 }
 
 // Survey creation/update request

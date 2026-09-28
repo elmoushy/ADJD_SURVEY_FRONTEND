@@ -85,10 +85,15 @@
         v-if="canSendReminder"
         :class="[$style.actionButton, $style.outlinedAction]"
         @click.stop="$emit('remind', survey)"
-        :title="t('survey.topics.actions.reminderHint')"
+        :title="reminderTitle"
+        :aria-label="reminderTitle"
       >
         <i class="fas fa-bell"></i>
         <span :class="$style.actionButtonText">{{ t('survey.card.reminder') }}</span>
+        <span
+          :class="[$style.reminderCountBadge, !reminderCount && $style.reminderCountBadgeEmpty]"
+          aria-hidden="true"
+        >{{ reminderCount }}</span>
       </button>
 
       <button
@@ -189,6 +194,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/useAppStore'
 import type { Survey } from '@/types/survey.types'
+import { reminderSummary } from '@/utils/reminderFormat'
 
 const props = withDefaults(defineProps<{
   survey: Survey
@@ -253,6 +259,12 @@ const creatorDisplayName = computed(() => {
   if (email) return email
   return isRTL.value ? 'هذا الشخص لم يعد متاح' : 'This person is no longer available'
 })
+
+// Manual reminder counter shown on the reminder button
+const reminderCount = computed(() => props.survey.reminder_count ?? 0)
+const reminderTitle = computed(() =>
+  `${t('survey.topics.actions.reminderHint')} — ${reminderSummary(reminderCount.value, props.survey.last_reminder_at, isRTL.value)}`
+)
 
 const formatDate = (dateString?: string | null, fallbackDate?: string | null) => {
   const dateToUse = dateString || fallbackDate

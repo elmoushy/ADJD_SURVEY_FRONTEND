@@ -429,6 +429,25 @@ const canSendReminder = (survey: Survey): boolean => {
   )
 }
 
+// Reflect the backend's updated reminder counter on the card (and an open
+// preview) without refetching the whole list.
+const applyReminderCounter = (
+  surveyId: string,
+  reminderCount: number | undefined,
+  lastReminderAt: string | null | undefined
+) => {
+  if (reminderCount === undefined) return
+  const targets = [
+    list.surveys.value.find((s) => s.id === surveyId),
+    selectedSurveyForPreview.value?.id === surveyId ? selectedSurveyForPreview.value : undefined,
+  ]
+  for (const target of targets) {
+    if (!target) continue
+    target.reminder_count = reminderCount
+    target.last_reminder_at = lastReminderAt ?? target.last_reminder_at ?? null
+  }
+}
+
 const sendReminder = async (survey: Survey) => {
   if (!survey?.id) return
   const isArabic = currentLanguage.value === 'ar'
@@ -473,7 +492,8 @@ const sendReminder = async (survey: Survey) => {
     })
     if (!result.isConfirmed) return
 
-    const { count } = await surveyService.sendReminder(survey.id)
+    const { count, reminder_count, last_reminder_at } = await surveyService.sendReminder(survey.id)
+    applyReminderCounter(survey.id, reminder_count, last_reminder_at)
     Swal.fire({
       icon: 'success',
       title: isArabic ? 'تم الإرسال' : 'Sent',

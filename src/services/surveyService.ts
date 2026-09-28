@@ -43,6 +43,14 @@ import type {
 } from '../types/survey.types'
 import type { AssignedUsersFilters, AssignedUsersResponse } from '../types/topic.types'
 import { apiClient } from './jwtAuthService'
+
+// POST surveys/{id}/send-reminder/ — `count` is how many users were reminded by
+// this send; reminder_count/last_reminder_at are the survey's updated totals.
+export interface SendReminderResult {
+  count: number
+  reminder_count?: number
+  last_reminder_at?: string | null
+}
 import { getDeviceMacAddress, getDeviceHeaders } from '../utils/deviceFingerprint'
 
 class SurveyService {
@@ -332,8 +340,8 @@ class SurveyService {
     return res.data
   }
 
-  async sendReminder(surveyId: string): Promise<{ count: number }> {
-    const res = await this.apiCall<ApiResponse<{ count: number }>>(
+  async sendReminder(surveyId: string): Promise<SendReminderResult> {
+    const res = await this.apiCall<ApiResponse<SendReminderResult>>(
       `surveys/${surveyId}/send-reminder/`,
       { method: 'POST' }
     )

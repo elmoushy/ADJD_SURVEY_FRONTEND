@@ -37,6 +37,8 @@ export interface CostCentersResponse {
   next: string | null
   previous: string | null
   results: CostCenter[]
+  page_size?: number
+  total_pages?: number
 }
 
 /**

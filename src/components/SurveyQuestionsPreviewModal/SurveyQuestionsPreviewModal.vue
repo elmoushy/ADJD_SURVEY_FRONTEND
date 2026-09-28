@@ -22,6 +22,17 @@
               <i class="fas fa-question-circle"></i>
               {{ isRTL ? `${questions.length} سؤال` : `${questions.length} question${questions.length === 1 ? '' : 's'}` }}
             </span>
+            <span
+              v-if="showReminderBadge"
+              :class="$style.questionCountBadge"
+              :title="reminderTooltip"
+            >
+              <i class="fas fa-bell"></i>
+              {{ isRTL ? `التذكيرات المرسلة: ${reminderCount}` : `Reminders sent: ${reminderCount}` }}
+              <span v-if="lastReminderLabel" :class="$style.reminderLast">
+                · {{ isRTL ? 'آخر تذكير' : 'last' }} {{ lastReminderLabel }}
+              </span>
+            </span>
           </div>
         </div>
         <div :class="$style.headerActions">
@@ -170,6 +181,7 @@ import { reshape } from 'arabic-persian-reshaper'
 import SurveyAttachmentsViewer from '../Survey/SurveyAttachmentsViewer.vue'
 import AssignedUsersPanel from '../Survey/AssignedUsersPanel.vue'
 import type { Survey, SurveyAttachment, SurveyQuestion } from '../../types/survey.types'
+import { formatReminderDate, reminderSummary } from '../../utils/reminderFormat'
 
 interface Props {
   survey: Survey
@@ -187,6 +199,19 @@ const loadError = ref<string | null>(null)
 const fetchedQuestions = ref<SurveyQuestion[] | null>(null)
 const fetchedAttachments = ref<SurveyAttachment[] | null>(null)
 const isExporting = ref(false)
+
+// Manual reminder counter. Shown wherever a reminder is possible (submitted
+// survey with an identifiable audience) or one was already sent.
+const reminderCount = computed(() => props.survey.reminder_count ?? 0)
+const showReminderBadge = computed(() => {
+  const s = props.survey
+  const applicable = s.status === 'submitted' && ['AUTH', 'PRIVATE', 'GROUPS'].includes(s.visibility)
+  return applicable || reminderCount.value > 0
+})
+const lastReminderLabel = computed(() => formatReminderDate(props.survey.last_reminder_at, isRTL.value))
+const reminderTooltip = computed(() =>
+  reminderSummary(reminderCount.value, props.survey.last_reminder_at, isRTL.value)
+)
 
 // Prefer the questions already loaded on the survey (no extra request needed);
 // only hit the detail endpoint when they're genuinely missing.
@@ -713,6 +738,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
   background: rgba(161, 125, 35, 0.08);
   border: 1px solid rgba(161, 125, 35, 0.2);
   color: #A17D23;
+}
+
+.reminderLast {
+  opacity: 0.8;
+  font-weight: 400;
 }
 
 .headerActions {

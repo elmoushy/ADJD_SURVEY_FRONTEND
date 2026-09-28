@@ -8,6 +8,7 @@ import type {
   SendEmailRequest,
   SendEmailResponse,
   SendDraftRequest,
+  CostCenter,
   CostCentersResponse,
   TemplatesResponse,
   EmailTemplateDetail,
@@ -51,11 +52,22 @@ export const emailPostingAPI = {
     is_active?: boolean
     search?: string
     ordering?: string
-  }): Promise<CostCentersResponse> => {
+    page?: number
+    page_size?: number
+  }, config?: { signal?: AbortSignal }): Promise<CostCentersResponse> => {
     const response = await apiClient.get<CostCentersResponse>(
       `${EMAIL_API_BASE}/cost-centers/`,
-      { params }
+      { params, signal: config?.signal }
     )
+    return response.data
+  },
+
+  /**
+   * Get a single cost center (used to resolve selected IDs not yet loaded)
+   * GET /api/email/cost-centers/{id}/
+   */
+  getCostCenter: async (id: number): Promise<CostCenter> => {
+    const response = await apiClient.get<CostCenter>(`${EMAIL_API_BASE}/cost-centers/${id}/`)
     return response.data
   },
 

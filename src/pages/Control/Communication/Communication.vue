@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useAppStore } from "../../../stores/useAppStore";
 import { useSimpleAuth } from '../../../composables/useSimpleAuth';
 import { QuillEditor, Quill } from '@vueup/vue-quill';
@@ -196,6 +196,20 @@ const composeForm = reactive({
 const costCenters = ref<CostCenter[]>([]);
 const templates = ref<EmailTemplateOption[]>([]);
 const loadingCostCenters = ref(false);
+
+// Cost center picker: server-side search + infinite scroll pagination
+const COST_CENTER_SCROLL_THRESHOLD = 80; // px from the bottom that triggers the next page
+const costCenterSearch = ref("");
+const costCenterPage = ref(0);
+const costCenterTotal = ref(0);
+const costCenterHasMore = ref(false);
+const loadingMoreCostCenters = ref(false);
+const costCenterListRef = ref<HTMLElement | null>(null);
+// Every cost center seen so far, so selected chips keep their labels across searches
+const knownCostCenters = reactive(new Map<number, CostCenter>());
+let costCenterRequestId = 0;
+let costCenterAbort: AbortController | null = null;
+let costCenterSearchTimer: ReturnType<typeof setTimeout> | null = null;
 const loadingTemplates = ref(false);
 const sendingEmail = ref(false);
 
@@ -231,7 +245,11 @@ const editorOptions = {
 // Load cost centers and templates when modal opens
 const openComposeModal = async () => {
   composeModalVisible.value = true;
-  await Promise.all([loadCostCenters(), loadTemplates()]);
+  if (costCenterSearchTimer) clearTimeout(costCenterSearchTimer);
+  costCenterSearch.value = "";
+  await nextTick();
+  if (costCenterSearchTimer) clearTimeout(costCenterSearchTimer); // skip the debounced reload from the reset above
+  await Promise.all([loadCostCenters(true), loadTemplates(), resolveSelectedCostCenters()]);
 };
 
 // Open draft for editing
@@ -286,24 +304,141 @@ const resetComposeForm = () => {
   composeAttachments.value = [];
 };
 
-// Load cost centers for recipient selection
-const loadCostCenters = async () => {
-  loadingCostCenters.value = true;
+// Load cost centers for recipient selection.
+// reset=true starts over from page 1 (modal open / new search); otherwise appends the next page.
+const loadCostCenters = async (reset = true) => {
+  if (!reset && (loadingCostCenters.value || loadingMoreCostCenters.value || !costCenterHasMore.value)) return;
+
+  // Cancel any in-flight request so a stale page/search can't overwrite newer results
+  costCenterAbort?.abort();
+  costCenterAbort = new AbortController();
+  const requestId = ++costCenterRequestId;
+  const page = reset ? 1 : costCenterPage.value + 1;
+  const search = costCenterSearch.value.trim();
+
+  if (reset) {
+    loadingCostCenters.value = true;
+    loadingMoreCostCenters.value = false;
+  } else {
+    loadingMoreCostCenters.value = true;
+  }
+
   try {
-    const response = await emailPostingAPI.getCostCenters({ is_active: true });
-    costCenters.value = response.results;
-  } catch (error) {
+    const response = await emailPostingAPI.getCostCenters(
+      {
+        is_active: true,
+        page,
+        ...(search ? { search } : {}),
+      },
+      { signal: costCenterAbort.signal }
+    );
+    if (requestId !== costCenterRequestId) return;
+
+    response.results.forEach((center) => knownCostCenters.set(center.id, center));
+    if (reset) {
+      costCenters.value = response.results;
+    } else {
+      // Guard against duplicates if data shifted between page requests
+      const existing = new Set(costCenters.value.map((c) => c.id));
+      costCenters.value = [...costCenters.value, ...response.results.filter((c) => !existing.has(c.id))];
+    }
+    costCenterPage.value = page;
+    costCenterTotal.value = response.count;
+    costCenterHasMore.value = Boolean(response.next);
+  } catch (error: any) {
+    if (error?.name === 'CanceledError' || error?.name === 'AbortError' || error?.code === 'ERR_CANCELED') return;
+    if (requestId !== costCenterRequestId) return;
     console.error('Failed to load cost centers:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'خطأ',
-      text: 'فشل تحميل مراكز التكلفة',
-      confirmButtonText: 'حسناً'
-    });
+    if (reset) {
+      Swal.fire({
+        icon: 'error',
+        title: 'خطأ',
+        text: 'فشل تحميل مراكز التكلفة',
+        confirmButtonText: 'حسناً'
+      });
+    }
   } finally {
-    loadingCostCenters.value = false;
+    if (requestId === costCenterRequestId) {
+      loadingCostCenters.value = false;
+      loadingMoreCostCenters.value = false;
+    }
+  }
+
+  if (requestId !== costCenterRequestId) return;
+  if (reset) {
+    await nextTick();
+    if (costCenterListRef.value) costCenterListRef.value.scrollTop = 0;
+  }
+  // If the list isn't tall enough to scroll yet, keep filling it
+  await nextTick();
+  maybeLoadMoreCostCenters();
+};
+
+const maybeLoadMoreCostCenters = () => {
+  const el = costCenterListRef.value;
+  if (!el || !costCenterHasMore.value || loadingCostCenters.value || loadingMoreCostCenters.value) return;
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - COST_CENTER_SCROLL_THRESHOLD) {
+    loadCostCenters(false);
   }
 };
+
+const onCostCenterListScroll = () => maybeLoadMoreCostCenters();
+
+// Debounced server-side search
+watch(costCenterSearch, () => {
+  if (costCenterSearchTimer) clearTimeout(costCenterSearchTimer);
+  costCenterSearchTimer = setTimeout(() => loadCostCenters(true), 350);
+});
+
+const clearCostCenterSearch = () => {
+  costCenterSearch.value = "";
+};
+
+const isCostCenterSelected = (id: number) => composeForm.costCenterIds.includes(id);
+
+const toggleCostCenter = (id: number) => {
+  if (sendingEmail.value) return;
+  const index = composeForm.costCenterIds.indexOf(id);
+  if (index === -1) {
+    composeForm.costCenterIds.push(id);
+  } else {
+    composeForm.costCenterIds.splice(index, 1);
+  }
+};
+
+const removeCostCenter = (id: number) => {
+  if (sendingEmail.value) return;
+  composeForm.costCenterIds = composeForm.costCenterIds.filter((cid) => cid !== id);
+};
+
+const clearSelectedCostCenters = () => {
+  if (sendingEmail.value) return;
+  composeForm.costCenterIds = [];
+};
+
+const selectedCostCenters = computed(() =>
+  composeForm.costCenterIds.map((id) => ({ id, center: knownCostCenters.get(id) }))
+);
+
+const formatCostCenterLabel = (center: CostCenter) =>
+  `${center.cost_center_code} - ${center.cost_center_name}`;
+
+// Resolve labels for selected IDs (e.g. from a draft) that aren't in the loaded pages
+const resolveSelectedCostCenters = async () => {
+  const missing = composeForm.costCenterIds.filter((id) => !knownCostCenters.has(id));
+  if (missing.length === 0) return;
+  const results = await Promise.allSettled(missing.map((id) => emailPostingAPI.getCostCenter(id)));
+  results.forEach((result) => {
+    if (result.status === 'fulfilled' && result.value) {
+      knownCostCenters.set(result.value.id, result.value);
+    }
+  });
+};
+
+onBeforeUnmount(() => {
+  costCenterAbort?.abort();
+  if (costCenterSearchTimer) clearTimeout(costCenterSearchTimer);
+});
 
 // Load email templates
 const loadTemplates = async () => {
@@ -614,9 +749,13 @@ watch(
 // Clear cost centers when switching to announcement
 watch(
   () => composeForm.sendType,
-  (newType) => {
+  async (newType) => {
     if (newType === 'ANNOUNCEMENT') {
       composeForm.costCenterIds = [];
+    } else {
+      // List just mounted: fetch more if the first page doesn't fill it
+      await nextTick();
+      maybeLoadMoreCostCenters();
     }
   }
 );
@@ -1062,30 +1201,107 @@ const closeEmailDetailModal = () => {
 
             <!-- Cost Centers Selection (only for SPECIFIC type) -->
             <div v-if="isSpecificSend" :class="$style.formField">
-              <label :class="$style.fieldLabel" for="costCenters">مراكز التكلفة *</label>
-              <div v-if="loadingCostCenters" :class="$style.loadingText">
-                <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
-              </div>
-              <select
-                v-else
-                id="costCenters"
-                v-model="composeForm.costCenterIds"
-                :class="$style.fieldSelect"
-                :disabled="sendingEmail"
-                multiple
-                size="6"
-              >
-                <option
-                  v-for="center in costCenters"
-                  :key="center.id"
-                  :value="center.id"
+              <label :class="$style.fieldLabel" for="costCenterSearch">مراكز التكلفة *</label>
+
+              <!-- Selected cost centers -->
+              <div v-if="selectedCostCenters.length" :class="$style.ccSelected">
+                <span
+                  v-for="item in selectedCostCenters"
+                  :key="item.id"
+                  :class="$style.ccChip"
                 >
-                  {{ center.cost_center_code }} - {{ center.cost_center_name }}
-                  ({{ center.recipient_count }} مستلمين، {{ center.cc_count }} نسخ)
-                </option>
-              </select>
+                  <span :class="$style.ccChipText">
+                    {{ item.center ? formatCostCenterLabel(item.center) : `#${item.id}` }}
+                  </span>
+                  <button
+                    type="button"
+                    :class="$style.ccChipRemove"
+                    :disabled="sendingEmail"
+                    :aria-label="'إزالة ' + (item.center ? formatCostCenterLabel(item.center) : item.id)"
+                    @click="removeCostCenter(item.id)"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </span>
+                <button
+                  type="button"
+                  :class="$style.ccClearAll"
+                  :disabled="sendingEmail"
+                  @click="clearSelectedCostCenters"
+                >
+                  مسح الكل
+                </button>
+              </div>
+
+              <div :class="$style.ccPicker">
+                <!-- Search -->
+                <div :class="$style.ccSearchWrap">
+                  <i class="fas fa-search" :class="$style.ccSearchIcon"></i>
+                  <input
+                    id="costCenterSearch"
+                    v-model="costCenterSearch"
+                    type="search"
+                    :class="$style.ccSearchInput"
+                    placeholder="ابحث بالرمز أو الاسم..."
+                    autocomplete="off"
+                    :disabled="sendingEmail"
+                  />
+                  <button
+                    v-if="costCenterSearch"
+                    type="button"
+                    :class="$style.ccSearchClear"
+                    aria-label="مسح البحث"
+                    @click="clearCostCenterSearch"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+
+                <!-- Scrollable list with infinite loading -->
+                <div
+                  ref="costCenterListRef"
+                  :class="$style.ccList"
+                  role="listbox"
+                  aria-multiselectable="true"
+                  @scroll.passive="onCostCenterListScroll"
+                >
+                  <div v-if="loadingCostCenters" :class="$style.ccStatus">
+                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
+                  </div>
+                  <template v-else>
+                    <label
+                      v-for="center in costCenters"
+                      :key="center.id"
+                      :class="[$style.ccOption, isCostCenterSelected(center.id) && $style.ccOptionSelected]"
+                      role="option"
+                      :aria-selected="isCostCenterSelected(center.id)"
+                    >
+                      <input
+                        type="checkbox"
+                        :class="$style.ccCheckbox"
+                        :checked="isCostCenterSelected(center.id)"
+                        :disabled="sendingEmail"
+                        @change="toggleCostCenter(center.id)"
+                      />
+                      <span :class="$style.ccOptionLabel">{{ formatCostCenterLabel(center) }}</span>
+                      <span :class="$style.ccOptionMeta">
+                        ({{ center.recipient_count }} مستلمين، {{ center.cc_count }} نسخ)
+                      </span>
+                    </label>
+
+                    <div v-if="costCenters.length === 0" :class="$style.ccStatus">
+                      {{ costCenterSearch.trim() ? 'لا توجد نتائج مطابقة' : 'لا توجد مراكز تكلفة' }}
+                    </div>
+                    <div v-if="loadingMoreCostCenters" :class="$style.ccStatus">
+                      <i class="fas fa-spinner fa-spin"></i> جاري تحميل المزيد...
+                    </div>
+                  </template>
+                </div>
+              </div>
+
               <small :class="$style.fieldHint">
-                اضغط Ctrl (أو Cmd على Mac) لاختيار عدة مراكز تكلفة
+                تم اختيار {{ composeForm.costCenterIds.length }}
+                <template v-if="costCenterTotal"> · عرض {{ costCenters.length }} من {{ costCenterTotal }}</template>
               </small>
             </div>
 
